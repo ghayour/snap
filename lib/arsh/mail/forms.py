@@ -7,7 +7,6 @@ from arsh.mail.models                      import Mail
 
 
 
-
 class ComposeForm(forms.ModelForm):
     content = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 30}))
 
@@ -16,6 +15,7 @@ class ComposeForm(forms.ModelForm):
     class Meta:
         model = Mail
         exclude = ('sender', 'recipients', 'thread')
+
 
 
 class ReplyForm(forms.ModelForm):

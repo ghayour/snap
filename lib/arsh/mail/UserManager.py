@@ -22,14 +22,15 @@ class UserManager:
         UserManager._instance.reload(*args, **kwargs)
         return UserManager._instance
 
+
     def __init__(self, user):
         self.load(user)
+        self._register_hooks()
 
-        #Registring plugin hooks
-        from arsh.simple_request import mail_request
-        DecoratorManager.get().register('show_thread', mail_request.get_html)
-        DecoratorManager.get().register('show_label', mail_request.label_list)
-        DecoratorManager.get().register('get_mail_summary', mail_request.get_mail_summary)
+
+    def _register_hooks(self):
+        #Register plugin hooks here
+        pass
 
 
     def reload(self, user=None):

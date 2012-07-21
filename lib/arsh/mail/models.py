@@ -224,35 +224,46 @@ class MailReceiver(models.Model):
 
 
 class Label(Slugged):
+    u""" این مدل یک برچسب را نشان می‌دهد. هر برچسب وابسته به یک کاربر است و برچسب‌های
+        کاربران مختلف، حتی اگر نام این برچسب‌ها یکی باشند، متفاوت هستند.
+    """
+
     INBOX_LABEL_NAME = u'صندوق ورودی'
     SENT_LABEL_NAME = u'فرستاده شده'
-    TRASH_LABEL_NAME = u'پاک شده'
     UNREAD_LABEL_NAME = u'unread'
 
     user = models.ForeignKey(User, related_name='labels')
     title = models.CharField(max_length=50)
 
-    @staticmethod
-    def setup_initial_labels(user):
-#        labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.UNREAD_LABEL_NAME]
-        labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME] #FIXME: hardcode customization for rezgh
-        for label in labels:
-            if not Label.objects.filter(title=label, user=user).count():
-                Label.objects.create(title=label, user=user)
+
+    def __unicode__(self):
+        return self.title
+
 
     def get_unread_count(self):
-        """
-        :return:
+        """ برای این برچسب (و کاربر متناظر با آن)، تعداد نخ‌هایی که حداقل یک نامه‌ی خوانده
+        نشده دارند را می‌دهد.
+        :return: تعداد نخ‌های خوانده نشده
+        :rtype: int
         """
         from arsh.mail.UserManager import UserManager
         return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
 
 
-    def __unicode__(self):
-        return self.title
-
     @staticmethod
     def get_label_for_user(label_name, user, create_new=False):
+        u""" با دادن نام برچسب، شی برچسب متناظر برای کاربر مد نظر را می‌دهد.
+
+        :param label_name: نام برچسب
+        :type label_name: str or unicode
+        :param user: کاربر مد نظر
+        :type user: django.contrib.auth.models.User
+        :param create_new: در صورت عدم وجود چنین برچسبی، آیا ساخته بشود؟
+        :type create_new: bool
+        :return: برچسب
+        :rtype: Label or None
+        """
+
         try:
             return Label.objects.get(title=label_name, user=user)
         except Label.DoesNotExist:
@@ -260,17 +271,36 @@ class Label(Slugged):
                 return Label.objects.create(title=label_name, user=user)
             return None
 
+
+    @staticmethod
+    def setup_initial_labels(user):
+        u""" برچسب‌های اولیه‌ی لازم برای کارایی سیستم را برای کاربر داده شده مي سازد. این
+            عمل چند پرسمان در پایگاه داده انجام می‌دهد و در نتیجه تنها باید در موقع نیاز فراخوانی
+            بشود.
+
+        :param user: کاربر مورد نظر
+        :rtype user: django.contrib.auth.models.User
+        :return: None
+        """
+        labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME]
+        for label in labels:
+            if not Label.objects.filter(title=label, user=user).count():
+                Label.objects.create(title=label, user=user)
+
     @staticmethod
     def get_user_labels(user):
-        """
-        1 Query
+        """ تمام برچسب‌های مربوط به کاربر داده شده را برمی‌گرداند. برچسب‌های صرفا مجازی
+            که تنها برای عملکرد داخلی سیستم به کار می‌رود، مانند خوانده نشده، برگردانده نمی‌شوند.
 
-        :param user:
+        :param user: کاربر مورد نظر یا آی‌دی کاربر
+        :type user: django.contrib.auth.models.User or int
         :return: تمام برچسب‌های این کاربر
+        :rtype: QuerySet of Label
         """
         if isinstance(user, User):
             user = user.id
         return Label.objects.filter(user__id=user).exclude(title=Label.UNREAD_LABEL_NAME)
+
 
 
 class Thread(Slugged):

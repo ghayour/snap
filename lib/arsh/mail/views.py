@@ -180,7 +180,6 @@ def mails_gc():
     """
         تابعی که باید به صورت دوره‌ای اجرا شود و میل‌های حذف شده را از پایگاه داده نیز حذف کند.
     """
-    #XXX: do it on label modification?
     Thread.objects.filter(labels__isnull=True).delete()
 
 

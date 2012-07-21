@@ -46,7 +46,6 @@ def label_list(user):
         WHERE l.user_id=%d AND l.title <> 'unread'
         ORDER BY title
     """ % (unread_label.id, user.id))
-    print (unread_label.id, user.id)
     b = Builder()
     b.open_list()
     for label in labels:
