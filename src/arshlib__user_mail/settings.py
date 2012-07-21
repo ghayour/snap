@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-#noinspection PyBroadException
 try:
     from local_settings  import *       #@UnusedWildImport IGNORE:W0614
-except:
-#noinspection PyBroadException
+except ImportError:
     try:
         from remote_settings  import *       #@UnusedWildImport IGNORE:W0614
-    except:
+    except ImportError:
         from autoup_settings  import *       #@UnusedWildImport IGNORE:W0614
 
 LOGGING.update({
@@ -52,9 +50,8 @@ MEDIA_URL = SITE_URL + 'media/'
 
 UPLOAD_URL = BASEPATH + 'media/uploads/'
 
-STATIC_ROOT = BASEPATH + '../static-roots/%s/' % PROJECT_INSTANCE_NAME
 STATIC_URL = SITE_URL + 'static/'
-ADMIN_STATIC_URL = STATIC_URL + 'admin/'
+ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 IMAGES_URL = STATIC_URL + 'images/'
 CSS_URL = STATIC_URL + 'css/'
 JS_URL = STATIC_URL + 'js/'
@@ -101,7 +98,14 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'django.contrib.admindocs',
 
-    'arsh.tree_model',
-    '.sample',
+    'arsh.shamsi',
+    'arsh.mail',
+    'arshlib__user_mail.mail'
 )
+
+
+
+import logging
+logger = logging.getLogger(PROJECT_INSTANCE_NAME)

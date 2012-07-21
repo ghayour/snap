@@ -8,20 +8,26 @@
 		<title>{% block title %} ARSH {% endblock title %}</title>
 
 
-{#        <link rel="stylesheet" href="{{ CSS_URL }}style.css" type="text/css" media="screen" />#}
         {% block CSS %}
 		{% endblock CSS %}
 
-        <script type='text/javascript' src="{{ JS_URL }}jquery-1.7.1.min.js"></script>
-        <script type='text/javascript' src="{{ JS_URL }}jquery-ui-1.8.17.custom.min.js"></script>
-        <script type='text/javascript' src="{{ JS_URL }}csrf.js"></script>
+        <script type='text/javascript' src="{{ STATIC_URL }}js/jquery-1.7.1.min.js"></script>
+        <script type='text/javascript' src="{{ STATIC_URL }}js/jquery-ui-1.8.17.custom.min.js"></script>
+        <script type='text/javascript' src="{{ STATIC_URL }}js/csrf.js"></script>
         {% block JS %}
 		{% endblock JS %}
 	</head>
 
-	<body>
-		{% block content %}
-		{% endblock content %}
+    <body style="direction: rtl">
+        <div style="display: inline-block; width: 30%; vertical-align: top;">
+            {% block sidebar %}
+            {% endblock %}
+        </div>
+
+        <div style="display: inline-block; width: 69%; vertical-align: top;">
+            {% block content %}
+            {% endblock %}
+        </div>
 
 		<div style="text-align: center">
 			<a href="http://arsh.co">

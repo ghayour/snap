@@ -2,9 +2,7 @@
 
 from project_name import *
 
-PROJECT_INSTANCE_NAME = "autoup_" + PROJECT_INSTANCE_NAME
-
-DEBUG          = False
+DEBUG          = True
 DAJAXICE_DEBUG = DEBUG
 TEMPLATE_DEBUG = DEBUG
 
@@ -15,7 +13,7 @@ LOGGING = {
             'handlers': ['mail_admin', 'console'], # can be: null, console, mail_admin
             'level': 'ERROR',
             },
-        '%s' % PROJECT_NAME: {
+        '%s' % PROJECT_INSTANCE_NAME: {
             'handlers': ['console'], # can be: null, console, mail_admin
             'level': 'WARNING',
             'propagate': True,
@@ -24,8 +22,9 @@ LOGGING = {
 }
 
 
-BASEPATH      = '/www/%s/'				% PROJECT_INSTANCE_NAME
-SITE_URL      = 'http://arsh.co.ir/%s/'	% PROJECT_INSTANCE_NAME # ?
+BASEPATH      = '/www/autoup/%s/'				% PROJECT_INSTANCE_NAME
+STATIC_ROOT   = BASEPATH + '../static-roots/%s/' % PROJECT_INSTANCE_NAME
+SITE_URL      = 'http://dev.arsh.co/%s/'	% PROJECT_INSTANCE_NAME
 LOGIN_URL     = '/accounts/login/'
 TEMPLATE_DIRS = (
 	'/usr/local/lib/python2.7/dist-packages/django/contrib/admin/templates/',
@@ -35,7 +34,7 @@ TEMPLATE_DIRS = (
 SERVE_STATIC_FILES = True
 
 
-SECRET_KEY    = '?' # ATTENTION: DON'T COMMIT THIS LINE
+SECRET_KEY    = 'autoup!' # ATTENTION: DON'T COMMIT THIS LINE
 
 
 DATABASES = {
@@ -49,7 +48,7 @@ DATABASES = {
 #    },
 	'default': {
 		'ENGINE':   'django.db.backends.sqlite3',
-		'NAME':     '%s.sqlite' % PROJECT_INSTANCE_NAME,
+		'NAME':     '%ssrc/%s.sqlite' % (BASEPATH, PROJECT_INSTANCE_NAME),
 		'USER':     'root',
 		'PASSWORD': '',
 		'HOST':     '',

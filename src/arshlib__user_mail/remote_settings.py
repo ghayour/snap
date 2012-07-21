@@ -13,7 +13,7 @@ LOGGING = {
             'handlers': ['mail_admin', 'console'], # can be: null, console, mail_admin
             'level': 'WARNING',
             },
-        '%s' % PROJECT_NAME: {
+        '%s' % PROJECT_INSTANCE_NAME: {
             'handlers': ['console'], # can be: null, console, mail_admin
             'level': 'INFO',
             'propagate': True,
@@ -23,6 +23,7 @@ LOGGING = {
 
 
 BASEPATH      = '/www/%s/'				% PROJECT_INSTANCE_NAME
+STATIC_ROOT   = BASEPATH + '../static-roots/%s/' % PROJECT_INSTANCE_NAME
 SITE_URL      = 'http://?/'
 LOGIN_URL     = '/accounts/login/'
 TEMPLATE_DIRS = (

@@ -13,7 +13,7 @@ LOGGING = {
             'handlers': ['console'], # can be: null, console, mail_admin
             'level': 'WARNING',
             },
-        '%s' % PROJECT_NAME: {
+        '%s' % PROJECT_INSTANCE_NAME: {
             'handlers': ['console'], # can be: null, console, mail_admin
             'level': 'DEBUG',
             },
@@ -31,6 +31,7 @@ LOGGING = {
 
 
 BASEPATH      = '/home/amirali/code/%s/'             % PROJECT_INSTANCE_NAME
+STATIC_ROOT   = BASEPATH + 'static/'
 SITE_URL      = 'http://127.0.0.1:8000/'
 LOGIN_URL     = '/accounts/login/'
 
@@ -42,10 +43,18 @@ TEMPLATE_DIRS = ( # in here JUST import django admin templates
 SERVE_STATIC_FILES = True
 
 
-SECRET_KEY    = '?'
+SECRET_KEY    = 'local!'
 
 
 DATABASES = {
+#		'default': {
+#			'ENGINE':   'django.db.backends.mysql',
+#			'NAME':     '%s' % PROJECT_INSTANCE_NAME,
+#			'USER':     'root',
+#			'PASSWORD': '',
+#			'HOST':     '',
+#			'PORT':     '',
+#			},
 		'default': {
 			'ENGINE':   'django.db.backends.sqlite3',
 			'NAME':     '%s.sqlite' % PROJECT_INSTANCE_NAME,
@@ -54,6 +63,9 @@ DATABASES = {
 			'HOST':     '',
 			'PORT':     '',
 			}
+
 		}
 
-ADMINS = ()
+ADMINS = ( # for email bugs to you
+		#    ('your name',                    'your email'),
+		)

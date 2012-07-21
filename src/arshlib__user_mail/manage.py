@@ -11,6 +11,7 @@ directories.pop()
 project_dir = "/".join(directories)
 sys.path.append("%s/src" % project_dir)
 sys.path.append("%s/lib" % project_dir)
+sys.path.pop(0)
 
 from project_name                            import *
 

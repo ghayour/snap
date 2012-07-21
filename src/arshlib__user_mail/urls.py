@@ -13,12 +13,15 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
-    url(r'^sample/', include('.sample.urls')),
+    url(r'^mail/', include('arshlib__user_mail.mail.urls')),
 )
 
 if settings.SERVE_STATIC_FILES:
     urlpatterns += patterns('',
-        url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
-                {'document_root': settings.STATIC_ROOT, }
-        )
+        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT,})
     )
+
+urlpatterns += patterns('',
+    url(r'^favicon.ico$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT, 'path': 'images/favicon.ico'}),
+    url(r'^robots.txt$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT, 'path': 'robots.txt'}),
+)

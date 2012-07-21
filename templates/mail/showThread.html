@@ -1,0 +1,92 @@
+{% extends 'mail/mail_template.html' %}
+{% load shamsi %}
+{% load user_manager %}
+{% load url from future %}
+
+{% block JS %}
+    {{ block.super }}
+    {{ replyForm.media }}
+    <script type='text/javascript' src="/static/js/mail.js"></script>
+    <script>
+        function mark_as_read(redirect) {
+            if (typeof redirect == 'undefined')
+                redirect = true;
+            var read_url = '{% url 'mail/thread/mark' thread_slug=thread.slug action='read' %}';
+            if (redirect) {
+                window.location = read_url;
+            } else {
+                $.post(read_url, {}, function(){console.log('[MailSystem] message successfully marked as read');});
+            }
+        }
+
+        function mark_as_unread() {
+            window.location = '{% url 'mail/thread/mark' thread_slug=thread.slug action='unread' %}';
+        }
+
+        {{ env.java_script }}
+    </script>
+{% endblock %}
+
+
+{% block content %}
+    <div class="bordered padded-normal">
+        <button onclick="window.location='{{ referrer }}';">برگشت</button>
+        {{ env.header }}
+    </div>
+    <br/>
+
+<div id='header' class="fa">
+    <span class="thread-title">{{ thread.title }}</span>
+    <div class="mail-tags inline">
+        {% for label in labels %}
+            <a class="mail-tag" href="{% url 'mail/see_label' label.slug %}">{{label}}</a>&nbsp; &nbsp;
+        {% endfor %}
+    </div>
+</div>
+
+    <div class="thread">
+    {% for mail in mails %}
+    <div class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
+        <div class="mail-header">
+        <span class="mail-sender">{{mail.sender_id|get_user_full_name}}</span>
+        <div>
+            <span class="bold">گیرندگان: </span>
+            {% with recipients=mail.get_recipients %}
+                {% for r in recipients.to %}
+                    <span class="icon list-item to-icon"><a target="_blank" href="/accounts/profile?user={{ r.user_id }}">{{ r|get_user_full_name }}</a></span>
+                {% endfor %}
+                {% for r in recipients.cc %}
+                    <span class="icon list-item cc-icon"><a target="_blank" href="/accounts/profile?user={{ r.user_id }}">{{ r|get_user_full_name }}</a></span>
+                {% endfor %}
+                {% for r in recipients.bcc %}
+                    {% if r.user == user or mail.sender == user %}
+                        <span class="icon list-item bcc-icon"><a target="_blank" href="/accounts/profile?user={{ r.user_id }}">{{ r|get_user_full_name }}</a></span>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+        </div>
+        <div class="mail-date">{{ mail.created_at|relative }}</div>
+        </div>
+        <div class="mail-content">
+         {{ mail.content|safe }}
+        </div>
+    </div>
+	{% endfor %}
+    </div>
+
+    <div>
+        {{ env.ribbon }}
+    </div>
+
+    {% if env.reply %}
+        <fieldset><legend>پاسخ</legend>
+        <div id='addSourceForm'>
+            <form name='reply' method='post' >
+                {% csrf_token %}
+                {{replyForm.as_p}}
+                <input type='submit' value='ارسال' >
+            </form>
+        </div>
+        </fieldset>
+    {%  endif %}
+{% endblock %}
