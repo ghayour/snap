@@ -18,6 +18,10 @@ def get_user_full_name(obj):
     :param user:
     :return:
     """
+    if obj is None:
+        return u'ناشناس'
     if not (isinstance(obj, int) or isinstance(obj, long)):
         obj = obj.user_id
+    if obj is None:
+        return u'ناشناس'
     return UserManager.get(None).get_user(obj).get_full_name()

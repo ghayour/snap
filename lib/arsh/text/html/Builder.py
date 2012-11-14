@@ -101,8 +101,9 @@ class Builder():
         self._html += answer
 
     @processed
-    def open_list(self):
-        self._html += u'<ul>'
+    def open_list(self, style=''):
+        if style: self._html += u'<ul class=%s>' %(style)
+        else: self._html += u'<ul>'
 
     @processed
     def li(self, html, **kwargs):

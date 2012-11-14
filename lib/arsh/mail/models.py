@@ -307,7 +307,7 @@ class Thread(Slugged):
     title = models.CharField(max_length=255)
     firstMail = models.ForeignKey(Mail, null=True, related_name='headThread')
     labels = models.ManyToManyField(Label, related_name='threads')
-
+    #TODO : Implement -> Starred Thread , approved , and in-progress thread
 
     def __unicode__(self):
         return self.title

@@ -47,13 +47,14 @@ def label_list(user):
         ORDER BY title
     """ % (unread_label.id, user.id))
     b = Builder()
-    b.open_list()
+    b.open_list('lists')
     for label in labels:
         #TODO: use annotate to reduce query count -> done
         unread = label.unread_threads_count
         unread_str = ' (%d)' % unread if unread else ''
         url = reverse('mail/see_label', args=[label.slug])
-        b.li("<a href='%s'>%s%s</a>" % (url, unicode(label), unread_str))
+        b.li("<div class='sidebar-item'><a href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
+             "<div class='sep-t'></div><div class='sep-b'></div></div>" %(url, unicode(label), unread_str))
     b.close_list()
     return b.render()
 

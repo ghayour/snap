@@ -30,11 +30,14 @@ class UserManager:
 
     def _register_hooks(self):
         #Register plugin hooks here
-        pass
+        from arsh.simple_request import mail_request
+        DecoratorManager.get().register('show_thread', mail_request.get_html)
+        DecoratorManager.get().register('show_label', mail_request.label_list)
+        DecoratorManager.get().register('get_mail_summary', mail_request.get_mail_summary)
 
 
     def reload(self, user=None):
-        if self._user != user:
+        if user and self._user != user:
             self.load(user)
 
     def load(self, user=None):
@@ -45,7 +48,7 @@ class UserManager:
     def setup_mailbox(self):
         Label.setup_initial_labels(self._user)
 
-    def get_label(self, label_name):
+    def get_label(self, label_name, create=False):
         """
         1 Query
 
@@ -54,6 +57,8 @@ class UserManager:
         try:
             return Label.objects.get(title = label_name, user = self._user)
         except Label.DoesNotExist:
+            if create:
+                return Label.objects.create(title = label_name, user = self._user)
             return None
 
     def get_inbox(self):
@@ -65,7 +70,7 @@ class UserManager:
 
     def get_unread_label(self):
         if self._unread_label is None:
-            self._unread_label = self.get_label(Label.UNREAD_LABEL_NAME)
+            self._unread_label = self.get_label(Label.UNREAD_LABEL_NAME, create=True)
         return self._unread_label
 
     def _cache_user(self, user):

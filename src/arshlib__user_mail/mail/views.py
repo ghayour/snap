@@ -115,6 +115,7 @@ def showThread(request, thread):
         'replyForm': replyForm,
         'referrer': referrer,
         'env': env,
+        'last_index':len(tobeShown),
         }, context_instance=RequestContext(request))
 
 
