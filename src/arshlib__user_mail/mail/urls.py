@@ -17,7 +17,7 @@ urlpatterns = patterns('arshlib__user_mail.mail.views',
     url(r'^threads/view/(?P<thread_slug>[a-zA-Z0-9_\.]+)/$', 'see', {'label_slug': None}, name='mail/see_thread_direct'),
     url(r'^threads/(?P<thread_slug>[a-zA-Z0-9_\.]+)/mark_(?P<action>read|unread)$', 'mark_thread', name='mail/thread/mark'),
 
-    url(r'^setup$', 'setup')
+    url(r'^setup$', 'setup', name='setup')
 )
 
 

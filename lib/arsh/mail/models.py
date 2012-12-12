@@ -10,8 +10,7 @@ from arsh.text.utils                       import get_summary
 
 from arsh.mail.Manager                     import DecoratorManager
 from arshlib__user_mail.mail.urls          import urlpatterns
-from django.core.urlresolvers              import resolve
-
+from django.core.urlresolvers             import RegexURLPattern
 
 
 __docformat__ = 'reStructuredText'
@@ -361,36 +360,37 @@ class Thread(Slugged):
     def get_user_threads(user):
         return Thread.objects.filter(labels__user=user)
 
-def Test_creator(url_string=None):
+def Test_creator(prefix,url_string=None):
     """
-    :param url_string:
+    :param  url_string: رشته مربوط به آدرسها
+    :param  prefix: منظور پیشوند آدرسها است.
     :return:
     یک اسکلت مناسب برای ایجاد تست تولید می کند. ورودی به صورت رشته url ها است.
     فرض بر این استه که باید لاگین صورت پذیرد. این کار با یوزر admin و پسورد admin صورت می گیرد.
     """
     print urlpatterns
-    result = 'calss AppTest(TestCase): \n'
+    result = 'class AppTest(TestCase): \n'
     result += '\tfixtures = [\'auth\']\n'
     result += '\tdef setUp(self):\n'
     result += '\t\tself.client = Client()\n'
     result += '\t\tself.assertTrue(self.client.login(username=\'admin\',password=\'admin\'))\n'
     for pattern in url_string:
-        temp = str(pattern)
-        temp = temp.replace('<RegexURLPattern ','')
+        temp = pattern.regex.pattern
         temp = temp.replace('>','')
-        list = temp.split(' ')
-        temp = list[0]
-        temp2 = list[0].replace('/',' ')
-        temp2 = temp2.title()
-        temp2 = temp2.replace(' ','_')
-        temp2.capitalize()
-        result += '\tdef test'+temp2 + ':\n'
-        result += '\t\tresponse = self.client.get(\''+temp+'\')\n'
+        temp = temp.replace('$','')
+        temp = temp.replace('^','')
+        temp2 = str(pattern.name)
+        temp2 = temp2.replace('/','__')
+        if temp2[len(temp2)-1]=='__':
+            temp2 = temp2[:-1]
+        result += '\n\tdef test'+temp2 + '(self):\n'
+        result += '\t\t#view function = ' + str(pattern.callback)+ '\n'
+        result += '\t\tresponse = self.client.get(\''+prefix+temp+'\')\n'
         result += '\t\tself.assertEqual(response.status_code,200)\n'
         result += '\t\tself.assertTemplateUsed(response,\'\')\n'
-    with open("Output.txt","wb") as Textfile:
-        Textfile.write(result)
-    #TODO: RegexURLPattern object must be analysed...
+    with open("Output.py","wb") as Output:
+        Output.write(result)
+    #TODO: Sample url for regular expressions
 
 
-Test_creator(urlpatterns)
+Test_creator("mail/",urlpatterns)
