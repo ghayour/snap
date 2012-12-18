@@ -1,15 +1,85 @@
 {% extends 'base.html' %}
 {% load mail %}
-
 {% block JS %}
+    <script type='text/javascript' src="{{ STATIC_URL }}js/jquery-1.8.3.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/arsh/arsh.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/arsh/connectors.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/select2.js"></script>
+    <script>
+        $(document).ready(
+         function()
+            {
+                $("select.filter").select2();
+
+
+                $("select.filter").change(function () {
+                    var classes = "";
+                    var description = "";
+
+                    // collect the selected filters
+                    $("select.filter").each(function() {
+                        if ($(this).val() != '*') {
+                            classes += "." + $(this).val();
+                            if (description != '') description += ', ';
+                            description += $.trim($(this).find("option:selected").text());
+                        }
+                    });
+
+                    if (classes == "") {
+                        // if no filters selected, show all items
+                        $("table.threads-table tr").show();
+                    } else {
+                        // otherwise, hide everything...
+                        $("table.threads-table tr").hide();
+                        // then show only the matching items
+                        rows = $("table.threads-table tr" + classes);
+                        if (rows.size() > 0) {
+                            rows.show();
+
+                        }
+                    }
+
+                    // count up the matching items
+                    if (description != '') {
+                        description += " (" + $("table.threads-table tr:visible").size() + ")";
+                    }
+
+                    // print a description of the active filter
+                    $("#filter-description").html(description);
+                }).change(); // here in case a drop-down has been pre-selected
+
+                // just a nice little hover effect
+                $("table.threads-table tr").hover(
+                        function() {
+                            $(this).addClass("hover");
+                        },
+                        function() {
+                            $(this).removeClass("hover");
+                        }
+                );
+
+
+
+
+            }
+
+        );
+        function log(e) {
+            var f=$("<li>"+e+"</li>");
+            $("#events_11").append(e);
+            f.show()
+        };
+
+
+    </script>
 {% endblock %}
 
-{% block CSS %}
+    {% block CSS %}
     <link rel="stylesheet" href="{{ STATIC_URL }}css/mail.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.dataTables_themeroller.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/select2.css"/>
+
 {% endblock %}
 
 {% block title %}سامانه پیام‌رسانی{% endblock %}
@@ -17,7 +87,7 @@
 {% block extra_head_js %}
     <script>
         function newLabel() {
-            var targetElement = document.getElementById('newLabelForm');
+            var targetElement = document.getElementById('nناهewLabelForm');
             targetElement.style.display = 'block';
         }
 
@@ -36,19 +106,51 @@
             targetElement.style.display = 'none';
         }
     </script>
+
 {% endblock %}
 
 {% block sidebar %}
     <hr/>
     <div id='header' class="Center">
-        <img class="icon" alt="inbox" src="/static/images/icons/mail-2-64.png" width="40px" onclick='window.location = "{% url mail/home %}"' />
+        <img class="icon" alt="inbox" src="/static/i.hide()});images/icons/mail-2-64.png" width="40px" onclick='window.location = "{% url mail/home %}"' />
         <img class="icon" alt="compose" src="/static/images/icons/primo/email_compose.png" width="48px" onclick='window.location = "{% url mail/compose %}"' />
     </div>
+    <hr/>
+    <div>
+        <select class="filter" style="min-width: 150px;" multiple="multiple">
+            <option value="*">All years</option>
+            <option value="warehouse-rey">rey</option>
+            <option value="warehouse-tehran">tehran</option>
+            <option value="warehouse-kashan">kashan</option>
+            <option value="warehouse-isfahan">isfahan</option>
+        </select>
+        <hr/>
+
+        <select class="filter" multiple="multiple" style="min-width: 150px;">
+            <option value="*">All tags</option>
+            <option value="tag-inbox">Inbox</option>
+            <option value="tag-listserv">Listserv</option>
+            <option value="tag-sent">Sent</option>
+            <option value="tag-drafts">Drafts</option>
+        </select>
+        <hr/>
+
+        <select class="filter" style="min-width: 150px;" multiple="multiple">
+            <option value="*">All senders</option>
+            <option value="sent-jonathan">Jonathan</option>
+            <option value="sent-sarah">Sarah</option>
+            <option value="sent-avi">Avi</option>
+            <option value="sent-moshe">Moshe</option>
+        </select>
+        <hr/>
+
+    </div>
+
     <hr/>
     <form class="Center" method='POST' id="mail_search_form" action="{% url mail/search %}">
         {% csrf_token %}
         <div id="search-input-div" class="inline">
-            <input type='text' name='keywords' />&nbsp;
+            <input id="search-tags2" type='text' name='keywords' />&nbsp;
         </div>
         <img id='mail-search' src="/static/images/search.png" width="40px" style="margin-bottom: -12px;" onclick="$('#mail_search_form').submit()" />
     </form>

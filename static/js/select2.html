@@ -7,11 +7,11 @@
 
     <script src="select2.js"></script>
     <script>
-        $(document).ready(function() { $("#e1").select2({ placeholder: "Select a State",allowClear: true}); });
+        $(document).ready(function() { $("#e1").select2({ placeholder: "Select a State",allowClear: true ,tags:["red"],tokenSeparators:[',',''])}); });
     </script>
 </head>
 <body>
-    <select id="e1" multiple="multiple">
+    <select id="e1">
     <option value="AL">Alabama</option>
     ...
     <option value="WY">Wyoming</option>
