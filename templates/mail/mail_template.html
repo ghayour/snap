@@ -11,57 +11,29 @@
          function()
             {
                 $("select.filter").select2();
-
-
+                //filtering emails based on inputs of selects with class = filter
                 $("select.filter").change(function () {
-                    var classes = "";
-                    var description = "";
-
+                    var $fltrs = $('temp');
+                    var $result = $("table.threads-table tr")
                     // collect the selected filters
                     $("select.filter").each(function() {
+                        $fltrs = $('temp');
+                        if ($(this).val() == null){
+                            $(this).val(['*']);
+                        }
                         if ($(this).val() != '*') {
-                            classes += "." + $(this).val();
-                            if (description != '') description += ', ';
-                            description += $.trim($(this).find("option:selected").text());
+
+                            $.each($(this).val(),function(index,val)
+                                    {
+                                        $fltrs = $fltrs.add($("table.threads-table tr"+this));
+                                    }
+                            );
+                            $result = $result.filter($fltrs);
                         }
                     });
-
-                    if (classes == "") {
-                        // if no filters selected, show all items
-                        $("table.threads-table tr").show();
-                    } else {
-                        // otherwise, hide everything...
-                        $("table.threads-table tr").hide();
-                        // then show only the matching items
-                        rows = $("table.threads-table tr" + classes);
-                        if (rows.size() > 0) {
-                            rows.show();
-
-                        }
-                    }
-
-                    // count up the matching items
-                    if (description != '') {
-                        description += " (" + $("table.threads-table tr:visible").size() + ")";
-                    }
-
-                    // print a description of the active filter
-                    $("#filter-description").html(description);
+                    $("table.threads-table tr").hide();
+                    $result.show()
                 }).change(); // here in case a drop-down has been pre-selected
-
-                // just a nice little hover effect
-                $("table.threads-table tr").hover(
-                        function() {
-                            $(this).addClass("hover");
-                        },
-                        function() {
-                            $(this).removeClass("hover");
-                        }
-                );
-
-
-
-
             }
 
         );
@@ -87,7 +59,7 @@
 {% block extra_head_js %}
     <script>
         function newLabel() {
-            var targetElement = document.getElementById('nناهewLabelForm');
+            var targetElement = document.getElementById('newLabelForm');
             targetElement.style.display = 'block';
         }
 
@@ -115,38 +87,37 @@
         <img class="icon" alt="inbox" src="/static/i.hide()});images/icons/mail-2-64.png" width="40px" onclick='window.location = "{% url mail/home %}"' />
         <img class="icon" alt="compose" src="/static/images/icons/primo/email_compose.png" width="48px" onclick='window.location = "{% url mail/compose %}"' />
     </div>
+
     <hr/>
-    <div>
-        <select class="filter" style="min-width: 150px;" multiple="multiple">
-            <option value="*">All years</option>
-            <option value="warehouse-rey">rey</option>
-            <option value="warehouse-tehran">tehran</option>
-            <option value="warehouse-kashan">kashan</option>
-            <option value="warehouse-isfahan">isfahan</option>
+    <div style="padding: 10px;">
+        {# any filtering can be added here - * for select all,class = filter,and . before the value of each selected. #}
+        <p>نام انبار:</p>
+        <select class="filter" style="min-width: 250px;" multiple="multiple">
+            <option value="*" selected="selected">همه انبارها</option>
+            <option value=".warehouse-rey">ری</option>
+            <option value=".warehouse-tehran">تهران</option>
+            <option value=".warehouse-kashan">کاشان</option>
+            <option value=".warehouse-isfahan">اصفهان</option>
         </select>
-        <hr/>
-
-        <select class="filter" multiple="multiple" style="min-width: 150px;">
-            <option value="*">All tags</option>
-            <option value="tag-inbox">Inbox</option>
-            <option value="tag-listserv">Listserv</option>
-            <option value="tag-sent">Sent</option>
-            <option value="tag-drafts">Drafts</option>
+        <p>تگ های مربوطه:</p>
+            <select class="filter" multiple="multiple" style="min-width: 250px;">
+            <option value="*" selected="selected">All tags</option>
+            <option value=".tag-inbox">Inbox</option>
+            <option value=".tag-listserv">Listserv</option>
+            <option value=".tag-sent">Sent</option>
+            <option value=".tag-drafts">Drafts</option>
         </select>
-        <hr/>
-
-        <select class="filter" style="min-width: 150px;" multiple="multiple">
-            <option value="*">All senders</option>
-            <option value="sent-jonathan">Jonathan</option>
-            <option value="sent-sarah">Sarah</option>
-            <option value="sent-avi">Avi</option>
-            <option value="sent-moshe">Moshe</option>
+        <p>نام فرستنده:</p>
+        <select class="filter" style="min-width: 250px;" multiple="multiple">
+            <option value="*" selected="selected">All senders</option>
+            <option value=".sent-jonathan">Jonathan</option>
+            <option value=".sent-sarah">Sarah</option>
+            <option value=".sent-avi">Avi</option>
+            <option value=".sent-moshe">Moshe</option>
         </select>
-        <hr/>
 
     </div>
 
-    <hr/>
     <form class="Center" method='POST' id="mail_search_form" action="{% url mail/search %}">
         {% csrf_token %}
         <div id="search-input-div" class="inline">
