@@ -6,30 +6,32 @@
     <script type='text/javascript' src="{{ STATIC_URL }}js/arsh/arsh.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/arsh/connectors.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/select2.js"></script>
+    <script type="text/javascript">
+        function addc(e){
+            $("div.constrains").append("<input type=\"text\" class=\"filterr " +e+"\" style=\"width: 200px;direction: rtl\"/>")
+        }
+    </script>
     <script>
         $(document).ready(
          function()
             {
-                $("select.filter").select2();
+                $("input.filterr").select2({tags:[]});
                 //filtering emails based on inputs of selects with class = filter
-                $("select.filter").change(function () {
+                $("input.filterr").change(function (e) {
                     var $fltrs = $('temp');
-                    var $result = $("table.threads-table tr")
+                    var $result = $("table.threads-table tr");
                     // collect the selected filters
-                    $("select.filter").each(function() {
+                    $("input.filterr").each(function() {
                         $fltrs = $('temp');
-                        if ($(this).val() == null){
-                            $(this).val(['*']);
-                        }
-                        if ($(this).val() != '*') {
-
-                            $.each($(this).val(),function(index,val)
-                                    {
-                                        $fltrs = $fltrs.add($("table.threads-table tr"+this));
-                                    }
-                            );
-                            $result = $result.filter($fltrs);
-                        }
+                        if (this.value == "")
+                            $fltrs = $("table.threads-table tr");
+                        var st = JSON.stringify(this.value).replace('\"','').replace('\"','').split(',');
+                        var source = "."+this.className.split(/\s+/)[1]+"-";
+                        $.each((st),function(index,val){
+                            if(this!="")
+                                $fltrs = $fltrs.add($("table.threads-table tr"+source+this));
+                        })
+                        $result = $result.filter($fltrs);
                     });
                     $("table.threads-table tr").hide();
                     $result.show()
@@ -89,33 +91,14 @@
     </div>
 
     <hr/>
-    <div style="padding: 10px;">
-        {# any filtering can be added here - * for select all,class = filter,and . before the value of each selected. #}
-        <p>نام انبار:</p>
-        <select class="filter" style="min-width: 250px;" multiple="multiple">
-            <option value="*" selected="selected">همه انبارها</option>
-            <option value=".warehouse-rey">ری</option>
-            <option value=".warehouse-tehran">تهران</option>
-            <option value=".warehouse-kashan">کاشان</option>
-            <option value=".warehouse-isfahan">اصفهان</option>
-        </select>
-        <p>تگ های مربوطه:</p>
-            <select class="filter" multiple="multiple" style="min-width: 250px;">
-            <option value="*" selected="selected">All tags</option>
-            <option value=".tag-inbox">Inbox</option>
-            <option value=".tag-listserv">Listserv</option>
-            <option value=".tag-sent">Sent</option>
-            <option value=".tag-drafts">Drafts</option>
-        </select>
-        <p>نام فرستنده:</p>
-        <select class="filter" style="min-width: 250px;" multiple="multiple">
-            <option value="*" selected="selected">All senders</option>
-            <option value=".sent-jonathan">Jonathan</option>
-            <option value=".sent-sarah">Sarah</option>
-            <option value=".sent-avi">Avi</option>
-            <option value=".sent-moshe">Moshe</option>
-        </select>
-
+    <div class = "constrains" style="padding: 10px;">
+    {# Two examples: #}
+        نام انبار:
+        <script type="text/javascript">window.addc('warehouse');</script>
+        <BR/><BR/>
+        نام تگ:
+        <script type="text/javascript">window.addc('tag');</script>
+    {# A filter can be added using above JS code. functino arg: class to be filtered #}
     </div>
 
     <form class="Center" method='POST' id="mail_search_form" action="{% url mail/search %}">
