@@ -1,0 +1,29 @@
+{% extends 'creator/base.html' %}
+{% block CSS %}
+{{block.super}}
+<link rel="stylesheet" href="{{STATIC_URL}}css/creator/article.css" type="text/css" />
+{% endblock %}
+{% block JS %}
+{{block.super}}
+<script type="text/javascript" src="{{STATIC_URL}}lib/data_tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}lib/data_tables/data_tables_API.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}lib/arsh/js/connectors.js"></script>
+{% endblock JS %}
+
+{% block main %}
+<h2>مشاهده پیام</h2><br/>
+<div class="art_title">{{ notification.name }}</div>
+<table class="art_table">
+    <tr><td class="art_title">محتوای پیام</td><td class="art_content">{{ notification.description|safe }}</td></tr>
+    <tr><td class="art_title">نوع پیام</td><td>{{ notification.type }}</td></tr>
+    <tr><td class="art_title">درجه اهمیت</td><td>
+        {% if notification.level == "W" %}<span style="color:#a52a2a;">اخطار</span>
+        {% else %}{% if notification.level == "I" %}<span style="color:green;">اطلاعات</span>
+        {% else %}{% if notification.level == "E" %}<span style="color:red;">خطا</span>
+        {% endif %}{% endif %}{% endif %}
+    </td></tr>
+    <tr><td class="art_title">تاریخ ایجاد</td><td>{{ notification.created_at }}</td></tr>
+    <tr><td class="art_title">تاریخ اعتبار</td><td>{{ notification.display_until }}</td></tr>
+</table>
+<a href="{% url notifications/show %}">بازگشت به لیست پیام ها</a><br/><br/>
+{% endblock %}
