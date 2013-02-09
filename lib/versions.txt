@@ -1,4 +1,4 @@
 arshlib 1.1.0
 common 0.1.1
-mail 0.2.0
-simple_request 0.2.0
+user_mail.mail 0.2.0
+user_mail.simple_request 0.2.0
