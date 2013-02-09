@@ -30,11 +30,11 @@ class UserManager:
 
     def _register_hooks(self):
         #Register plugin hooks here
-        from arsh.simple_request import mail_request
-        DecoratorManager.get().register('show_thread', mail_request.get_html)
-        DecoratorManager.get().register('show_label', mail_request.label_list)
-        DecoratorManager.get().register('get_mail_summary', mail_request.get_mail_summary)
-
+        #from arsh.simple_request import mail_request
+        #DecoratorManager.get().register('show_thread', mail_request.get_html)
+        #DecoratorManager.get().register('show_label', mail_request.label_list)
+        #DecoratorManager.get().register('get_mail_summary', mail_request.get_mail_summary)
+        pass
 
     def reload(self, user=None):
         if user and self._user != user:

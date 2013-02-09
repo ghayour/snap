@@ -45,7 +45,7 @@
         </thead>
         <tbody>
         {% for thread in threads %}
-            <tr>
+            <tr class="warehouse-kashan tag-drafts tag-listserv">
                 <td class="Center" style="width: 20px;"><input type="checkbox" class="thread-checkbox" value="{{ thread.id }}" /></td>
                 <td style="width: 20%;"><a href='{% url 'mail/see_thread_direct' thread.slug %}'>{{ thread }}</a></td>
                 <td style="width: 40%;">
@@ -60,6 +60,12 @@
                 <td class="Center">{{ thread.firstMail.created_at|relative }}</td>
             </tr>
         {% endfor %}
+        <tr class="warehouse-rey tag-sent tag-drafts year-2010 sent-sarah">
+            <td class="Center" style="width: 20px;"><input type="checkbox" class="thread-checkbox" value="0" /></td>
+            <td>rey</td>
+            <td>sent-drafts</td>
+            <td>2010</td>
+        </tr>
         </tbody>
     </table>
 {% endblock %}

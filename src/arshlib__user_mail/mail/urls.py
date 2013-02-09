@@ -4,7 +4,7 @@ from django.conf.urls.defaults import patterns, url
 
 
 
-urlpatterns = patterns('arsh.mail.views',
+urlpatterns = patterns('arshlib__user_mail.mail.views',
     url(r'^compose$', 'compose', name='mail/compose'),
 #    url(r'^addLabel/$', 'addLabel', name='mail/addLabel'),
     url(r'^search/$', 'search', name='mail/search'),
@@ -17,5 +17,7 @@ urlpatterns = patterns('arsh.mail.views',
     url(r'^threads/view/(?P<thread_slug>[a-zA-Z0-9_\.]+)/$', 'see', {'label_slug': None}, name='mail/see_thread_direct'),
     url(r'^threads/(?P<thread_slug>[a-zA-Z0-9_\.]+)/mark_(?P<action>read|unread)$', 'mark_thread', name='mail/thread/mark'),
 
-    url(r'^setup$', 'setup')
+    url(r'^setup$', 'setup', name='setup')
 )
+
+

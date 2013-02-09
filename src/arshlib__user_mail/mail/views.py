@@ -134,7 +134,7 @@ def showLabel(request, label, archive_mode):
         context_instance=RequestContext(request))
 
 
-@login_required
+login_required
 def createLabel(request):
     title = request.POST.get('title')
     label = Label()
@@ -144,7 +144,7 @@ def createLabel(request):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
-@login_required
+login_required
 def search(request):
     up = request.user
     keywords = request.POST.get('keywords')

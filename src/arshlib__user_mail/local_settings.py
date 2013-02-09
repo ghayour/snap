@@ -30,13 +30,14 @@ LOGGING = {
 }
 
 
-BASEPATH      = '/home/amirali/code/%s/'             % PROJECT_INSTANCE_NAME
+BASEPATH      = '/Users/Masood/PycharmProjects/Mail/'             #% PROJECT_INSTANCE_NAME
 STATIC_ROOT   = BASEPATH + 'static/'
 SITE_URL      = 'http://127.0.0.1:8000/'
 LOGIN_URL     = '/accounts/login/'
 
 TEMPLATE_DIRS = ( # in here JUST import django admin templates
-	'/usr/local/lib/python2.7/dist-packages/django/contrib/admin/templates', # for other ubuntu users
+	#'/usr/local/lib/python2.7/dist-packages/django/contrib/admin/templates', # for other ubuntu users
+                '/Library/Python/2.7/site-packages/django/template',
 )
 
 
@@ -57,7 +58,7 @@ DATABASES = {
 #			},
 		'default': {
 			'ENGINE':   'django.db.backends.sqlite3',
-			'NAME':     '%s.sqlite' % PROJECT_INSTANCE_NAME,
+			'NAME':     '%ssrc/%s.sqlite' %(BASEPATH, PROJECT_INSTANCE_NAME),
 			'USER':     'root',
 			'PASSWORD': '',
 			'HOST':     '',
@@ -67,5 +68,5 @@ DATABASES = {
 		}
 
 ADMINS = ( # for email bugs to you
-		#    ('your name',                    'your email'),
+		    ('your name',                    'your email'),
 		)
