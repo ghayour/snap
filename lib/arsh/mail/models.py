@@ -5,13 +5,14 @@ import logging
 from django.db import models
 from django.contrib.auth.models import User
 
+from arsh.common.algorithm.strings import get_summary
 from arsh.common.db.basic import Slugged
 from arsh.mail.Manager import DecoratorManager
 
 
 __docformat__ = 'reStructuredText'
-logger = logging.getLogger()
 
+logger = logging.getLogger()
 
 
 class Mail(models.Model):
@@ -22,10 +23,8 @@ class Mail(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     thread = models.ForeignKey('Thread', related_name='mails')
 
-
     def __unicode__(self):
         return self.title
-
 
     def get_recipients(self):
         all_rec = self.mailreceiver_set.all()
@@ -34,16 +33,13 @@ class Mail(models.Model):
             rec[r.type].append(r)
         return rec
 
-
     def get_summary(self):
         env = {'content': self.content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(env['content'], 50, striptags=True)
 
-
     def set_thread(self, thread):
         self.thread = thread
-
 
     @staticmethod
     def add_receiver(mail, thread, receiver_address, type='to', label_names=None, create_new_labels=True):
@@ -68,7 +64,7 @@ class Mail(models.Model):
                 #TODO: send failed delivery report to sender
                 return False
 
-        label_names = set(label_names) #unique
+        label_names = set(label_names)  # unique
         if create_new_labels:
             labels = []
             for label_name in label_names:
@@ -82,7 +78,6 @@ class Mail(models.Model):
 
         MailReceiver.objects.create(mail=mail, user=receiver, type=type)
         return True
-
 
     @staticmethod
     def create(content, subject, sender, receivers, cc=None, bcc=None, thread=None, titles=None,
@@ -125,7 +120,7 @@ class Mail(models.Model):
             logger.warn('sender in null, sending anonymous mail...')
 
         mail = Mail.objects.create(title=subject, thread=thread, created_at=datetime.datetime.now(), content=content,
-            sender=sender)
+                                   sender=sender)
 
         if thread.firstMail is None:
             logger.debug('setting first thread mail')
@@ -142,14 +137,15 @@ class Mail(models.Model):
                 for address in addresses:
                     if isinstance(address, str) or isinstance(address, unicode):
                         address = address.strip()
-                    if not address: continue
+                    if not address:
+                        continue
                     recipients_count += 1
                     sent = Mail.add_receiver(mail, thread, address, t, titles)
-                    if sent: sent_count += 1
+                    if sent:
+                        sent_count += 1
 
         logger.debug('mail sent to %d/%d of recipients' % (sent_count, recipients_count))
         return mail
-
 
     @staticmethod
     def reply(content, sender, in_reply_to=None, thread=None):
@@ -168,8 +164,10 @@ class Mail(models.Model):
 
         if not thread and not in_reply_to:
             raise ValueError('No mail specified to reply to it!')
-        if not thread: thread = in_reply_to.thread
-        if not in_reply_to: in_reply_to = thread.get_last_mail()
+        if not thread:
+            thread = in_reply_to.thread
+        if not in_reply_to:
+            in_reply_to = thread.get_last_mail()
 
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
@@ -191,7 +189,6 @@ class Mail(models.Model):
         Mail.create(content, mail.title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread)
 
 
-
 #TODO: implement this in showThread, etc.
 class MailReply(models.Model):
     first = models.ForeignKey(Mail, related_name='+')
@@ -201,8 +198,7 @@ class MailReply(models.Model):
 class MailReceiver(models.Model):
     TYPE_CHOICES = (('to', 'to'),
                     ('cc', 'cc'),
-                    ('bcc', 'bcc'),
-        )
+                    ('bcc', 'bcc'), )
     mail = models.ForeignKey(Mail)
     user = models.ForeignKey(User)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES)
@@ -231,10 +227,8 @@ class Label(Slugged):
     user = models.ForeignKey(User, related_name='labels')
     title = models.CharField(max_length=50)
 
-
     def __unicode__(self):
         return self.title
-
 
     def get_unread_count(self):
         """ برای این برچسب (و کاربر متناظر با آن)، تعداد نخ‌هایی که حداقل یک نامه‌ی خوانده
@@ -243,8 +237,8 @@ class Label(Slugged):
         :rtype: int
         """
         from arsh.mail.UserManager import UserManager
-        return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
 
+        return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
 
     @staticmethod
     def get_label_for_user(label_name, user, create_new=False):
@@ -266,7 +260,6 @@ class Label(Slugged):
             if create_new:
                 return Label.objects.create(title=label_name, user=user)
             return None
-
 
     @staticmethod
     def setup_initial_labels(user):
@@ -298,7 +291,6 @@ class Label(Slugged):
         return Label.objects.filter(user__id=user).exclude(title=Label.UNREAD_LABEL_NAME)
 
 
-
 class Thread(Slugged):
     title = models.CharField(max_length=255)
     firstMail = models.ForeignKey(Mail, null=True, related_name='headThread')
@@ -310,7 +302,6 @@ class Thread(Slugged):
 
     def save(self, *args, **kwargs):
         super(Thread, self).save(*args, **kwargs)
-
 
     def add_label(self, label):
         if not label in self.labels.all():
@@ -324,7 +315,6 @@ class Thread(Slugged):
     def has_label(self, label):
         return label in self.labels.all()
 
-
     def get_user_labels(self, user, remove_special_labels=True):
         qs = self.labels.filter(user=user)
         if remove_special_labels:
@@ -333,14 +323,17 @@ class Thread(Slugged):
 
     def is_unread(self, user=None):
         from arsh.mail.UserManager import UserManager
+
         return self.has_label(UserManager.get(user).get_unread_label())
 
     def mark_as_read(self, user=None):
         from arsh.mail.UserManager import UserManager
+
         return self.remove_label(UserManager.get(user).get_unread_label())
 
     def mark_as_unread(self, user=None):
         from arsh.mail.UserManager import UserManager
+
         return self.add_label(UserManager.get(user).get_unread_label())
 
     def get_last_mail(self):
@@ -356,7 +349,8 @@ class Thread(Slugged):
     def get_user_threads(user):
         return Thread.objects.filter(labels__user=user)
 
-def Test_creator(prefix,url_string=None):
+
+def Test_creator(prefix, url_string=None):
     """
     :param  url_string: رشته مربوط به آدرسها
     :param  prefix: منظور پیشوند آدرسها است.
@@ -372,21 +366,18 @@ def Test_creator(prefix,url_string=None):
     result += '\t\tself.assertTrue(self.client.login(username=\'admin\',password=\'admin\'))\n'
     for pattern in url_string:
         temp = pattern.regex.pattern
-        temp = temp.replace('>','')
-        temp = temp.replace('$','')
-        temp = temp.replace('^','')
+        temp = temp.replace('>', '')
+        temp = temp.replace('$', '')
+        temp = temp.replace('^', '')
         temp2 = str(pattern.name)
-        temp2 = temp2.replace('/','__')
-        if temp2[len(temp2)-1]=='__':
+        temp2 = temp2.replace('/', '__')
+        if temp2[len(temp2) - 1] == '__':
             temp2 = temp2[:-1]
-        result += '\n\tdef test'+temp2 + '(self):\n'
-        result += '\t\t#view function = ' + str(pattern.callback)+ '\n'
-        result += '\t\tresponse = self.client.get(\''+prefix+temp+'\')\n'
+        result += '\n\tdef test' + temp2 + '(self):\n'
+        result += '\t\t#view function = ' + str(pattern.callback) + '\n'
+        result += '\t\tresponse = self.client.get(\'' + prefix + temp + '\')\n'
         result += '\t\tself.assertEqual(response.status_code,200)\n'
         result += '\t\tself.assertTemplateUsed(response,\'\')\n'
-    with open("Output.py","wb") as Output:
+    with open("Output.py", "wb") as Output:
         Output.write(result)
-    #TODO: Sample url for regular expressions
-
-
-#Test_creator("mail/",urlpatterns)
+        #TODO: Sample url for regular expressions

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+import uuid
 from datetime import date
 
 from model_utils import Choices
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.loading import get_model, get_app
 from django.utils.translation import ugettext_lazy as _
-from arsh.common.db.basic import Logged
 
+from arsh.common.db.basic import Logged
 from arsh.mail.models import Thread
 
 
@@ -16,7 +20,6 @@ class Controlled(models.Model):
 
     class Meta:
         abstract = True
-
 
     def accept(self):
         self.accepted = True
@@ -35,7 +38,6 @@ class Controlled(models.Model):
             status = u'رد شده'
         return status
 
-
     def get_controlled_field_names(self):
         return [field.name for field in self._meta.fields + self._meta.many_to_many]
 
@@ -51,46 +53,30 @@ class Controlled(models.Model):
 
 class SimpleRequest(Logged):
     object_content_type = models.ForeignKey(ContentType)
-    request_object_id   = models.PositiveIntegerField()
-    request_object      = generic.GenericForeignKey('object_content_type', 'request_object_id')
+    request_object_id = models.PositiveIntegerField()
+    request_object = generic.GenericForeignKey('object_content_type', 'request_object_id')
 
-    type                = models.CharField(max_length=255, default='')
-    requester           = models.ForeignKey(User, null=True, blank=True)
-    description         = models.TextField(null=True, blank=True)
-    url_accept          = models.CharField(max_length=255, blank=True)
-    url_reject          = models.CharField(max_length=255, blank=True)
-    discussion_thread   = models.ForeignKey(Thread, null=True)
-
+    type = models.CharField(max_length=255, default='')
+    requester = models.ForeignKey(User, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    url_accept = models.CharField(max_length=255, blank=True)
+    url_reject = models.CharField(max_length=255, blank=True)
+    discussion_thread = models.ForeignKey(Thread, null=True)
 
     def get_status(self):
         #noinspection PyUnresolvedReferences
         return self.request_object.accepted
 
-
     def get_edit_url(self):
-        from rezgh.accounts.models import Profile
-        from rezgh.places.models import Place
-        obj = self.request_object
-        if isinstance(obj, Profile):
-            return reverse('show_profile')
-        if isinstance(obj, Place):
-            return '%s?action=edit_shop&id=%s' % (reverse('jobs/tree'), obj.id)
+        # TODO: use hooks to implement
         return False
 
-
     def get_inspect_urls(self):
-        from rezgh.accounts.models import Profile
-        from rezgh.places.models import Place
-        obj = self.request_object
-        if isinstance(obj, Profile):
-            return [(u'مشاهده پروفایل', reverse('show_profile')+'?user=%d'%self.requester_id)]
-        if isinstance(obj, Place):
-            return [(u'ارزیابی مغازه', '%s?action=edit_shop&id=%s' % (reverse('jobs/tree'), obj.id))]
+        # TODO: use hooks to implement
         return []
 
-
     def save(self, *args, **kwargs):
-        if self.id is None:
+        if self.pk is None:
             prefix = reverse('simple_request/eval', kwargs={'url': 'a'})[:-1]
             self.url_accept = prefix + str(uuid.uuid4())
             self.url_reject = prefix + str(uuid.uuid4())
@@ -110,7 +96,7 @@ class M_request(Logged):
         tmp.model = model
         tmp.m_id = m_id
         tmp.field = field
-        tmp.request = self.id
+        tmp.request = self
         tmp.prev_val = prev_val
         tmp.new_val = new_val
         tmp.status = 'P'
@@ -125,11 +111,11 @@ class M_request(Logged):
             nval = modified_object._meta.get_value(f.name)
             if pval != nval:
                 self.__add_request_item(m_id=m_id, app=meta.app_label, model=meta.module_name(), prev_val=pval.name,
-                    new_val=nval, field=f.name)
+                                        new_val=nval, field=f.name)
                 #TODO: make original_object and modified_object as a list of tuples
 
     def requests(self):
-        return self.requestitem_set.all()
+        return self.request_items.all()
 
 
 class RequestItem(models.Model):
@@ -139,7 +125,7 @@ class RequestItem(models.Model):
     model = models.CharField(max_length=255)
     m_id = models.PositiveIntegerField()
     field = models.CharField(max_length=255)
-    request = models.ForeignKey(M_request)
+    request = models.ForeignKey(M_request, related_name='request_items')
     prev_val = models.CharField(max_length=255, blank=True)
     new_val = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=1, choices=STATUS)
@@ -150,7 +136,6 @@ class RequestItem(models.Model):
         self.status = 'A'
         self.answered_at = date.today()
         self.save()
-
 
     def reject(self):
         self.status = 'R'

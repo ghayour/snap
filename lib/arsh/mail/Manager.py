@@ -2,13 +2,11 @@
 __docformat__ = 'reStructuredText'
 
 
-
 class DecoratorManager():
     _instance = None
 
     def __init__(self):
         self._fs = {}
-
 
     @staticmethod
     def get():
@@ -20,7 +18,6 @@ class DecoratorManager():
             DecoratorManager._instance = DecoratorManager()
             return DecoratorManager._instance
         return DecoratorManager._instance
-
 
     def activate_hook(self, name, object_model, *args):
         """if a function with key==name exist then call that function
@@ -34,7 +31,6 @@ class DecoratorManager():
         functions = self._fs.get(name, [])
         for function in functions:
             function(object_model, *args)
-
 
     def register(self, hook_name, function):
         """append {'hook_name':function} to Decorator
