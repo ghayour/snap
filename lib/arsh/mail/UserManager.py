@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.contrib.auth.models            import User
+from django.contrib.auth.models import User
 
-from arsh.mail.Manager                     import DecoratorManager
-from arsh.mail.models                      import Label
-
+from arsh.mail.models import Label
 
 
-
+#TODO: refactor this functionality
 class UserManager:
     _instance = None
 
@@ -22,18 +20,12 @@ class UserManager:
         UserManager._instance.reload(*args, **kwargs)
         return UserManager._instance
 
-
     def __init__(self, user):
         self.load(user)
         self._register_hooks()
 
-
     def _register_hooks(self):
-        #Register plugin hooks here
-        #from arsh.simple_request import mail_request
-        #DecoratorManager.get().register('show_thread', mail_request.get_html)
-        #DecoratorManager.get().register('show_label', mail_request.label_list)
-        #DecoratorManager.get().register('get_mail_summary', mail_request.get_mail_summary)
+        # Register plugin hooks here
         pass
 
     def reload(self, user=None):
@@ -55,10 +47,10 @@ class UserManager:
             :rtype: Label
         """
         try:
-            return Label.objects.get(title = label_name, user = self._user)
+            return Label.objects.get(title=label_name, user=self._user)
         except Label.DoesNotExist:
             if create:
-                return Label.objects.create(title = label_name, user = self._user)
+                return Label.objects.create(title=label_name, user=self._user)
             return None
 
     def get_inbox(self):
@@ -66,7 +58,6 @@ class UserManager:
             :rtype: Label
         """
         return self.get_label(Label.INBOX_LABEL_NAME)
-
 
     def get_unread_label(self):
         if self._unread_label is None:
@@ -76,11 +67,11 @@ class UserManager:
     def _cache_user(self, user):
         self._cached_users.add(user)
 
-    def get_user(self, id):
+    def get_user(self, pk):
         for user in self._cached_users:
-            if user.id == id:
+            if user.id == pk:
                 return user
 
-        user = User.objects.get(id=id)
+        user = User.objects.get(id=pk)
         self._cache_user(user)
         return user
