@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from django.utils.safestring               import mark_safe
-from rezgh.accounts.AccountManager import AccountManager
+from django.utils.safestring import mark_safe
 from arsh.simple_request.models import SimpleRequest
-
-
 
 
 __docformat__ = 'reStructuredText'
 
 FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
+
 
 def append_components_to_mail(self, content, components):
     """transform components dictionary to comma separated str and append end of mail
@@ -25,7 +23,7 @@ def append_components_to_mail(self, content, components):
     return content + FOOTER_SLUG + form
 
 
-
+#@register_mail_hook('show_thread')
 def get_html(sender, first_mail, env):
     """ create html codes of request form and add to env['ribbon']
     :param sender: sender
@@ -93,7 +91,8 @@ def get_html(sender, first_mail, env):
 <b>این پیام نمایشگر وضعیت درخواست شماست.</b><br/>
  می‌توانید آخرین وضعیت درخواست را از اینجا ببینید یا با مسئول بررسی مکالمه نمایید.
             </p>"""
-        txt += u"""<input id="accept_form_txt" type="text" name="content" style="width: 500px; margin-bottom: 10px;" /></br>"""
+        txt += u'<input id="accept_form_txt" type="text" name="content" style="width: 500px; margin-bottom: 10px;" />'
+        txt += '</br>'
         form = txt + form
 
     #header buttons
@@ -105,7 +104,7 @@ def get_html(sender, first_mail, env):
     if is_responder:
         for action_title, url in request.get_inspect_urls():
             env['header'] += u'<a target="_blank" href="%s">%s</a>' % (url, action_title)
-    if is_requester or not form: #اگر هیچ کاری نتواند بکند، باید بتواند درخواست را ببندد
+    if is_requester or not form:  # اگر هیچ کاری نتواند بکند، باید بتواند درخواست را ببندد
         env['header'] += u'<button onclick="mark_as_read(true)">بستن درخواست</button>'
     env['header'] = mark_safe(env['header'])
 
@@ -116,7 +115,10 @@ def get_html(sender, first_mail, env):
     return env
 
 
+#@register_mail_hook('show_label')
 def label_list(label, threads, user, env):
+    from rezgh.accounts.AccountManager import AccountManager
+
     env['headers'] = ['importance', 'status', 'open']
     for thread in threads:
         s = 'progress.png' if thread.is_unread() else ''
@@ -143,6 +145,7 @@ def label_list(label, threads, user, env):
                        in [imp, s, o]]
 
 
+#@register_mail_hook('get_mail_summary')
 def get_mail_summary(env, mail):
     """
     :param mail:
