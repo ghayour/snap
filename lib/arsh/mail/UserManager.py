@@ -52,7 +52,7 @@ class UserManager:
         """
         1 Query
 
-            :rtype: rezgh.mail.models.Label
+            :rtype: Label
         """
         try:
             return Label.objects.get(title = label_name, user = self._user)
@@ -63,7 +63,7 @@ class UserManager:
 
     def get_inbox(self):
         """
-            :rtype: rezgh.mail.models.Label
+            :rtype: Label
         """
         return self.get_label(Label.INBOX_LABEL_NAME)
 

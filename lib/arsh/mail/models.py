@@ -2,15 +2,11 @@
 import datetime
 import logging
 
-from django.db                             import models
-from django.contrib.auth.models            import User
+from django.db import models
+from django.contrib.auth.models import User
 
-from arsh.db_models.common                 import Slugged
-from arsh.text.utils                       import get_summary
-
-from arsh.mail.Manager                     import DecoratorManager
-from arshlib__user_mail.mail.urls          import urlpatterns
-from django.core.urlresolvers             import RegexURLPattern
+from arsh.common.db.basic import Slugged
+from arsh.mail.Manager import DecoratorManager
 
 
 __docformat__ = 'reStructuredText'
@@ -106,10 +102,10 @@ class Mail(models.Model):
         :param bcc: آدرس دریافت کنندگان مخفی
         :type bcc: str[]
         :param thread: نخ مربوطه که این نامه روی آن ارسال می‌شود، اگر از قبل وجود داشته باشد.
-        :type thread: rezgh.mail.models.Thread
+        :type thread: arsh.mail.models.Thread
         :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
         :type titles: str[]
-        :rtype: rezgh.mail.models.mail
+        :rtype: arsh.mail.models.mail
         """
         #        Label.setup_initial_labels(sender)
         #        Label.setup_initial_labels(User.objects.get(id=1))
@@ -368,7 +364,7 @@ def Test_creator(prefix,url_string=None):
     یک اسکلت مناسب برای ایجاد تست تولید می کند. ورودی به صورت رشته url ها است.
     فرض بر این استه که باید لاگین صورت پذیرد. این کار با یوزر admin و پسورد admin صورت می گیرد.
     """
-    print urlpatterns
+    #print urlpatterns
     result = 'class AppTest(TestCase): \n'
     result += '\tfixtures = [\'auth\']\n'
     result += '\tdef setUp(self):\n'
@@ -393,4 +389,4 @@ def Test_creator(prefix,url_string=None):
     #TODO: Sample url for regular expressions
 
 
-Test_creator("mail/",urlpatterns)
+#Test_creator("mail/",urlpatterns)
