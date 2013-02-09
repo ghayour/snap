@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from django.utils.safestring               import mark_safe
-from rezgh.accounts.AccountManager import AccountManager
-from arsh.simple_request.models import SimpleRequest
+from django.utils.safestring import mark_safe
+#from rezgh.accounts.AccountManager import AccountManager
+#from arsh.simple_request.models import SimpleRequest
 
 
 

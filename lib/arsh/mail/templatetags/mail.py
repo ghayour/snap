@@ -1,13 +1,10 @@
 # -*- coding:utf-8 -*-
-from django                                import template
-from django.core.urlresolvers              import reverse
+from django import template
+from django.core.urlresolvers import reverse
 
-from arsh.text.html.Builder                import Builder
-
-from arsh.mail.UserManager                 import UserManager
-from arsh.mail.models                      import Label
-
-
+from arsh.common.html.builder import Builder
+from arsh.mail.UserManager import UserManager
+from arsh.mail.models import Label
 
 
 __docformat__ = 'reStructuredText'
@@ -47,15 +44,14 @@ def label_list(user):
         ORDER BY title
     """ % (unread_label.id, user.id))
     b = Builder()
-    b.open_list('lists')
+    ls = []
     for label in labels:
-        #TODO: use annotate to reduce query count -> done
         unread = label.unread_threads_count
         unread_str = ' (%d)' % unread if unread else ''
         url = reverse('mail/see_label', args=[label.slug])
-        b.li("<div class='sidebar-item'><a href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
-             "<div class='sep-t'></div><div class='sep-b'></div></div>" %(url, unicode(label), unread_str))
-    b.close_list()
+        ls.append("<div class='sidebar-item'><a href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
+                  "<div class='sep-t'></div><div class='sep-b'></div></div>" % (url, unicode(label), unread_str))
+    b.list(ls)
     return b.render()
 
 
