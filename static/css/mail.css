@@ -1,0 +1,400 @@
+#content button, #content input[type=submit], #content input[type=button] {
+    font-family: 'B Yekan', "B Traffic", "B Mitra bold", 'B Nazanin', Tahoma, serif;
+    font-size: 13px;
+    min-width: 100px;
+    height: 30px;
+    margin: 4px 6px;
+    padding: 3px 7px;
+    color: white;
+    border-radius: 2px;
+    border: 1px solid #5BB3DC;
+    background-color: lightskyblue;
+}
+
+#content button:hover, #content input[type=submit]:hover, #content input[type=button]:hover {
+    border: 1px solid #8FB4E3;
+    background-color: #83c8f2;
+}
+
+.mail-tags {
+     display: inline-block;
+     float: left;
+ }
+
+.mail-tag{
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    border: 0 none;
+    border-radius: 3px;
+    background-color: #C6D9F1;
+    display: inline-block;
+    margin: 3px;
+    float:left;
+    padding: 1px 3px;
+    heigh:24px !important;
+}
+.mail-tag a{
+    font-size: 14px !important;
+    color: #ffffff;
+}
+
+.mail-tag-title {
+    float:left;
+    border-radius: 3px 0 0 3px;
+}
+
+.mail-tag-delete{
+    float: right;
+    color: red;
+    font-size: 20px;
+    font-family: tahoma, serif;
+    border-radius: 0 3px 3px 0 ;
+    width:13px;
+    cursor: pointer;
+}
+.mail-tag:hover {
+    color: #f4c239;
+    background-color: #8FB4E3;
+}
+
+.inline {
+    display: inline-block;
+}
+
+.Center {
+    text-align: center;
+}
+
+.center {
+    text-align: center;
+}
+
+.rtl {
+    direction: rtl;
+}
+
+.ltr {
+    direction: ltr;
+}
+
+.padded-normal {
+    padding: 7px 15px;
+}
+
+.bordered {
+    border-radius: 3px;
+    border: 2px solid #B7DEE8;
+    background-color: #dbeef4;
+    /*font-weight: bold;*/
+    font-size: 18px;
+    color: #525358;
+}
+
+.blue-box {
+    margin: 5px 20%;
+    padding: 5px;
+    box-shadow: 5px 5px 5px #CCF;
+    border: 1px solid #00F;
+}
+
+.small-blue-box {
+    margin: 5px 30%;
+    padding: 5px;
+    box-shadow: 5px 5px 5px #CCF;
+    border: 1px solid #00F;
+}
+
+.hidden {
+    display: none;
+}
+
+.icon {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.list-item {
+    margin: 0 5px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.thread-title {
+    font-weight: bold;
+    margin-left: 50px;
+}
+
+.mail {
+    /*box-shadow: 3px 2px 3px #888888;*/
+    margin: 10px 0;
+    border-radius: 3px;
+    border: 2px solid #b7dee8;
+    background-color: #f2f2f2;
+}
+
+.mail-header {
+    padding: 5px 13px;
+    border-radius: 3px 3px 0 0;
+    background-color: #b7dee8;
+    height: 50px;
+
+}
+
+.mail-sender {
+    /*color: #F26D1B;*/
+    color: #BA004A;
+    font-weight: bold;
+}
+
+.mail-subject {
+    font-weight:bold;
+}
+
+.mail-summery{
+    opacity:0.5;
+}
+
+.mail-date {
+    float: left;
+}
+
+.mail-subject{
+    display: none;
+}
+
+img.attach-icon {
+    width: 22px !important;
+    height: 22px !important;
+    float: none !important;
+    cursor: pointer;
+}
+
+.to-icon a {
+    text-decoration: none;
+    color: #008844;
+    font-size: 18px;
+}
+
+.cc-icon a {
+    color: black;
+}
+
+.bcc-icon a {
+    color: gray;
+}
+
+.sidebar-labels-list {
+    padding: 10px 20px;
+}
+
+.sidebar-labels-list a {
+    text-decoration: none;
+    font-weight: bold;
+    -moz-transition: all 0.1s ease-in 0s;
+}
+
+.sidebar-labels-list a:hover {
+    color: #FFB01F;
+}
+
+div.active_mail {
+    background-color: white;
+    padding: 13px 20px;
+}
+
+div.inactive_mail {
+    background-color: #F5F5F5;
+    padding: 13px 20px;
+}
+
+.hand-pointer {
+    cursor: pointer;
+}
+
+#content div.inactive_mail button {
+    background-color: #EBE1FF;
+    color: gray;
+}
+
+.table#threads {
+    margin-bottom: 10px;
+    border: 2px solid #B7DEE8;
+    background-color: white;
+}
+
+#threads_filter {
+    float: right;
+    text-align: center;
+    border-radius: 3px;
+    padding: 5px 10px;
+    margin: 7px 10px;
+    border: 1px solid #B7DEE8;
+    background-color: #FFFEF2;
+}
+
+#threads_filter label {
+    font-weight: bold !important;
+    font-size: 14px;
+}
+
+#header {
+    text-align: right;
+    padding: 15px 10px;
+}
+
+.mail-reply, .left-item {
+    display: inline-block;
+    float: left;
+}
+
+.mail-action
+{
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.info
+{
+    width: 200px;
+}
+.r-label > input[type=radio]{
+    display:none;
+}
+
+.mail-header-label{
+    float: left;
+    height: 30px;
+}
+
+
+input[type=radio] + img{
+    cursor:pointer;
+    border:2px solid transparent;
+}
+
+input[type=radio]:checked + img{
+    border:2px solid #66ccff;
+}
+a, a:active, a:visited {
+    outline: medium none;
+}
+#mail-search{
+    float: left;
+}
+
+.mail-labels {
+     display: inline-block;
+     float: left;
+ }
+.mail-label{
+    text-decoration: none;
+    display: inline-block;
+    float:left;
+    margin: 0 2px 3px 3px;
+}
+.mail-label a{
+    font-size: 14px !important;
+    color: #ffffff;
+    padding: 0 5px;
+}
+
+.mail-label-title {
+    background-color: #8FB4E3;
+    color: #ffffff;
+    float:left;
+    border-radius: 3px 0 0 3px;
+    height: 25px !important;
+}
+
+.mail-label-delete{
+    background-color: #8FB4E3;
+    float: right;
+    color: red;
+    font-size: 17px;
+    font-family: tahoma, serif;
+    border-radius: 0 3px 3px 0 ;
+    height: 21px !important;
+    padding: 2px 3px;
+    width: 12px;
+    cursor: pointer;
+}
+.mail-label:hover {
+    color: #f4c239;
+    background-color: #7CA0C7;
+}
+
+
+/**********************
+ * Custom Mail Layout *
+ **********************/
+body {
+    font-family: "B Nazanin", 'BNazanin', Tahoma, serif;
+}
+
+div#sidebar {
+    padding: 20px 10px;
+}
+
+div#sidebar hr {
+    margin-right: -10px;
+    margin-left: -10px;
+}
+
+div#content-box {
+    right: 291px;
+    padding: 5px 10px;
+}
+
+
+/**************
+ * UI Classes *
+ **************/
+input.label-input {
+    margin: 3px;
+    border-radius: 5px;
+    border: 1px solid #808080;
+    padding-right: 3px;
+    width: 225px;
+}
+
+
+/***************
+ * UI Elements *
+ ***************/
+#compose-button {
+    width: 125px;
+    font-family: "B Nazanin", "BNazanin", Tahoma, serif;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+div#sidebar li {
+    font-family: 'Droid Arabic Naskh', 'B Mitra bold', 'B Yekan', 'B Nazanin', 'BNazanin', Tahoma, serif;
+    padding: 0;
+    width: auto;
+    background-color: inherit;
+    margin: 7px 10px;
+    text-align: right;
+    font-weight: bold;
+}
+
+div#sidebar li a {
+    position: static;
+    top: 0;
+}
+
+div#sidebar li .sidebar-item a.current {
+    color: black;
+    cursor: default;
+}
+
+div#sidebar li .sidebar-item a.current:before {
+    content: '> ';
+}
+
+#compose-mail label{
+    width: 80px;
+}

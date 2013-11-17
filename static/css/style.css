@@ -1,0 +1,66 @@
+/******************
+ *  Sidebar Menu  *
+ ******************/
+div#sidebar #sidebar-menu-personnel, div#sidebar #sidebar-menu-warehouse {
+    padding: 10px 10px 10px 15px;
+}
+
+/******************
+ *  Sidebar Help  *
+ ******************/
+#help-div .help-content {
+    font-size: 18px;
+    text-align: justify;
+    padding: 10px 20%;
+    background-color: #EEEEEE;
+    bottom: 0;
+    color: #666666;
+    display: none;
+    left: 0;
+    margin: 0;
+    position: fixed;
+    right: 305px;
+    top: 0;
+    z-index: 100000000;
+}
+
+#help-div #help-toolbar {
+    background-color: cadetblue;
+    bottom: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 305px;
+    z-index: 100000000;
+}
+
+#help-div #help-toolbar a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+}
+
+#help-div #help-toolbar li {
+    margin: 8px;
+}
+
+#help-div #HelpPageHandler {
+    opacity: 0.75;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 100000000;
+}
+
+#help-div #HelpPageHandler {
+    background-color: cadetblue;
+    border: none;
+    padding: 10px 10px 8px 12px;
+}
+
+#help-div #HelpPageHandler a {
+    text-decoration: none;
+    font-size: 24px;
+    font-weight: bolder;
+    color: white;
+}
