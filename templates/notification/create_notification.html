@@ -1,0 +1,30 @@
+{% extends 'creator/base.html' %}
+{% block CSS %}
+{{block.super}}
+<link rel="stylesheet" href="{{STATIC_URL}}css/creator/article.css" type="text/css" />
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}admin/css/base.css" />
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}admin/css/forms.css" />
+{% endblock %}
+{% block JS %}
+{{block.super}}
+<script type="text/javascript" src="{{STATIC_URL}}lib/data_tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}lib/data_tables/data_tables_API.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}lib/arsh/js/connectors.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}lib/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/datepicker/jquery.ui.datepicker-cc.all.min.js"></script>
+
+{% endblock JS %}
+
+{% block main %}
+<h2>ایجاد پیام</h2><br/>
+
+    <form method='post' id="form" name='create' enctype='multipart/form-data'>{% csrf_token %}
+        <table border="1" style="border-collapse:collapse;" cellspacing="0">
+            {{ notificationForm.as_table }}
+            <tr>
+                <td><input type="submit" value="ایجاد"/></td>
+            </tr>
+        </table>
+    </form>
+    <br/>
+{% endblock %}
