@@ -1,0 +1,336 @@
+{% extends 'mail/mail_template.html' %}
+{#{% load shamsi %}#}
+{% load user_manager %}
+{% load date_maker %}
+{% load my_extras %}
+{% load url from future %}
+{% load layout i18n form_render %}
+{% load rich_form_template_tags %}
+{% load crispy_forms_tags %}
+{% load layout rich_form_template_tags %}
+
+{% block CSS %}
+    {{ block.super }}
+    {% css 'rich_form_css_custom' %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.css" type="text/css" media="screen"/>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        mailSystem.setView('mails');
+    </script>
+{% endblock %}
+
+{% block JS %}
+    {{ block.super }}
+    {{ replyForm.media }}
+    {% load_rich_form_required_statics %}
+    <script type='text/javascript' src="/static/js/mail/mail.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}tiny_mce/tiny_mce.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>
+{#    <script src="{{ STATIC_URL }}lib/select2-3.3.1/select2.js"></script>#}
+    <script>
+        function mark_as_read(redirect) {
+            if (typeof redirect == 'undefined')
+                redirect = true;
+            var read_url = '{% url 'mail/thread/mark' thread_slug=thread.slug action='read' %}';
+            if (redirect) {
+                window.location = read_url;
+            } else {
+                $.post(read_url, {}, function () {
+                    console.log('[MailSystem] message successfully marked as read');
+                });
+            }
+        }
+
+        function mark_as_unread() {
+            window.location = '{% url 'mail/thread/mark' thread_slug=thread.slug action='unread' %}';
+        }
+
+        {{ env.java_script }}
+
+        $(document).ready(function () {
+            show_hide_info_fields();
+            manage_read_mails();
+            manage_mails_display();
+
+            var last_mail = $("div.mail").last();
+            $("#fw-re-form").append('<input id="selected-mail-id" type="hidden" name="mail_id " value="' + last_mail.data("db") + '"></input>');
+            $("#fw-re-form").append('<input id="message-type" type="hidden" name="re-fw" value=""></input>');
+
+            $(".apply").click(function () {
+                var mail_id = $(this).parent().parent().parent().parent().data("db");
+                respond(this.id, mail_id);
+            });
+            $("#fw-re-form").submit(function () {
+                var receiver = $("#id_receivers").val();
+                if (!receiver && $("#message-type").val() == 'forward') {
+                    notify("حداقل یک گیرنده را انتخاب کنید.");
+                    return false;
+                }
+                return true;
+            });
+
+            $("button.register_approve").click(function () {
+                respond_register($(this).val(), 1);
+            });
+
+            $("button.register_deny").click(function () {
+                respond_register($(this).val(), 0);
+            });
+
+            $(".select_all").click(function () {
+                var r_id = this.id.split("-")[1];
+                div_id = "div#m_request_" + r_id;
+                inputs = $(div_id + " input:checkbox");
+                for (i = 0; i < inputs.length; i++) {
+                    inputs[i].checked = true;
+                }
+            });
+
+            $(".select_none").click(function () {
+                var r_id = this.id.split("-")[1];
+                div_id = "div#m_request_" + r_id;
+                inputs = $(div_id + " input:checkbox");
+                for (i = 0; i < inputs.length; i++) {
+                    inputs[i].checked = false;
+                }
+            });
+
+            $(".fancy").fancybox({
+                type: 'iframe',
+                closeBtn: 'true',
+                width: 700,
+                height: 900,
+                helpers: {
+                    overlay: {
+                        css: {
+                            'background': 'rgba(58, 42, 45, 0.95)'
+                        }
+                    }
+                }
+            });
+
+            if ($(".other-mails").length) {
+                $("#other-mails").removeClass("hide-element");
+            }
+
+            $("#other-mails").on("click", function () {
+                showAllMails();
+            });
+
+            // not used
+            $(".mail-reply").on('click', function () {
+                var mail_id = $(this).parent().parent().data("db");
+                $.post(arsh.dj.resolver.url('mail/reply'), {'mail_id': mail_id}, function (data) {
+                    if (data.length) {
+                        var mails = $(".mail.hide-element");
+                        mails.each(function () {
+                            var id = $(this).data("db");
+                            var index = data.indexOf(id);
+                            if (index != -1) {
+                                $("#mail-" + data[index]).removeClass("hide-element");
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(".receiver , .sender").popover({ placement: 'bottom', trigger: 'manual', html: true, content: '<a class="add-contact">' + _t("Add to contacts") + '<a>' }).mouseenter(function () {
+                $(this).popover('show');
+                $(".add-contact").on('click', function () {
+                    var user_id = $('.thread').data('user-id');
+                    var contact_user_id = $(this).parents().find('.fancy').data('contact-user-id');
+                    $.post(arsh.dj.resolver.url('mail/contact/add'), {'user_id': user_id, 'contact_user_id': contact_user_id }, function (contact) {
+                        if (contact.errors) {
+                            notify(contact.errors, {type: 'error'});
+                        }
+                        else {
+                            notify(contact.display_name + _t(' added to your contacts.'));
+
+                            }
+
+
+                    });
+                });
+            });
+
+            $("html").on('click', function () {
+                $('.fancy').popover('hide');
+                $('.select2-dropdown-open').removeClass("select2-dropdown-open");
+            });
+
+            var lastResults = [];
+
+            $(".info").select2({
+                multiple: true,
+                placeholder: _t("Add username or contact name."),
+                tokenSeparators: [","],
+                ajax: {
+                    multiple: true,
+                    url: arsh.dj.resolver.url('mail/contact/list'),
+                    dataType: "json",
+                    type: "POST",
+                    data: function (term, page) {
+                        var user_id = $('.thread').data('user-id');
+                        return {
+                            q: term,
+                            user_id: user_id
+                        };
+                    },
+                    results: function (data, page) {
+                        lastResults = data.results;
+                        return data;
+                    }
+                },
+                createSearchChoice: function (term) {
+                    var text = term + (lastResults.some(function (r) {
+                        return r.text == term
+                    }) ? "" : " (" + _t('new') + ")");
+                    return { id: term, text: text };
+                }
+            });
+            
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <input type="hidden" id="current_label" value="{{ label.id }}">
+    <div id='header' class="fa">
+        <span class="thread-title">{{ thread.title }}</span>
+        <input type="hidden" id="thread-id" value="{{ thread.id }}">
+
+        <div class="mail-tags">
+            {% for label in labels %}
+                <div class="mail-tag delete-label">
+                    <span class="mail-tag-delete" item_type="thread"
+                          item_id={{ thread.id }} label_id={{ label.id }}>X</span>
+                    <span class="mail-tag-title">
+                        <a href="{% url 'mail/see_label' label.slug %}">{{ label }}</a>
+                    </span>
+                </div>
+
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <div class="thread" data-user-id="{{ user.id }}">
+        {% for mail, mail_label_list in mails.items %}
+            <div id="mail-{{ mail.pk }}" class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
+                <div class="mail-header in-line">
+                    <div>
+                        <input class="mail-checkbox" type="checkbox" value="{{ mail.pk }}">
+                        <span class="mail-sender">
+                            <div class="icon list-item">
+                                <a class="fancy sender " data-style="text-decoration: none"
+                                   data-contact-user-id="{{ mail.sender_id }}"
+                                   href="{% url 'show_profile' oid=mail.sender_id|get_user_o_id %}">{{ mail.sender_id|get_user_full_name }}
+                                </a>
+                                >>
+                            </div>
+                        </span>
+                        {% with recipients=mail.get_recipients %}
+                            {% for r in recipients.to %}
+                                <div class="icon list-item to-icon"><a class="fancy receiver"
+                                                                       data-contact-user-id="{{ r.user_id }}"
+
+                                                                       href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                </div>
+                            {% endfor %}
+                            {% for r in recipients.cc %}
+                                <div class="icon list-item cc-icon"><a class="fancy receiver"
+                                                                       data-contact-user-id="{{ r.user_id }}"
+                                                                       href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                </div>
+                            {% endfor %}
+                            {% for r in recipients.bcc %}
+                                {% if r.user == user or mail.sender == user %}
+                                    <div class="icon list-item bcc-icon"><a class="fancy receiver"
+                                                                            data-contact-user-id="{{ r.user_id }}"
+                                                                            href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                        <span class="mail-subject"> {{ mail.title }}</span>
+                        <span class="mail-summery hide-element"
+                              id="mail-summery-{{ forloop.counter0 }}"> - {{ mail.get_summary|striptags }}</span>
+                        {% if mail.attachment_set.all %}
+                            <span class="mail-attach">
+                        <img class="attach-icon" src="{{ STATIC_URL }}images/attachment.png"
+                             alt="{% trans "attachment" %}" title="{% trans "attachment" %}">
+                    </span>
+                        {% endif %}
+                        <span class="mail-date">{{ mail.created_at|shamsi }}</span>
+                    </div>
+                    <div class="mail-header-label">
+                        <div class="mail-labels" id="label-list">
+                            {% for mail_label in mail_label_list %}
+                                <div class="mail-label delete-label">
+                                    <span class="mail-label-delete" item_type="mail"
+                                          item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>
+                                    <span class="mail-label-title">
+                                        <a href="{% url 'mail/see_label' mail_label.label.slug %}">{{ mail_label.label }}</a>
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mail-content{{ mail.status }}">
+                    <div class="mail-reply" style="display: none">
+                        <img class="small-icon" src="{{ STATIC_URL }}images/icon-reply.png"
+                             alt="{% trans "Show mail replies" %}" title="{% trans "Show mail replies" %}">
+                    </div>
+                    <div class="content-p">
+                        {{ mail.content|safe }}
+                    </div>
+
+                    {% if mail.attachment_set.all %}
+                        <h4 style="margin-bottom: 0">فایل های پیوست:</h4>
+                        {% for attached_file in mail.attachment_set.all %}
+                            <div class="mail-attachment">
+                                <a href="{{ attached_file.attachment.url }}" target="_blank">
+                                    {{ attached_file.attachment|filename }}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                </div>
+            </div>
+            {% if forloop.counter == 1 %}
+                <div id="other-mails" class="hide-element Center hand-pointer"><a style="height: 30px;">
+                    <img src="{{ STATIC_URL }}images/three-dot-hr.png">
+                </a></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div>
+        {{ env.ribbon }}
+    </div>
+    <div id="bottom-div">
+        <div id="re-or-fw" class="hide-element">
+            <fieldset>
+                <legend>{% trans "Reply Or Forward" %}</legend>
+                <div id='ReFwForm'>
+                    <form id="fw-re-form" class="MultiFile-intercepted" enctype="multipart/form-data" method="POST">
+                        {% csrf_token %}
+                        {% crispy fw_re_form fw_re_form.helper %}
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block jscode %}
+    {% pass_template_variables %}
+{% endblock %}

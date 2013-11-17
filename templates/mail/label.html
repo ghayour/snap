@@ -1,0 +1,64 @@
+{% extends 'mail/mail_template.html' %}
+{#{% load shamsi %}#}
+{% load mail %}
+{% load user_manager %}
+{% load date_maker %}
+{% load url from future %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        mailSystem.setView('threads');
+        $(function () {
+            arsh.connectors.data_table.create('#threads', {
+                bLengthChange: false,
+                bSort: true});
+
+            // انتقال فیلتر باکس به سایدبار صفحه!
+            var $fastFilter = $('#threads_filter input');
+            $fastFilter.closest('div').hide();
+            $('#mail-search-input').keyup(function() {
+                $fastFilter.val($(this).val());
+                $fastFilter.trigger('keyup');
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <input type="hidden" id="current_label" value="{{ label.id }}">
+    <table id="threads" class="fa threads-table bold table">
+        <thead class="">
+        <tr>
+            <th></th>
+            <th>عنوان</th>
+            <th>خلاصه</th>
+            {% for header in env.headers %}
+                <th>{{ header }}</th>
+            {% endfor %}
+            <th>تاریخ ایجاد درخواست</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for thread in threads %}
+            <tr>
+                <td class="Center" style="width: 20px;"><input type="checkbox" class="thread-checkbox"
+                                                               value="{{ thread.id }}"/></td>
+                <td style="width: 20%;"><a
+                        href='{% url 'mail/see_thread' label_slug=label.slug thread_slug=thread.slug %}'>{{ thread }}</a>
+                </td>
+                <td style="width: 40%;">
+                    {% for l in thread.user_labels %}
+                        <span class="mail-tag">{{ l }}</span>
+                    {% endfor %}
+                    {{ thread.firstMail.get_summary|striptags }}
+                </td>
+                {% for row in thread.rows %}
+                    <td>{{ row }}</td>
+                {% endfor %}
+                <td class="Center">{{ thread.firstMail.created_at|shamsi }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'mail/mail_template.html' %}
+
+{% load layout i18n form_render%}
+{% load url from future %}
+{% load rich_form_template_tags %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block CSS %}
+    {{ block.super }}
+{#    {% css 'rich_form_css_custom' %}#}
+{% endblock %}
+
+{% block JS %}
+    {{ block.super }}
+    {{ mailForm.media }}
+    {% load_rich_form_required_statics %}
+    <script type='text/javascript' >
+    $(document).ready(function(){
+        $(".info").select2({
+                multiple: true,
+                placeholder: _t("Add username or contact name."),
+                tokenSeparators: [","],
+                ajax: {
+                    multiple: true,
+                    url: arsh.dj.resolver.url('mail/contact/list'),
+                    dataType: "json",
+                    type: "POST",
+                    data: function (term, page) {
+                        var user_id = $('#user-id').val();
+                        return {
+                            q: term,
+                            user_id: user_id
+                        };
+                    },
+                    results: function (data, page) {
+                        lastResults = data.results;
+                        return data;
+                    }
+                },
+                createSearchChoice: function (term) {
+                    var text = term + (lastResults.some(function (r) {
+                        return r.text == term
+                    }) ? "" : " (" + _t('new') + ")");
+                    return { id: term, text: text };
+                }
+            });
+    });
+    </script>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        // mailSystem.setView('compose');  // not yet!
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div id="compose-mail">
+        <h2>ارسال پیام به سایر کاربران</h2>
+        <input type="hidden" id="user-id" value="{{ user.id }}">
+        <form id="compose-form" method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% crispy mailForm mailForm.helper %}
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load layout i18n %}
+{% load url from future %}
+
+{% block HEAD %}
+    {{ block.super }}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+{% endblock %}
+
+{% block extra_headers %}
+    <!--[if lt IE 9]>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.2/html5shiv.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/respond.js/1.2.0/respond.js"></script>
+    <![endif]-->
+{% endblock %}
+
+{% block CSS %}
+    {{ block.super }}
+    {% css 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}
+    {% css 'bootstrap-fa' %}
+{% endblock %}
+
+{% block JS %}
+    {{ block.super }}
+    {% js 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}
+{% endblock %}

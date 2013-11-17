@@ -1,0 +1,63 @@
+{% extends 'base_bootstrap.html' %}
+{% load mail layout i18n %}
+{% load url from future %}
+
+{% block title %}سامانه پیام‌رسانی{% endblock %}
+
+{% block js %}
+    <script type='text/javascript' src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/mail/mail.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/mail/label.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}lib/arsh/js/connectors.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.form.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MetaData.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MultiFile.js"></script>
+    <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.blockUI.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/select2-3.3.1/select2.js"></script>
+
+
+
+    {% js 'mail/ui.js' %}
+    {% js 'mail/loader/loader.js' %}
+    {% js 'mail/toolbar/toolbar.js' %}
+    {% js 'mail/mail_client.js' %}
+    {% js 'mail/client.js' %}
+
+    <script type="text/javascript">
+        mailSystem.state.onlyShowNewMail = {% if archive %}false{% else %}true{% endif %};
+    </script>
+{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/mail.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}lib/datatables/datatables.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}lib/select2-3.3.1/select2.css" type="text/css" media="screen"/>
+    {% css 'arsh/mail/toolbar/toolbar.css' %}
+    {% css 'arsh/mail/loader/loader.css' %}
+    {% css 'rich_form_css_custom' %}
+{% endblock %}
+
+{% block SIDEBAR %}
+    <button id="compose-button" type="button" class="btn btn-primary"
+            onclick="window.location = '{% url 'mail/compose' %}'">نوشتن
+    </button>
+    <hr/>
+    {% label_list user label.title %}
+    <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
+        <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 250px"/>
+    </form>
+    <hr/>
+    <div id="fast-filter-box">
+    </div>
+{% endblock %}
+
+{% block CONTENT %}
+    <div id="action-bar">
+        {{ env.header }}
+        {# toolbar will be added here by mailToolbar object #}
+    </div>
+
+    {% block content %}{% endblock %}
+{% endblock %}
