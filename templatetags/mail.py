@@ -3,8 +3,8 @@ from django import template
 from django.core.urlresolvers import reverse
 
 from arsh.common.html.builder import Builder
-from arsh.mail.UserManager import UserManager
-from arsh.mail.models import Label, Thread
+from arsh.user_mail.UserManager import UserManager
+from arsh.user_mail.models import Label, Thread
 
 
 __docformat__ = 'reStructuredText'

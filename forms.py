@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, HTML, Submit, Hidden, Button
 
-from arsh.mail.models import Mail, AddressBook
-from arsh.mail.widgets import MultiFileInput
+from user_mail.models import Mail, AddressBook
+from user_mail.widgets import MultiFileInput
 from arsh.rich_form.layout.utils import LayoutUtils
 from arsh.rich_form.validation import ValidationService
 
