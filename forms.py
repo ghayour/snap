@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from tinymce.widgets import TinyMCE
 from django import forms
-from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, HTML, Submit, Hidden, Button
 
-from user_mail.models import Mail, AddressBook
-from user_mail.widgets import MultiFileInput
+from arsh.user_mail.models import Mail, AddressBook
+from arsh.user_mail.widgets import MultiFileInput
 from arsh.rich_form.layout.utils import LayoutUtils
 from arsh.rich_form.validation import ValidationService
 

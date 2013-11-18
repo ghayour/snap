@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls.defaults import patterns, url
 
-urlpatterns = patterns('user_mail/views',
+urlpatterns = patterns('user_mail.views',
     url(r'^compose$', 'compose', name='mail/compose'),
     url(r'^search/$', 'search', name='mail/search'),
     url(r'^view/$', 'see', {'label_slug': None, 'thread_slug': None}, name='mail/home'),

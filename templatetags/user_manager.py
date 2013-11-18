@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from django import template
 
-from user_mail.UserManager import UserManager
+from arsh.user_mail.UserManager import UserManager
 
 
 __docformat__ = 'reStructuredText'

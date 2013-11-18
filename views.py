@@ -11,11 +11,11 @@ from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
 
-from user_mail.common.http.ajax import ajax_view, json_response
-from user_mail.UserManager import UserManager
-from user_mail.Manager import DecoratorManager
-from user_mail.forms import ComposeForm, FwReForm
-from user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
+from arsh.user_mail.common.http.ajax import ajax_view, json_response
+from arsh.user_mail.UserManager import UserManager
+from arsh.user_mail.Manager import DecoratorManager
+from arsh.user_mail.forms import ComposeForm, FwReForm
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
 
 @login_required
