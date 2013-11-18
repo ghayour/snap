@@ -11,7 +11,7 @@ from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
 
-from arsh.user_mail.common.http.ajax import ajax_view, json_response
+from arsh.common.http.ajax import ajax_view, json_response
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm

@@ -1,28 +1,28 @@
 [
     {
         "pk": 1,
-        "model": "mail.maildomain",
+        "model": "user_mail.maildomain",
         "fields": {
             "name": "arshmail.ir"
         }
     },
     {
         "pk": 2,
-        "model": "mail.maildomain",
+        "model": "user_mail.maildomain",
         "fields": {
             "name": "arsh.co"
         }
     },
     {
         "pk": 3,
-        "model": "mail.maildomain",
+        "model": "user_mail.maildomain",
         "fields": {
             "name": "arsh.co.ir"
         }
     },
     {
         "pk": 1,
-        "model": "mail.mailprovider",
+        "model": "user_mail.mailprovider",
         "fields": {
             "domains": [1],
             "name": "ArshMail.ir"
@@ -30,7 +30,7 @@
     },
     {
         "pk": 2,
-        "model": "mail.mailprovider",
+        "model": "user_mail.mailprovider",
         "fields": {
             "domains": [2, 3],
             "name": "Arsh.co"
