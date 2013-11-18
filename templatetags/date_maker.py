@@ -1,8 +1,7 @@
 # -*- coding:utf-8 -*-
 from django import template
-from django.template.defaultfilters import stringfilter
 
-from arsh.shamsi.date.shamsi_date import pdate_time_persian_month, pdate, pdate_persian_month
+from arsh.shamsi.templatetags.shamsi_template_tags import pdate
 
 __docformat__ = 'reStructuredText'
 
@@ -15,7 +14,7 @@ def shamsi(value):
     :param value:
     :return:
     """
-    return pdate_time_persian_month(value)
+    return pdate(value)
 
 
 @register.filter()
@@ -25,4 +24,4 @@ def shamsi_date(value):
     :param value:
     :return:
     """
-    return pdate_persian_month(value)
+    return pdate(value)

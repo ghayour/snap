@@ -32,16 +32,16 @@ def label_list(user, current_label=''):
     unread_label = UserManager.get(user).get_unread_label()
     labels = Label.objects.raw("""
         SELECT l.id,l.title,l.slug,ma.email AS account_name,
-          (SELECT COUNT(*) FROM mail_threadlabel tl
+          (SELECT COUNT(*) FROM user_mail_threadlabel tl
             WHERE
               tl.label_id=l.id
             AND
-              (SELECT COUNT(*) FROM mail_threadlabel tl2
+              (SELECT COUNT(*) FROM user_mail_threadlabel tl2
                  WHERE tl2.label_id=%d AND tl2.thread_id=tl.thread_id
               )>0
           ) AS unread_threads_count
-        FROM mail_label l
-        INNER JOIN mail_mailaccount ma
+        FROM user_mail_label l
+        INNER JOIN user_mail_mailaccount ma
         ON (l.account_id = ma.id)
         WHERE l.user_id=%d AND l.title <> 'unread'
         ORDER BY title
@@ -75,3 +75,5 @@ def is_unread(thread, user):
     if thread.is_unread(user):
         return '*'
     return ''
+
+

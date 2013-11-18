@@ -78,12 +78,12 @@ def compose(request):
                         attachments=attachments)
 
             return HttpResponseRedirect(reverse('mail/home'))
-    side_menu = Menu.objects.get(name='profile_menu')
-    side_menu.set_user(request.user)
-    side_menu.set_url(u'/personnel/userProfile')
+    #side_menu = Menu.objects.get(name='profile_menu')
+    #side_menu.set_user(request.user)
+    #side_menu.set_url(u'/personnel/userProfile')
     return render_to_response('mail/composeEmail.html', {
         'user': up,
-        'side_menu': side_menu,
+        #'side_menu': side_menu,
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
@@ -149,7 +149,7 @@ def showThread(request, thread, label=None):
         else:
         #بررسی می کنیم که آیا کاربر جاری جزو مافوق های ج    دید کاربر است تا
         # نامه های درخواست پاسخ داده نشده را به او نشان دهیم
-            requester = Member.objects.get(id=thread.firstMail.sender.id)
+        #    requester = Member.objects.get(id=thread.firstMail.sender.id)
             if up.id in [user.id for user in requester.get_manager()] and is_request_mail(mail.content) == 1:
                 tobeShown[mail] = mail.get_user_labels(up)
 
@@ -169,12 +169,12 @@ def showThread(request, thread, label=None):
         except:
             pass
 
-    side_menu = Menu.objects.get(name='profile_menu')
-    side_menu.set_user(request.user)
-    side_menu.set_url(u'/personnel/userProfile')
+    #side_menu = Menu.objects.get(name='profile_menu')
+    #side_menu.set_user(request.user)
+    #side_menu.set_url(u'/personnel/userProfile')
 
     return render_to_response('mail/showThread.html', {
-        'side_menu': side_menu,
+        #'side_menu': side_menu,
         'user': request.user,
         'up': up,
         'thread': thread,
@@ -198,14 +198,16 @@ def showLabel(request, label, archive_mode):
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, up, env)
 
-    side_menu = Menu.objects.get(name='profile_menu')
-    side_menu.set_user(request.user)
-    side_menu.set_url(u'/personnel/userProfile')
+    #side_menu = Menu.objects.get(name='profile_menu')
+    #side_menu.set_user(request.user)
+    #side_menu.set_url(u'/personnel/userProfile')
 
     return render_to_response('mail/label.html',
                               {'threads': threads, 'label': label, 'label_title': label.title, 'user': request.user,
                                'env': env,
-                               'archive': archive_mode, 'side_menu': side_menu},
+                               'archive': archive_mode,
+                               #'side_menu': side_menu
+                              },
                               context_instance=RequestContext(request))
 
 

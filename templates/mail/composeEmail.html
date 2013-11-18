@@ -1,15 +1,11 @@
 {% extends 'mail/mail_template.html' %}
 
-{% load layout i18n form_render%}
+{% load layout i18n%}
 {% load url from future %}
 {% load rich_form_template_tags %}
 {% load crispy_forms_tags %}
 {% load i18n %}
 
-{% block CSS %}
-    {{ block.super }}
-{#    {% css 'rich_form_css_custom' %}#}
-{% endblock %}
 
 {% block JS %}
     {{ block.super }}
@@ -19,7 +15,7 @@
     $(document).ready(function(){
         $(".info").select2({
                 multiple: true,
-                placeholder: _t("Add username or contact name."),
+                placeholder: "Add username or contact name.",
                 tokenSeparators: [","],
                 ajax: {
                     multiple: true,

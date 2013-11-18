@@ -4,14 +4,13 @@
 {% load date_maker %}
 {% load my_extras %}
 {% load url from future %}
-{% load layout i18n form_render %}
+{% load layout i18n %}
 {% load rich_form_template_tags %}
 {% load crispy_forms_tags %}
 {% load layout rich_form_template_tags %}
 
 {% block CSS %}
     {{ block.super }}
-    {% css 'rich_form_css_custom' %}
     <link rel="stylesheet" href="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.css" type="text/css" media="screen"/>
 {% endblock %}
 
@@ -26,10 +25,10 @@
     {{ block.super }}
     {{ replyForm.media }}
     {% load_rich_form_required_statics %}
-    <script type='text/javascript' src="/static/js/mail/mail.js"></script>
+{#    <script type='text/javascript' src="/static/js/mail/mail.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}tiny_mce/tiny_mce.js"></script>
-    <script type="text/javascript" charset="UTF-8" src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>
+{#    <script type="text/javascript" charset="UTF-8" src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>#}
 {#    <script src="{{ STATIC_URL }}lib/select2-3.3.1/select2.js"></script>#}
     <script>
         function mark_as_read(redirect) {

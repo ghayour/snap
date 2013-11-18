@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-{% load layout i18n mycustomtags %}
+{% load layout %}
 {% load url from future %}
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link href="{% static_url 'images/icon/rc.png' %}" rel="shortcut icon">
-    <title>سامانه میل </title>
+    <title>
+        سامانه پیام رسانی
+    </title>
     {% block HEAD %}{% endblock %}
 
     {# Common CSS files #}
@@ -17,8 +19,8 @@
     {% css 'rtl' %}
     {# Third Party CSS files #}
     {% css 'lib/jquery-ui/cupertino/jquery-ui.css' %}
-    {% css 'lib/jquery-window/css/jquery.window.css' %}
-    {% css 'lib/jquery-window/css/window.css' %}
+{#    {% css 'lib/jquery-window/css/jquery.window.css' %}#}
+{#    {% css 'lib/jquery-window/css/window.css' %}#}
     {% css 'lib/pnotify/jquery.pnotify.default.css' %}
     {# Page CSS files #}
     {% block CSS %}{% endblock %}
@@ -29,7 +31,7 @@
     {% js 'lib/underscore.js' %}
     {% js 'lib/jquery/jquery.js' %}
     {% js 'lib/jquery-ui/jquery-ui.js' %}
-    {% js 'lib/jquery-window/js/jquery.window.js' %}
+{#    {% js 'lib/jquery-window/js/jquery.window.js' %}#}
     {% js 'lib/jquery-ui/plugins/jquery.ui.datepicker.js' %}
     {% js 'lib/pnotify/jquery.pnotify.js' %}
     {# Arsh JS library files #}
@@ -38,7 +40,7 @@
     {% js 'lib/arsh/js/csrf.js' %}
     {% js 'lib/arsh/js/django.js' %}
     {% js 'auto/url_resolver' %}
-    {% js 'auto/translator' %}
+{#    {% js 'auto/translator' %}#}
     {# Common JS files #}
     {% js 'js/warehouse/jquery.formset.js' %}
     {# Page JS files #}
@@ -48,18 +50,19 @@
     {% block extra_headers %}{% endblock extra_headers %}
 </head>
 
-<body>
-    <div id="page">
+<body> <div id="page">
         <div id="sidebar">{% block SIDEBAR %}
+
         {% endblock SIDEBAR %}</div>
-        <div id="content-box">
-            {% block CONTENT %}
-        {% endblock CONTENT %}
-        </div>
+        <div id="content-box">{% block CONTENT %}
+
+            {% block HEADER %}<h2 id="header2" class="fa-titr">{% block header %}{% endblock header %}</h2>{% endblock %}
+            <div id="content">
+                {% block content %}{% endblock %}
+            </div>
+        {% endblock CONTENT %}</div>
     </div>
-
-
-    {% js 'base' %}
+{% block jscode %}{% endblock %}
 </body>
 
 </html>
