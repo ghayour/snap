@@ -1,0 +1,114 @@
+.controls {
+    display: inline-block;
+
+}
+
+.asteriskField {
+    color: red;
+}
+
+.crispy_td {
+    min-height: inherit;
+    padding: 3px 10px 3px 5px;
+    border: 1px solid transparent;
+}
+
+.bordered {
+    border: 1px solid #F1F1F1;
+    border-radius: 3px;
+}
+
+.requiredField {
+    font-weight: bold;
+}
+
+.field-block-focused {
+    background-color: #FFF5E0;
+    border: 1px solid #FAE2AF !important;
+
+}
+
+.ctrlHolder label {
+    float: right;
+    width: 25%;
+}
+
+.crispy_table {
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+.formError .formErrorContent {
+    background: none repeat scroll 0 0 #FFE0E5;
+    border: 1px solid #B5142F;
+    border-radius: 3px 3px 3px 3px;
+    box-shadow: none;
+    color: #B5142F;
+    min-height: 11px;
+    min-width: 120px;
+    position: relative;
+    text-shadow: none;
+    width: 100%;
+    text-align: right;
+    display: none;
+}
+
+.formHint {
+    color: #7F8981;
+    font-size: smaller;
+}
+
+.errorField {
+    margin: 0;
+    font-size: smaller;
+    color: #B5142F;
+}
+
+.crispy_table .error {
+    background: none repeat scroll 0 0 #FFEDF0;
+    border: 1px solid #B5142F;
+
+}
+
+.formError .formErrorArrow div {
+    border-left: 2px solid #B5142F;
+    border-right: 2px solid #B5142F;
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    -o-box-shadow: 0 0 0 #444;
+    font-size: 0px;
+    height: 1px;
+    background: #FFE0E5;
+    margin: 0 auto;
+    line-height: 0;
+    font-size: 0;
+    display: block;
+}
+
+.formError .formErrorArrow .line2 {
+    width: 3px;
+    border: none;
+    background: #B5142F;
+}
+
+.formError .formErrorArrow .line1 {
+    width: 1px;
+    border: none;
+    background: #B5142F;
+}
+
+.formError .formErrorArrow .line3 {
+    width: 1px;
+    border-left: 2px solid #B5142F;
+    border-right: 2px solid #B5142F;
+    border-bottom: 0 solid #B5142F;
+}
+
+.formError .formErrorArrow {
+    padding-right: 5px;
+}
+
+.formError .formErrorArrowBottom {
+    padding-right: 5px;
+}
