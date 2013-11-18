@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $("input.label-input").live('keypress',function (event) {
+    $("input.label-input").keypress(function (event) {
         if (event.keyCode == 13) {
             event.preventDefault();
         }
@@ -7,7 +7,7 @@ $(document).ready(function () {
         autocomplete_label($(this), type);
     });
 
-    $(".mail-tag-delete, .mail-label-delete").live("click", function(){
+    $(".mail-tag-delete, .mail-label-delete").click(function(){
         var item_element = $(this);
         var item_id = item_element.attr("item_id");
         var item_type = item_element.attr("item_type");

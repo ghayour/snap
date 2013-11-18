@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from tinymce.widgets import TinyMCE
 from django import forms
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
@@ -20,6 +19,8 @@ class ComposeForm(forms.ModelForm):
         exclude = ('sender', 'recipients', 'thread')
 
     def __init__(self, *args, **kwargs):
+        from tinymce.widgets import TinyMCE
+
         super(ComposeForm, self).__init__(*args, **kwargs)
 
         self.fields['title'].widget.attrs['style'] = 'min-width:60%'
@@ -61,6 +62,8 @@ class FwReForm(forms.ModelForm):
         exclude = ('thread', 'recipients', 'sender')
 
     def __init__(self, *args, **kwargs):
+        from tinymce.widgets import TinyMCE
+
         self.user_id = kwargs.pop('user_id', -1)
         qs = AddressBook.get_addressbook_for_user(get_object_or_404(User, pk=self.user_id)).get_all_contacts()
 

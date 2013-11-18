@@ -11,7 +11,7 @@
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.form.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MetaData.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MultiFile.js"></script>
-    <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.blockUI.js"></script>
+    {% js 'bower_components/blockui/jquery.blockUI.js' %}
     <script type="text/javascript" src="{{ STATIC_URL }}lib/select2-3.3.1/select2.js"></script>
 
     {% js 'mail/ui.js' %}

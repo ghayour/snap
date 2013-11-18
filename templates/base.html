@@ -18,9 +18,7 @@
     {% css 'fonts' %}
     {% css 'rtl' %}
     {# Third Party CSS files #}
-    {% css 'lib/jquery-ui/cupertino/jquery-ui.css' %}
-{#    {% css 'lib/jquery-window/css/jquery.window.css' %}#}
-{#    {% css 'lib/jquery-window/css/window.css' %}#}
+    {% css 'bower_components/jquery-ui/themes/base/minified/jquery-ui.min.css' %}
     {% css 'lib/pnotify/jquery.pnotify.default.css' %}
     {# Page CSS files #}
     {% block CSS %}{% endblock %}
@@ -29,10 +27,8 @@
 
     {# Base JS libraries #}
     {% js 'lib/underscore.js' %}
-    {% js 'lib/jquery/jquery.js' %}
-    {% js 'lib/jquery-ui/jquery-ui.js' %}
-{#    {% js 'lib/jquery-window/js/jquery.window.js' %}#}
-    {% js 'lib/jquery-ui/plugins/jquery.ui.datepicker.js' %}
+    {% js 'bower_components/jquery/jquery.min.js' %}
+    {% js 'bower_components/jquery-ui/ui/minified/jquery-ui.min.js' %}
     {% js 'lib/pnotify/jquery.pnotify.js' %}
     {# Arsh JS library files #}
     {% js 'lib/arsh/js/arsh.js' %}
@@ -40,9 +36,9 @@
     {% js 'lib/arsh/js/csrf.js' %}
     {% js 'lib/arsh/js/django.js' %}
     {% js 'auto/url_resolver' %}
-{#    {% js 'auto/translator' %}#}
+    {% js 'auto/translator' %}
     {# Common JS files #}
-    {% js 'js/warehouse/jquery.formset.js' %}
+    {#{% js 'js/warehouse/jquery.formset.js' %}#}
     {# Page JS files #}
     {% block JS %}{% endblock %}
     {% block js %}{% endblock %}
