@@ -1,35 +1,23 @@
 {% extends 'mail/mail_template.html' %}
-{#{% load shamsi %}#}
 {% load user_manager %}
 {% load date_maker %}
 {% load my_extras %}
 {% load url from future %}
 {% load layout i18n %}
-{% load rich_form_template_tags %}
 {% load crispy_forms_tags %}
-{% load layout rich_form_template_tags %}
-
-{% block CSS %}
+{% load rich_form_template_tags %}
+icon-reply
+{% block css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}lib/jquery/plugins/jquery.fancybox.css" type="text/css" media="screen"/>
 {% endblock %}
 
 {% block js %}
     {{ block.super }}
-    <script>
-        mailSystem.setView('mails');
-    </script>
-{% endblock %}
-
-{% block JS %}
-    {{ block.super }}
-    {{ replyForm.media }}
+     {{ replyForm.media }}
     {% load_rich_form_required_statics %}
-{#    <script type='text/javascript' src="/static/js/mail/mail.js"></script>#}
-    <script type="text/javascript" src="{{ STATIC_URL }}lib/fancybox/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/jquery/plugins/jquery.fancybox.pack.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}tiny_mce/tiny_mce.js"></script>
-{#    <script type="text/javascript" charset="UTF-8" src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>#}
-{#    <script src="{{ STATIC_URL }}lib/select2-3.3.1/select2.js"></script>#}
     <script>
         function mark_as_read(redirect) {
             if (typeof redirect == 'undefined')
@@ -191,7 +179,7 @@
                     return { id: term, text: text };
                 }
             });
-            
+
         });
     </script>
 {% endblock %}
@@ -227,7 +215,7 @@
                             <div class="icon list-item">
                                 <a class="fancy sender " data-style="text-decoration: none"
                                    data-contact-user-id="{{ mail.sender_id }}"
-                                   href="{% url 'show_profile' oid=mail.sender_id|get_user_o_id %}">{{ mail.sender_id|get_user_full_name }}
+                                   href="#">{{ mail.sender_id|get_user_full_name }}
                                 </a>
                                 >>
                             </div>
@@ -237,20 +225,20 @@
                                 <div class="icon list-item to-icon"><a class="fancy receiver"
                                                                        data-contact-user-id="{{ r.user_id }}"
 
-                                                                       href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                                                       href="#">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.cc %}
                                 <div class="icon list-item cc-icon"><a class="fancy receiver"
                                                                        data-contact-user-id="{{ r.user_id }}"
-                                                                       href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                                                       href="#">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.bcc %}
                                 {% if r.user == user or mail.sender == user %}
                                     <div class="icon list-item bcc-icon"><a class="fancy receiver"
                                                                             data-contact-user-id="{{ r.user_id }}"
-                                                                            href="{% url 'show_profile' oid=r.user_id|get_user_o_id %}">{{ r|get_user_full_name }}</a>
+                                                                            href="#">{{ r|get_user_full_name }}</a>
                                     </div>
                                 {% endif %}
                             {% endfor %}
@@ -260,7 +248,7 @@
                               id="mail-summery-{{ forloop.counter0 }}"> - {{ mail.get_summary|striptags }}</span>
                         {% if mail.attachment_set.all %}
                             <span class="mail-attach">
-                        <img class="attach-icon" src="{{ STATIC_URL }}images/attachment.png"
+                        <img class="attach-icon" src="{{ STATIC_URL }}mail/images/attachment.png"
                              alt="{% trans "attachment" %}" title="{% trans "attachment" %}">
                     </span>
                         {% endif %}
@@ -283,7 +271,7 @@
 
                 <div class="mail-content{{ mail.status }}">
                     <div class="mail-reply" style="display: none">
-                        <img class="small-icon" src="{{ STATIC_URL }}images/icon-reply.png"
+                        <img class="small-icon" src="{{ STATIC_URL }}mail/images/icon-reply.png"
                              alt="{% trans "Show mail replies" %}" title="{% trans "Show mail replies" %}">
                     </div>
                     <div class="content-p">
@@ -305,7 +293,7 @@
             </div>
             {% if forloop.counter == 1 %}
                 <div id="other-mails" class="hide-element Center hand-pointer"><a style="height: 30px;">
-                    <img src="{{ STATIC_URL }}images/three-dot-hr.png">
+                    <img src="{{ STATIC_URL }}mail/images/three-dot-hr.png">
                 </a></div>
             {% endif %}
         {% endfor %}

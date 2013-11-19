@@ -360,7 +360,7 @@ class Label(Slugged):
         :return: تعداد نخ‌های خوانده نشده
         :rtype: int
         """
-        from arsh.mail.UserManager import UserManager
+        from .UserManager import UserManager
 
         return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
 
@@ -459,18 +459,18 @@ class Thread(Slugged):
         return qs
 
     def is_unread(self, user=None):
-        from arsh.mail.UserManager import UserManager
+        from .UserManager import UserManager
 
         return self.has_label(UserManager.get(user).get_unread_label())
 
     def mark_as_read(self, user=None):
-        from arsh.mail.UserManager import UserManager
+        from .UserManager import UserManager
 
         ReadMail.mark_as_read(user, self.mails.all())
         return self.remove_label(UserManager.get(user).get_unread_label())
 
     def mark_as_unread(self, user=None):
-        from arsh.mail.UserManager import UserManager
+        from .UserManager import UserManager
 
         ReadMail.mark_as_unread(user, self.mails.all())
         return self.add_label(UserManager.get(user).get_unread_label())
