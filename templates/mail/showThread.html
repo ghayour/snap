@@ -6,7 +6,7 @@
 {% load layout i18n %}
 {% load crispy_forms_tags %}
 {% load rich_form_template_tags %}
-icon-reply
+
 {% block css %}
     {{ block.super }}
     <link rel="stylesheet" href="{{ STATIC_URL }}lib/jquery/plugins/jquery.fancybox.css" type="text/css" media="screen"/>
@@ -16,7 +16,7 @@ icon-reply
     {{ block.super }}
      {{ replyForm.media }}
     {% load_rich_form_required_statics %}
-    <script type="text/javascript" src="{{ STATIC_URL }}lib/jquery/plugins/jquery.fancybox.pack.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/jquery/plugins/jquery.fancybox.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}tiny_mce/tiny_mce.js"></script>
     <script>
         function mark_as_read(redirect) {
@@ -126,7 +126,7 @@ icon-reply
             });
 
             $(".receiver , .sender").popover({ placement: 'bottom', trigger: 'manual', html: true, content: '<a class="add-contact">' + _t("Add to contacts") + '<a>' }).mouseenter(function () {
-                $(this).popover('show');
+                 $(this).popover('show');
                 $(".add-contact").on('click', function () {
                     var user_id = $('.thread').data('user-id');
                     var contact_user_id = $(this).parents().find('.fancy').data('contact-user-id');
@@ -151,6 +151,9 @@ icon-reply
 
             var lastResults = [];
 
+
+            //TODO: move to mail.js
+            var arshmail = /^.+@arshmail.ir$/;
             $(".info").select2({
                 multiple: true,
                 placeholder: _t("Add username or contact name."),
@@ -172,13 +175,23 @@ icon-reply
                         return data;
                     }
                 },
-                createSearchChoice: function (term) {
+                  createSearchChoice: function (term) {
                     var text = term + (lastResults.some(function (r) {
                         return r.text == term
-                    }) ? "" : " (" + _t('new') + ")");
+                    }) ? "" : '');
                     return { id: term, text: text };
                 }
-            });
+            }).on("select2-selecting", function(e) {
+
+                     if(!arshmail.test(e.object.text))
+                     {
+                         alert('ارسال پیام به این سرور ممکن نیست');
+                         return false;
+                     }
+                    e.object.id=e.val=e.object.text.split('@')[0];
+
+
+        });
 
         });
     </script>
@@ -225,20 +238,20 @@ icon-reply
                                 <div class="icon list-item to-icon"><a class="fancy receiver"
                                                                        data-contact-user-id="{{ r.user_id }}"
 
-                                                                       href="#">{{ r|get_user_full_name }}</a>
+                                                                       >{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.cc %}
                                 <div class="icon list-item cc-icon"><a class="fancy receiver"
                                                                        data-contact-user-id="{{ r.user_id }}"
-                                                                       href="#">{{ r|get_user_full_name }}</a>
+                                                                      >{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.bcc %}
                                 {% if r.user == user or mail.sender == user %}
                                     <div class="icon list-item bcc-icon"><a class="fancy receiver"
                                                                             data-contact-user-id="{{ r.user_id }}"
-                                                                            href="#">{{ r|get_user_full_name }}</a>
+                                                                           >{{ r|get_user_full_name }}</a>
                                     </div>
                                 {% endif %}
                             {% endfor %}

@@ -516,7 +516,7 @@ def contact_list(request):
             Q(display_name__startswith=q) | Q(first_name__startswith=q) | Q(last_name__startswith=q) | Q(
                 email__startswith=q))
         for c in all_contacts:
-            data['results'].append({'id': c.email, 'text': c.get_display_name()})
+            data['results'].append({'id': c.email, 'text': c.email+'@arshmail.ir'})#TODO: save as email
         return data
     except ValueError as e:
         pass
