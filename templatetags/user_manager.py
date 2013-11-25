@@ -22,4 +22,5 @@ def get_user_full_name(user):
         user = user.user_id
     if user is None:
         return u'ناشناس'
-    return UserManager.get(None).get_user(user).get_full_name()
+    u = UserManager.get(None).get_user(user)
+    return u.get_full_name() or u.username

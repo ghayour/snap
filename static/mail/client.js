@@ -12,7 +12,7 @@ $(function(){
         title: 'بازگشت',
         show: 'mailSystem.state.viewing != "threads"',
         action: function() {
-            window.location='/mail/view';
+            window.location = arsh.dj.resolver.url('mail/home');
         }
     });
     mailToolbar.addButton({
