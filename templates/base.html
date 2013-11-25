@@ -46,7 +46,8 @@
     {% block extra_headers %}{% endblock extra_headers %}
 </head>
 
-<body> <div id="page">
+<body>{% block BODY %}
+<div id="page">
         <div id="sidebar">{% block SIDEBAR %}
 
         {% endblock SIDEBAR %}</div>
@@ -59,6 +60,5 @@
         {% endblock CONTENT %}</div>
     </div>
 {% block jscode %}{% endblock %}
-</body>
-
+{% endblock BODY %}</body>
 </html>
