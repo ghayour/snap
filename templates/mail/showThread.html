@@ -39,6 +39,7 @@
         {{ env.java_script }}
 
         $(document).ready(function () {
+            mailSystem.setView('mails');
             show_hide_info_fields();
             manage_read_mails();
             manage_mails_display();

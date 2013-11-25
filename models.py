@@ -681,8 +681,8 @@ class ReadMail(models.Model):
         try:
             ReadMail.objects.get(mail=mail, reader=user)
         except ReadMail.DoesNotExist:
-            return False
-        return True
+            return True
+        return False
 
     @staticmethod
     def mark_mails(user, mails):
@@ -697,11 +697,7 @@ class ReadMail(models.Model):
         unread = len(mails)
         for mail in mails:
             if not ReadMail.has_read(user, mail):
-                raw_content = mail.content
-                index = raw_content.rfind(FOOTER_SLUG)
-                if index != -1 and not respond:
-                    continue
-                ReadMail.objects.create(reader=user, mail=mail)
+                ReadMail.objects.get(reader=user, mail=mail).delete()
             unread -= 1
         return unread
 
@@ -710,6 +706,10 @@ class ReadMail(models.Model):
         read = len(mails)
         for mail in mails:
             if ReadMail.has_read(user, mail):
-                ReadMail.objects.get(reader=user, mail=mail).delete()
+                raw_content = mail.content
+                index = raw_content.rfind(FOOTER_SLUG)
+                if index != -1 and not respond:
+                    continue
+                ReadMail.objects.create(reader=user, mail=mail)
             read -= 1
         return read
