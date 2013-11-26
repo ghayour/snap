@@ -31,15 +31,13 @@
                 });
             }
         }
-
         function mark_as_unread() {
             window.location = '{% url 'mail/thread/mark' thread_slug=thread.slug action='unread' %}';
         }
-
+         mailSystem.setView('mails');
         {{ env.java_script }}
 
         $(document).ready(function () {
-            mailSystem.setView('mails');
             show_hide_info_fields();
             manage_read_mails();
             manage_mails_display();
@@ -190,10 +188,7 @@
                          return false;
                      }
                     e.object.id=e.val=e.object.text.split('@')[0];
-
-
         });
-
         });
     </script>
 {% endblock %}

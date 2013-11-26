@@ -7,8 +7,9 @@
 {% block js %}
     {{ block.super }}
     <script>
+
+        mailSystem.setView('threads');
         $(function () {
-            mailSystem.setView('threads');
             arsh.connectors.data_table.create('#threads', {
                 bLengthChange: false,
                 bSort: true});
