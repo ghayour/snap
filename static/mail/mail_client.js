@@ -152,8 +152,8 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
 
                     $('.mail-tags').append(
                         '<div class="mail-tag delete-label">' +
-                            '<span class="mail-tag-delete" item_type="thread" item_id=' +
-                                thread_id + 'label_id=' + data['label_id'] + '>X</span>' +
+                            '<span class="mail-tag-delete" item_type="thread" item_id="' +
+                                thread_id + '" label_id="' + data['label_id'] + '">X</span>' +
                             '<span class="mail-tag-title">' +
                                 '<a href="' + data["label_url"] + '">' + label_name.split('(برچسب جدید)')[0] + '</a>' +
                             '</span>' +

@@ -7,6 +7,21 @@ fw_template = _.template( '<p></p>' +
     '<br><br>' +
     '<div> {{ content }} </div>'
 );
+function show_hide(element, force_hide, force_show){
+    force_hide = typeof force_hide !== 'undefined' ? force_hide : false ;
+    force_show = typeof force_show !== 'undefined' ? force_show : false ;
+    if (element.hasClass("hide-element")){
+        if (!force_hide){
+            element.removeClass("hide-element");
+        }
+    }
+    else{
+        if (!force_show){
+            element.addClass("hide-element");
+        }
+    }
+}
+
 
 function reply(message, success, reload) {
     if (typeof success == 'undefined') success = function () {
@@ -150,6 +165,7 @@ function update_message_type(){
 
 $(document).ready(function () {
     $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">')
+
 });
 
 $(document).ajaxStart(function () {
@@ -176,4 +192,15 @@ function cancelOperation() {
 function cancelAddLabel() {
     var targetElement = document.getElementById('addLabelForm');
     targetElement.style.display = 'none';
+}
+function disable_enter($form_selector){
+    $form_selector.bind("keyup keypress", function(e) {
+        if (e.which  == 13) {
+        var $targ = $(e.target);
+
+        if (!$targ.is("textarea") && !$targ.is(":button,:submit")) {
+    return false;
+  }}
+        });
+
 }
