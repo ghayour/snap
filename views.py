@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
+from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
@@ -27,8 +28,9 @@ def setup(request):
 
 
 @login_required
-def see(request, label_slug, thread_slug, archive=False):
+def see(request, label_slug, thread_slug, archive=None):
     user_manager = UserManager.get(request.user)
+    config_manager = ConfigManager.prepare()
 
     # MailAccount
     accounts = request.user.mail_accounts.all().count()
@@ -51,6 +53,8 @@ def see(request, label_slug, thread_slug, archive=False):
             raise Http404("Thread not in label")
         return showThread(request, thread, label)
 
+    if archive is None:
+        archive = config_manager.get('default-view') == 'archive'
     return showLabel(request, label, archive)
 
 
@@ -60,6 +64,7 @@ def compose(request):
     initial_cc = request.GET.get('cc', '')
     initial_bcc = request.GET.get('bcc', '')
     up = request.user
+    cf = ConfigManager.prepare()
     composeForm = ComposeForm()
     result_error = None
     if request.method == "POST":
@@ -77,8 +82,8 @@ def compose(request):
             bcc = request.POST.get('bcc')
             try:
                 Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=[u'کاربران'],
-                            initial_sender_labels=[u'فرستاده شده', u'کاربران'],
+                            bcc=parse_address(bcc), titles=[cf.get('inbox-folder')],
+                            initial_sender_labels=[Label.SENT_LABEL_NAME],
                             attachments=attachments)
 
                 return HttpResponseRedirect(reverse('mail/home'))
@@ -102,6 +107,7 @@ def showThread(request, thread, label=None):
     """
 
     up = request.user
+    cf = ConfigManager.prepare()
     address_book = AddressBook.get_addressbook_for_user(up, create_new=True)
     if label:
         UserManager.get()._cache_user(up)
@@ -126,7 +132,8 @@ def showThread(request, thread, label=None):
 
             if request.POST.get('re-fw', '') == 'forward':
                 Mail.create(content=content, subject=title, sender=up, receivers=parse_address(receivers),
-                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread, titles=['کاربران'],
+                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread,
+                            titles=[cf.get('inbox-folder')],
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
@@ -187,7 +194,8 @@ def showLabel(request, label, archive_mode):
     up = request.user
 
     tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
-    threads = tls if archive_mode else tls.filter(labels=UserManager.get(up).get_unread_label())[:100]
+    threads = tls if archive_mode else tls.filter(labels=UserManager.get(up).get_unread_label())
+    threads = threads[:50]  # TODO: how to view all mails?
     threads = [t for t in threads if t.is_thread_related(up)]
 
     env = {'headers': []}

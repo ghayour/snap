@@ -86,20 +86,6 @@
                 }
             });
 
-            $(".fancy").fancybox({
-                type: 'iframe',
-                closeBtn: 'true',
-                width: 700,
-                height: 900,
-                helpers: {
-                    overlay: {
-                        css: {
-                            'background': 'rgba(58, 42, 45, 0.95)'
-                        }
-                    }
-                }
-            });
-
             if ($(".other-mails").length) {
                 $("#other-mails").removeClass("hide-element");
             }
@@ -129,23 +115,21 @@
                  $(this).popover('show');
                 $(".add-contact").on('click', function () {
                     var user_id = $('.thread').data('user-id');
-                    var contact_user_id = $(this).parents().find('.fancy').data('contact-user-id');
-                    $.post(arsh.dj.resolver.url('mail/contact/add'), {'user_id': user_id, 'contact_user_id': contact_user_id }, function (contact) {
+                    var contact_user_id = $(this).parents().find('.contact').data('contact-user-id');
+                    $.post(arsh.dj.resolver.url('mail/contact/add'),
+                           {user_id: user_id, contact_user_id: contact_user_id}
+                    ).success(function (contact) {
                         if (contact.errors) {
                             notify(contact.errors, {type: 'error'});
-                        }
-                        else {
+                        } else {
                             notify(contact.display_name + _t(' added to your contacts.'));
-
-                            }
-
-
+                        }
                     });
                 });
             });
 
             $("html").on('click', function () {
-                $('.fancy').popover('hide');
+                $('.contact').popover('hide');
                 $('.select2-dropdown-open').removeClass("select2-dropdown-open");
             });
 
@@ -187,32 +171,25 @@
                         <input class="mail-checkbox" type="checkbox" value="{{ mail.pk }}">
                         <span class="mail-sender">
                             <div class="icon list-item">
-                                <a class="fancy sender " data-style="text-decoration: none"
-                                   data-contact-user-id="{{ mail.sender_id }}"
-                                   href="#">{{ mail.sender_id|get_user_full_name }}
-                                </a>
-                                >>
+                                <a class="contact sender" data-style="text-decoration: none" data-contact-user-id="{{ mail.sender_id }}" href="#">{{ mail.sender_id|get_user_full_name }}</a>
                             </div>
                         </span>
+                        <span class="glyphicon glyphicon-circle-arrow-left" style="font-size: 14px; color: #000;"></span>
                         {% with recipients=mail.get_recipients %}
                             {% for r in recipients.to %}
-                                <div class="icon list-item to-icon"><a class="fancy receiver"
-                                                                       data-contact-user-id="{{ r.user_id }}"
-
-                                                                       >{{ r|get_user_full_name }}</a>
+                                <div class="icon list-item to-icon">
+                                    <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.cc %}
-                                <div class="icon list-item cc-icon"><a class="fancy receiver"
-                                                                       data-contact-user-id="{{ r.user_id }}"
-                                                                      >{{ r|get_user_full_name }}</a>
+                                <div class="icon list-item cc-icon">
+                                    <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.bcc %}
                                 {% if r.user == user or mail.sender == user %}
-                                    <div class="icon list-item bcc-icon"><a class="fancy receiver"
-                                                                            data-contact-user-id="{{ r.user_id }}"
-                                                                           >{{ r|get_user_full_name }}</a>
+                                    <div class="icon list-item bcc-icon">
+                                        <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                     </div>
                                 {% endif %}
                             {% endfor %}
