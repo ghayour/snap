@@ -38,7 +38,7 @@
         {{ env.java_script }}
 
         $(document).ready(function () {
-            disable_enter($("#re-or-fw"));
+            setup_mail_form();
             show_hide_info_fields();
             manage_read_mails();
             manage_mails_display();
@@ -149,47 +149,10 @@
                 $('.select2-dropdown-open').removeClass("select2-dropdown-open");
             });
 
-            var lastResults = [];
 
 
-            //TODO: move to mail.js
-            var arshmail = /^.+@arshmail.ir$/;
-            $(".info").select2({
-                multiple: true,
-                placeholder: _t("Add username or contact name."),
-                tokenSeparators: [","],
-                ajax: {
-                    multiple: true,
-                    url: arsh.dj.resolver.url('mail/contact/list'),
-                    dataType: "json",
-                    type: "POST",
-                    data: function (term, page) {
-                        var user_id = $('.thread').data('user-id');
-                        return {
-                            q: term,
-                            user_id: user_id
-                        };
-                    },
-                    results: function (data, page) {
-                        lastResults = data.results;
-                        return data;
-                    }
-                },
-                  createSearchChoice: function (term) {
-                    var text = term + (lastResults.some(function (r) {
-                        return r.text == term
-                    }) ? "" : '');
-                    return { id: term, text: text };
-                }
-            }).on("select2-selecting", function(e) {
 
-                     if(!arshmail.test(e.object.text))
-                     {
-                         alert('ارسال پیام به این سرور ممکن نیست');
-                         return false;
-                     }
-                    e.object.id=e.val=e.object.text.split('@')[0];
-        });
+
         });
     </script>
 {% endblock %}
@@ -216,6 +179,7 @@
     </div>
 
     <div class="thread" data-user-id="{{ user.id }}">
+    <input id="user-id" type="hidden" value="{{ user.id }}">
         {% for mail, mail_label_list in mails.items %}
             <div id="mail-{{ mail.pk }}" class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
                 <div class="mail-header in-line">

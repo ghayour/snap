@@ -13,48 +13,9 @@
     {% load_rich_form_required_statics %}
     <script type='text/javascript' >
     $(document).ready(function(){
-        disable_enter($("#compose-form"));
-
-        //TODO: move to mail.js
-         var arshmail = /^.+@arshmail.ir$/;
-        $(".info").select2({
-                multiple: true,
-                placeholder: "",
-                tokenSeparators: [","],
-                ajax: {
-                    multiple: true,
-                    url: arsh.dj.resolver.url('mail/contact/list'),
-                    dataType: "json",
-                    type: "POST",
-                    data: function (term, page) {
-                        var user_id = $('#user-id').val();
-                        return {
-                            q: term,
-                            user_id: user_id
-                        };
-                    },
-                    results: function (data, page) {
-                        lastResults = data.results;
-                        return data;
-                    }
-                },
-                createSearchChoice: function (term) {
-                    var text = term + (lastResults.some(function (r) {
-                        return r.text == term
-                    }) ? "" : '');
-                    return { id: term, text: text };
-                }
-            }).on("select2-selecting", function(e) {
-
-                     if(!arshmail.test(e.object.text))
-                     {
-                         alert('ارسال پیام به این سرور ممکن نیست');
-                         return false;
-                     }
-                    e.object.id=e.val=e.object.text.split('@')[0];
+        setup_mail_form();
 
 
-        });
     });
     </script>
 {% endblock %}
