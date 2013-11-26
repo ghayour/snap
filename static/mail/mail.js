@@ -164,8 +164,23 @@ function update_message_type(){
 }
 
 $(document).ready(function () {
-    $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">')
-
+     $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">');
+    $("form.mail-form").submit(function(e){
+        result=true;
+        $.ajax({
+            type:"POST",
+            url:arsh.dj.resolver.url('mail/validate'),
+            data:$(this).serializeArray(),
+            async:false,
+            success:function(data){
+           if(data.error){
+               alert(data.error);
+               result=false;
+           }
+        }
+    });
+        return result;
+         });
 });
 
 $(document).ajaxStart(function () {
