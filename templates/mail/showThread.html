@@ -317,7 +317,7 @@
             <fieldset>
                 <legend>{% trans "Reply Or Forward" %}</legend>
                 <div id='ReFwForm'>
-                    <form id="fw-re-form" class="MultiFile-intercepted" enctype="multipart/form-data" method="POST">
+                    <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
                         {% crispy fw_re_form fw_re_form.helper %}
                     </form>

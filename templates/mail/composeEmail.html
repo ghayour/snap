@@ -69,8 +69,12 @@
 {% block content %}
     <div id="compose-mail">
         <h2>ارسال پیام به سایر کاربران</h2>
+        {% if send_error %}
+
+        <div class="error-bar">{{ send_error }}</div>
+        {% endif %}
         <input type="hidden" id="user-id" value="{{ user.id }}">
-        <form id="compose-form" method='POST' enctype="multipart/form-data">
+        <form id="compose-form" class="mail-form" method='POST' enctype="multipart/form-data">
             {% csrf_token %}
             {% crispy mailForm mailForm.helper %}
         </form>

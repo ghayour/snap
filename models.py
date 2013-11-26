@@ -102,6 +102,23 @@ class Mail(models.Model):
         self.thread = thread
 
     @staticmethod
+    def validate_receiver(receiver):
+        if isinstance(receiver, str) or isinstance(receiver, unicode):
+            receiver = receiver.strip()
+        try:
+            User.objects.get(username=receiver)
+            return True
+        except User.DoesNotExist:
+            pass
+        if isinstance(receiver, Contact):
+            try:
+                User.objects.get(username=receiver.email)
+                return True
+            except User.DoesNotExist:
+                pass
+        return False
+
+    @staticmethod
     def add_receiver(mail, thread, receiver_address, type='to', label_names=None, create_new_labels=True):
         """
         :param mail:
@@ -168,6 +185,12 @@ class Mail(models.Model):
         """
         #        Label.setup_initial_labels(sender)
         #        Label.setup_initial_labels(User.objects.get(id=1))
+
+        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
+        for t, rl in recipients.items():
+            for r in rl:
+                if not Mail.validate_receiver(r):
+                    raise ValidationError(u"گیرنده نامعتبر است.")
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -198,7 +221,6 @@ class Mail(models.Model):
 
         sent_count = 0
         recipients_count = 0
-        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
         for t, addresses in recipients.items():
             if addresses:
                 for address in addresses:
@@ -271,7 +293,8 @@ class Mail(models.Model):
             logger.debug('no recipients can be selected to reply to, replying to sender')
             to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
-                            attachments=attachments)
+                                attachments=attachments)
+
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
@@ -351,7 +374,7 @@ class Label(Slugged):
             #TODO: which account should be selected?
         except IndexError:
             account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
-                                   email=user.username + '@' + MailProvider.get_default_domain())
+                                                 email=user.username + '@' + MailProvider.get_default_domain())
         return Label.objects.create(title=title, user=user, account=account)
 
     def get_unread_count(self):

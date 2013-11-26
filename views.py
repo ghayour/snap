@@ -4,6 +4,7 @@ import smtplib
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.shortcuts import render_to_response, get_object_or_404
@@ -11,7 +12,7 @@ from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
 
-from arsh.common.http.ajax import ajax_view, json_response
+from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm
@@ -60,6 +61,7 @@ def compose(request):
     initial_bcc = request.GET.get('bcc', '')
     up = request.user
     composeForm = ComposeForm()
+    result_error = None
     if request.method == "POST":
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
@@ -73,22 +75,24 @@ def compose(request):
 
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
-            Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                        bcc=parse_address(bcc), titles=[u'کاربران'], initial_sender_labels=[u'فرستاده شده', u'کاربران'],
-                        attachments=attachments)
+            try:
+                Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
+                            bcc=parse_address(bcc), titles=[u'کاربران'],
+                            initial_sender_labels=[u'فرستاده شده', u'کاربران'],
+                            attachments=attachments)
 
-            return HttpResponseRedirect(reverse('mail/home'))
-    #side_menu = Menu.objects.get(name='profile_menu')
-    #side_menu.set_user(request.user)
-    #side_menu.set_url(u'/personnel/userProfile')
+                return HttpResponseRedirect(reverse('mail/home'))
+            except ValidationError as e:
+                result_error = e.messages[0]
+
     return render_to_response('mail/composeEmail.html', {
         'user': up,
-        #'side_menu': side_menu,
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
         'mailForm': composeForm,
         'all_labels': Label.get_user_labels(up),
+        'send_error': result_error
     }, context_instance=RequestContext(request))
 
 
@@ -195,6 +199,18 @@ def showLabel(request, label, archive_mode):
                                'archive': archive_mode,
                               },
                               context_instance=RequestContext(request))
+
+@ajax_view
+def mail_validate(request):
+        rl=[]
+        rl.append(request.POST.get('receivers', ''))
+        rl.append(request.POST.get('cc', ''))
+        rl.append(request.POST.get('bcc', ''))
+        for r in rl:
+            if r and not Mail.validate_receiver(r):
+                return {"error": "گیرنده نامعتبر است."}
+        return 'Ok'
+
 
 
 @login_required
@@ -502,7 +518,7 @@ def contact_list(request):
             Q(display_name__startswith=q) | Q(first_name__startswith=q) | Q(last_name__startswith=q) | Q(
                 email__startswith=q))
         for c in all_contacts:
-            data['results'].append({'id': c.email, 'text': c.email+'@arshmail.ir'})#TODO: save as email
+            data['results'].append({'id': c.email, 'text': c.email + '@arshmail.ir'})#TODO: save as email
         return data
     except ValueError as e:
         pass
