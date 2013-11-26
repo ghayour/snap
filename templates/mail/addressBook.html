@@ -1,0 +1,25 @@
+{% extends 'mail/mail_template.html' %}
+
+{% load layout i18n%}
+{% load url from future %}
+{% load rich_form_template_tags %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block JS %}
+{% endblock JS %}
+
+{% block content %}
+    {% for constact in contacts %}
+        {{ constact.first_name }}
+    {% endfor %}
+
+    <div id="contact-form">
+        <h2>   لیست  </h2>
+        <input type="hidden" id="user-id" value="{{ user.id }}">
+        <form id="contactform" method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% crispy cf cf.helper %}
+        </form>
+    </div>
+{% endblock content %}

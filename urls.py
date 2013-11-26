@@ -27,4 +27,5 @@ urlpatterns = patterns('arsh.user_mail.views',
     url(r'^move-thread/$', 'move_thread', name='mail/move_thread'),
     url(r'^mail/contact/add$', 'add_contact', name='mail/contact/add'),
     url(r'^contact/list$', 'contact_list', name='mail/contact/list'),
+    url(r'^show/addressbook$', 'addressbook_view' , name='view/address_book')
 )

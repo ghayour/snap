@@ -10,11 +10,12 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
+from django.views.generic import FormView
 
 from arsh.common.http.ajax import ajax_view, json_response
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm
+from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
 
@@ -506,3 +507,20 @@ def contact_list(request):
         return data
     except ValueError as e:
         pass
+
+#
+#class AddreessBookView (FormView):
+#    form_class = AddressBook
+
+@login_required
+def addressbook_view (request):
+    print 'salam'
+    #print 'salam'
+    user = request.user
+    #user_id = request.GET.get('user_id' , -1)
+    #user = get_object_or_404(User , pk = user_id)
+    #print user
+    contacts = AddressBook.objects.get(user = user).get_all_contacts()
+    contactform = ContactForm()
+    return render_to_response('mail/addressBook.html',{'contacts': contacts , 'cf':contactform},
+                                context_instance=RequestContext(request))

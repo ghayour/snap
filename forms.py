@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 from crispy_forms.helper import FormHelper
 
-from arsh.user_mail.models import Mail, AddressBook
+from arsh.user_mail.models import Mail, AddressBook, Contact
 from arsh.user_mail.widgets import MultiFileInput
 from arsh.rich_form.layout.utils import LayoutUtils
 from arsh.rich_form.validation import ValidationService
@@ -97,3 +97,25 @@ class FwReForm(forms.ModelForm):
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
 
+class ContactForm(forms.ModelForm):
+
+    class Meta:
+        model = Contact
+        exclude = ('addressbook' ,'first_name',)
+
+    def __init__(self , *args , **kwargs):
+        super(ContactForm , self).__init__(*args , **kwargs)
+
+        self.fields['display_name'] = forms.CharField(required= True)
+        #self.fields['first_name'] = forms.CharField(required=True)
+        #self.fields['last_name'] = forms.CharField(required=True)
+        self.fields['email'] = forms.EmailField(required=True)
+        self.fields['additional_email']=forms.EmailField(required=False)
+
+
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-margin-30'
+        self.helper.layout = LayoutUtils(has_submit=True, has_reset=False,
+                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'content',
+                                                       'attachments']).generate_table_layout(self, 1)
