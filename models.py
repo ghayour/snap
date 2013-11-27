@@ -104,7 +104,7 @@ class Mail(models.Model):
     @staticmethod
     def validate_receiver(receiver):
         if isinstance(receiver, str) or isinstance(receiver, unicode):
-            receiver = receiver.strip()
+            receiver = receiver.strip().split('@')[0]
         try:
             User.objects.get(username=receiver)
             return True
@@ -112,7 +112,7 @@ class Mail(models.Model):
             pass
         if isinstance(receiver, Contact):
             try:
-                User.objects.get(username=receiver.email)
+                User.objects.get(username=receiver.username)
                 return True
             except User.DoesNotExist:
                 pass
@@ -135,11 +135,19 @@ class Mail(models.Model):
             receiver = receiver_address
 
         else:
+            receiver_username = receiver_address
+            if isinstance(receiver_address, str) or isinstance(receiver_address, unicode):
+                c = Contact.get_contact_by_address(receiver_address)
+                if c:
+                    receiver_username = c.username
+                else:
+                    receiver_username = receiver_username.split('@')[0]
+
             if isinstance(receiver_address, Contact):
-                receiver_address = receiver_address.email
+                receiver_username = receiver_address.username
                 #TODO: write a method to add contact by email address
             try:
-                receiver = User.objects.get(username=receiver_address)
+                receiver = User.objects.get(username=receiver_username)
             except User.DoesNotExist:
                 logger.warn('Sending mail failed: user with username %s does not exists' % receiver_address)
                 #TODO: send failed delivery report to sender
@@ -188,9 +196,10 @@ class Mail(models.Model):
 
         recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
         for t, rl in recipients.items():
-            for r in rl:
-                if not Mail.validate_receiver(r):
-                    raise ValidationError(u"گیرنده نامعتبر است.")
+            if rl:
+                for r in rl[0].split(','):
+                    if not Mail.validate_receiver(r):
+                        raise ValidationError(u"گیرنده نامعتبر است.")
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -668,12 +677,14 @@ class AddressBook(models.Model):
         try:
             if contact_user == self.user:
                 raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
-            Contact.objects.get(address_book=self, email=contact_user.username)
+            Contact.objects.get(address_book=self,
+                                email=contact_user.username + '@' + MailProvider.get_default_domain())
             raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
         except Contact.DoesNotExist:
             return Contact.objects.create(address_book=self, display_name=contact_user.get_full_name(),
                                           first_name=contact_user.first_name, last_name=contact_user.last_name,
-                                          email=contact_user.username)
+                                          email=contact_user.username + '@' + MailProvider.get_default_domain())
+
 
     #TODO: write a method to add contact by email address
 
@@ -719,6 +730,10 @@ class Contact(models.Model):
         if self.display_name:
             return self.display_name
         return self.email
+
+    @property
+    def username(self):
+        return self.email.split('@')[0]
 
     @classmethod
     def get_contact_by_address(cls, address):
