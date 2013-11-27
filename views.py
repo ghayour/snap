@@ -17,7 +17,7 @@ from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.forms import ComposeForm, FwReForm
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
 
 
 @login_required
@@ -208,17 +208,17 @@ def showLabel(request, label, archive_mode):
                               },
                               context_instance=RequestContext(request))
 
+
 @ajax_view
 def mail_validate(request):
-        rl=[]
-        rl.append(request.POST.get('receivers', ''))
-        rl.append(request.POST.get('cc', ''))
-        rl.append(request.POST.get('bcc', ''))
-        for r in rl:
-            if r and not Mail.validate_receiver(r):
-                return {"error": "گیرنده نامعتبر است."}
-        return 'Ok'
-
+    rl = []
+    rl.append(request.POST.get('receivers', ''))
+    rl.append(request.POST.get('cc', ''))
+    rl.append(request.POST.get('bcc', ''))
+    for r in rl:
+        if r and not Mail.validate_receiver(r):
+            return {"error": "گیرنده نامعتبر است."}
+    return 'Ok'
 
 
 @login_required
@@ -398,18 +398,13 @@ def search(request):
                 search_query = search_query & search_dic(tuple_keywords)
 
         answer = Thread.get_user_threads(up).filter(search_query).distinct()
-        #side_menu = Menu.objects.get(name='profile_menu')
-        #side_menu.set_user(request.user)
-        #side_menu.set_url(u'/personnel/userProfile')
         return render_to_response('mail/label.html', {
             'threads': answer,
             'label_title': 'نتایج جستجو',
-            #'side_menu': side_menu
         }, context_instance=RequestContext(request))
 
 
 def parse_address(input):
-    # input = input.replace(' ', ';')
     input = input.replace(',', ';')
     tokens = input.split(';')
     result = []
@@ -508,6 +503,12 @@ def add_contact(request):
         user = get_object_or_404(User, pk=user_id)
         contact_user_id = request.POST.get("contact_user_id", -1)
         contact_user = get_object_or_404(User, pk=contact_user_id)
+        if request.POST.get('action', 'add') == 'validate':
+            ab = AddressBook.get_addressbook_for_user(user, create_new=True)
+            if ab.has_contact_address(user.username) or contact_user == user:
+                return {'result': False}
+            else:
+                return {'result': True}
         contact = AddressBook.get_addressbook_for_user(user, create_new=True).add_contact_by_user(contact_user)
         return {'id': contact.id, 'display_name': contact.get_display_name()}
     except ValueError as e:

@@ -293,7 +293,7 @@ class Mail(models.Model):
             logger.debug('no recipients can be selected to reply to, replying to sender')
             to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
-                                attachments=attachments)
+                            attachments=attachments)
 
 
         # if is_specific_reply:
@@ -617,6 +617,7 @@ class ThreadLabel(models.Model):
 class AddressBook(models.Model):
     user = models.OneToOneField(User)
 
+
     def get_all_contacts(self):
         u'''
 
@@ -625,6 +626,32 @@ class AddressBook(models.Model):
         '''
 
         return Contact.objects.filter(address_book=self)
+
+    def has_contact(self, contact):
+        """
+        بررسی میکند که تماس داده شده
+        در این لیست وجود دارد یا نه.
+
+        :type contact: Contact
+        :return: bool
+        """
+        if not contact:
+            return False
+        if self.get_all_contacts().filter(id=contact.id):
+            return True
+        return False
+
+    def has_contact_address(self, address):
+        """
+        بررسی میکند آیا تماسی با آدرس داده شده
+        در لیست نشانی ها وجود دارد یا نه.
+        :type address: str
+        :return: bool
+        """
+        c = Contact.get_contact_by_address(address)
+        if c and c.address_book == self:
+            return True
+        return False
 
     def add_contact_by_user(self, contact_user):
         u'''
@@ -640,9 +667,9 @@ class AddressBook(models.Model):
 
         try:
             if contact_user == self.user:
-                raise ValueError(_('You can not add yourself to your contacts.'))
+                raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
             Contact.objects.get(address_book=self, email=contact_user.username)
-            raise ValueError(_('This user exits your contacts.'))
+            raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
         except Contact.DoesNotExist:
             return Contact.objects.create(address_book=self, display_name=contact_user.get_full_name(),
                                           first_name=contact_user.first_name, last_name=contact_user.last_name,
@@ -692,6 +719,20 @@ class Contact(models.Model):
         if self.display_name:
             return self.display_name
         return self.email
+
+    @classmethod
+    def get_contact_by_address(cls, address):
+        """
+        در صورت وجود، تماس با آدرس
+        داده شده را برمیگرداند.
+        :type address: str
+        :return: Contact or None
+        """
+        try:
+            c = cls.objects.get(email=address)
+            return c
+        except cls.DoesNotExist:
+            return None
 
 
 class ReadMail(models.Model):
