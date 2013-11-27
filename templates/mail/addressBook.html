@@ -65,10 +65,5 @@
 {% block JS %}
     {{ block.super }}
     {% js 'bower_components/bootstrap-editable/js/bootstrap-editable.min.js' %}
-    <script type="text/javascript">
-    $.fn.editable.defaults.mode = 'inline';
-    $(document).ready(function() {
-    $('.firstname').editable();
-});
-    </script>
+    {% js 'js/addressbook/aditable.js' %}
 {% endblock %}
