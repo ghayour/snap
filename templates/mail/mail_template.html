@@ -6,7 +6,6 @@
 {% block js %}
     <script type='text/javascript' src="{{ STATIC_URL }}lib/datatables/datatables.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}mail/mail.js"></script>
-    <script type='text/javascript' src="{{ STATIC_URL }}mail/label.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}lib/arsh/js/connectors.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.form.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MetaData.js"></script>
@@ -14,11 +13,14 @@
     {% js 'bower_components/blockui/jquery.blockUI.js' %}
     <script type="text/javascript" src="{{ STATIC_URL }}lib/select2/select2.js"></script>
 
+    {% js 'mail/base.js' %}
     {% js 'mail/ui.js' %}
     {% js 'mail/loader/loader.js' %}
     {% js 'mail/toolbar/toolbar.js' %}
     {% js 'mail/mail_client.js' %}
     {% js 'mail/client.js' %}
+    {% js 'mail/contact.js' %}
+    {% js 'mail/label.js' %}
 
     <script type="text/javascript">
         mailSystem.state.onlyShowNewMail = {% if archive %}false{% else %}true{% endif %};

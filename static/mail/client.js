@@ -163,6 +163,7 @@ function forward_reply_handler(action_type){
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
     }
-    var FW_RE = $("#bottom-div");
-    content_place.append(FW_RE);
+    //TODO: move fw-re form according to selected mail
+//    var FW_RE = $("#bottom-div");
+//    content_place.append(FW_RE);
 }
