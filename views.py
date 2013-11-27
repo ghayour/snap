@@ -513,14 +513,16 @@ def contact_list(request):
 #    form_class = AddressBook
 
 @login_required
-def addressbook_view (request):
-    print 'salam'
-    #print 'salam'
+def addressbook_edit (request):
     user = request.user
-    #user_id = request.GET.get('user_id' , -1)
-    #user = get_object_or_404(User , pk = user_id)
-    #print user
     contacts = AddressBook.objects.get(user = user).get_all_contacts()
     contactform = ContactForm()
     return render_to_response('mail/addressBook.html',{'contacts': contacts , 'cf':contactform},
                                 context_instance=RequestContext(request))
+
+@login_required
+def addressbook_view(request):
+    user = request.user
+    contacts = AddressBook.objects.get(user = user).get_all_contacts()
+    return render_to_response('mail/addressbook.html', {'contacts': contacts} ,
+                              context_instance = RequestContext(request))

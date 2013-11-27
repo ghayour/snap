@@ -7,19 +7,46 @@
 {% load i18n %}
 
 {% block JS %}
+    <script type="text/javascript">
+        $(".collapse").collapse()
+    </script>
 {% endblock JS %}
 
 {% block content %}
-    {% for constact in contacts %}
-        {{ constact.first_name }}
-    {% endfor %}
 
-    <div id="contact-form">
-        <h2>   لیست  </h2>
-        <input type="hidden" id="user-id" value="{{ user.id }}">
-        <form id="contactform" method='POST' enctype="multipart/form-data">
-            {% csrf_token %}
-            {% crispy cf cf.helper %}
-        </form>
+   <div class="panel-group" id="accordion">
+   {%  for contact in contacts %}
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ contact.id }}">
+              {{ contact.display_name }}
+            </a>
+          </h4>
+        </div>
+        <div id="collapse{{ contact.id }}" class="panel-collapse collapse in">
+          <div class="panel-body">
+              <ul>
+                  <li>
+                      نام:
+                      {{ contact.first_name }}
+                  </li>
+                  <li>
+                      نام خانوادگی :
+                      {{ contact.last_name }}
+                  </li>
+                  <li>
+                      آدرس ایمیل:
+                      {{ contact.email }}
+                  </li>
+                  <li>
+                      آدرس ایمیلی دیگر:
+                      {{ contact.extra_email }}
+                  </li>
+              </ul>
+          </div>
+        </div>
+      </div>
+   {% endfor %}
     </div>
 {% endblock content %}

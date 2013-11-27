@@ -101,21 +101,11 @@ class ContactForm(forms.ModelForm):
 
     class Meta:
         model = Contact
-        exclude = ('addressbook' ,'first_name',)
+        exclude = ('addressbook',)
 
     def __init__(self , *args , **kwargs):
         super(ContactForm , self).__init__(*args , **kwargs)
 
-        self.fields['display_name'] = forms.CharField(required= True)
-        #self.fields['first_name'] = forms.CharField(required=True)
-        #self.fields['last_name'] = forms.CharField(required=True)
-        self.fields['email'] = forms.EmailField(required=True)
-        self.fields['additional_email']=forms.EmailField(required=False)
-
-
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = 'form-margin-30'
-        self.helper.layout = LayoutUtils(has_submit=True, has_reset=False,
-                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'content',
-                                                       'attachments']).generate_table_layout(self, 1)

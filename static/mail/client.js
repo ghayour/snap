@@ -119,7 +119,13 @@ $(function(){
             forward_reply_handler("forward");
         }
     });
-
+    mailToolbar.addButton({
+        bootstrapIcon: 'off',
+        title: 'خروج',
+        action : function(){
+            window.location = arsh.dj.resolver.url('accounts/logout');
+        }
+    });
 });
 
 /* Loader */
