@@ -164,8 +164,23 @@ function update_message_type(){
 }
 
 $(document).ready(function () {
-    $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">')
-
+     $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">');
+    $("form.mail-form").submit(function(e){
+        result=true;
+        $.ajax({
+            type:"POST",
+            url:arsh.dj.resolver.url('mail/validate'),
+            data:$(this).serializeArray(),
+            async:false,
+            success:function(data){
+           if(data.error){
+               alert(data.error);
+               result=false;
+           }
+        }
+    });
+        return result;
+         });
 });
 
 $(document).ajaxStart(function () {
@@ -193,14 +208,58 @@ function cancelAddLabel() {
     var targetElement = document.getElementById('addLabelForm');
     targetElement.style.display = 'none';
 }
-function disable_enter($form_selector){
-    $form_selector.bind("keyup keypress", function(e) {
+function disable_enter(){
+    $("form.mail-form").bind("keyup keypress", function(e) {
         if (e.which  == 13) {
         var $targ = $(e.target);
 
         if (!$targ.is("textarea") && !$targ.is(":button,:submit")) {
     return false;
   }}
+        });
+
+}
+
+function setup_mail_form(){
+    disable_enter();
+    var lastResults = [];
+      var arshmail = /^.+@arshmail.ir$/;
+        $(".info").select2({
+                multiple: true,
+                minimumInputLength: 3,
+                placeholder: "",
+                tokenSeparators: [","],
+                ajax: {
+                    multiple: true,
+                    url: arsh.dj.resolver.url('mail/contact/list'),
+                    dataType: "json",
+                    type: "POST",
+                    data: function (term, page) {
+                        var user_id = $('#user-id').val();
+                        return {
+                            q: term,
+                            user_id: user_id
+                        };
+                    },
+                    results: function (data, page) {
+                        lastResults = data.results;
+                        return data;
+                    }
+                },
+                createSearchChoice: function (term) {
+                    var text = term + (lastResults.some(function (r) {
+                        return r.text == term
+                    }) ? "" : '');
+                    return { id: term, text: text };
+                }
+            }).on("select2-selecting", function(e) { if(!arshmail.test(e.object.text))
+                     {
+                         alert('ارسال پیام به این سرور ممکن نیست');
+                         return false;
+                     }
+                    e.object.id=e.val=e.object.text.split('@')[0];
+
+
         });
 
 }

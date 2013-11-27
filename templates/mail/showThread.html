@@ -38,6 +38,7 @@
         {{ env.java_script }}
 
         $(document).ready(function () {
+            setup_mail_form();
             show_hide_info_fields();
             manage_read_mails();
             manage_mails_display();
@@ -85,20 +86,6 @@
                 }
             });
 
-            $(".fancy").fancybox({
-                type: 'iframe',
-                closeBtn: 'true',
-                width: 700,
-                height: 900,
-                helpers: {
-                    overlay: {
-                        css: {
-                            'background': 'rgba(58, 42, 45, 0.95)'
-                        }
-                    }
-                }
-            });
-
             if ($(".other-mails").length) {
                 $("#other-mails").removeClass("hide-element");
             }
@@ -124,77 +111,17 @@
                 });
             });
 
-            $(".receiver , .sender").popover({ placement: 'bottom', trigger: 'manual', html: true, content: '<a class="add-contact">' + _t("Add to contacts") + '<a>' }).mouseenter(function () {
-                 $(this).popover('show');
-                $(".add-contact").on('click', function () {
-                    var user_id = $('.thread').data('user-id');
-                    var contact_user_id = $(this).parents().find('.fancy').data('contact-user-id');
-                    $.post(arsh.dj.resolver.url('mail/contact/add'), {'user_id': user_id, 'contact_user_id': contact_user_id }, function (contact) {
-                        if (contact.errors) {
-                            notify(contact.errors, {type: 'error'});
-                        }
-                        else {
-                            notify(contact.display_name + _t(' added to your contacts.'));
-
-                            }
 
 
-                    });
-                });
-            });
-
-            $("html").on('click', function () {
-                $('.fancy').popover('hide');
-                $('.select2-dropdown-open').removeClass("select2-dropdown-open");
-            });
-
-            var lastResults = [];
 
 
-            //TODO: move to mail.js
-            var arshmail = /^.+@arshmail.ir$/;
-            $(".info").select2({
-                multiple: true,
-                placeholder: _t("Add username or contact name."),
-                tokenSeparators: [","],
-                ajax: {
-                    multiple: true,
-                    url: arsh.dj.resolver.url('mail/contact/list'),
-                    dataType: "json",
-                    type: "POST",
-                    data: function (term, page) {
-                        var user_id = $('.thread').data('user-id');
-                        return {
-                            q: term,
-                            user_id: user_id
-                        };
-                    },
-                    results: function (data, page) {
-                        lastResults = data.results;
-                        return data;
-                    }
-                },
-                  createSearchChoice: function (term) {
-                    var text = term + (lastResults.some(function (r) {
-                        return r.text == term
-                    }) ? "" : '');
-                    return { id: term, text: text };
-                }
-            }).on("select2-selecting", function(e) {
 
-                     if(!arshmail.test(e.object.text))
-                     {
-                         alert('ارسال پیام به این سرور ممکن نیست');
-                         return false;
-                     }
-                    e.object.id=e.val=e.object.text.split('@')[0];
-        });
         });
     </script>
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="current_label" value="{{ label.id }}">
+    <input type="hidden" id="current_label" value="{{ label.id }}" data-slug="{{ label.slug }}">
     <div id='header' class="fa">
         <span class="thread-title">{{ thread.title }}</span>
         <input type="hidden" id="thread-id" value="{{ thread.id }}">
@@ -215,6 +142,7 @@
     </div>
 
     <div class="thread" data-user-id="{{ user.id }}">
+    <input id="user-id" type="hidden" value="{{ user.id }}">
         {% for mail, mail_label_list in mails.items %}
             <div id="mail-{{ mail.pk }}" class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
                 <div class="mail-header in-line">
@@ -222,32 +150,25 @@
                         <input class="mail-checkbox" type="checkbox" value="{{ mail.pk }}">
                         <span class="mail-sender">
                             <div class="icon list-item">
-                                <a class="fancy sender " data-style="text-decoration: none"
-                                   data-contact-user-id="{{ mail.sender_id }}"
-                                   href="#">{{ mail.sender_id|get_user_full_name }}
-                                </a>
-                                >>
+                                <a class="contact sender" data-style="text-decoration: none" data-contact-user-id="{{ mail.sender_id }}" href="#">{{ mail.sender_id|get_user_full_name }}</a>
                             </div>
                         </span>
+                        <span class="glyphicon glyphicon-circle-arrow-left" style="font-size: 14px; color: #000;"></span>
                         {% with recipients=mail.get_recipients %}
                             {% for r in recipients.to %}
-                                <div class="icon list-item to-icon"><a class="fancy receiver"
-                                                                       data-contact-user-id="{{ r.user_id }}"
-
-                                                                       >{{ r|get_user_full_name }}</a>
+                                <div class="icon list-item to-icon">
+                                    <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.cc %}
-                                <div class="icon list-item cc-icon"><a class="fancy receiver"
-                                                                       data-contact-user-id="{{ r.user_id }}"
-                                                                      >{{ r|get_user_full_name }}</a>
+                                <div class="icon list-item cc-icon">
+                                    <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                 </div>
                             {% endfor %}
                             {% for r in recipients.bcc %}
                                 {% if r.user == user or mail.sender == user %}
-                                    <div class="icon list-item bcc-icon"><a class="fancy receiver"
-                                                                            data-contact-user-id="{{ r.user_id }}"
-                                                                           >{{ r|get_user_full_name }}</a>
+                                    <div class="icon list-item bcc-icon">
+                                        <a class="contact receiver" data-contact-user-id="{{ r.user_id }}">{{ r|get_user_full_name }}</a>
                                     </div>
                                 {% endif %}
                             {% endfor %}
@@ -316,7 +237,7 @@
             <fieldset>
                 <legend>{% trans "Reply Or Forward" %}</legend>
                 <div id='ReFwForm'>
-                    <form id="fw-re-form" class="MultiFile-intercepted" enctype="multipart/form-data" method="POST">
+                    <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
                         {% crispy fw_re_form fw_re_form.helper %}
                     </form>

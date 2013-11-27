@@ -4,6 +4,7 @@ import smtplib
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.shortcuts import render_to_response, get_object_or_404
@@ -12,11 +13,12 @@ from django.utils import simplejson
 from django.contrib.auth.models import User
 from django.views.generic import FormView
 
-from arsh.common.http.ajax import ajax_view, json_response
+from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
+from arsh.user_mail.config_manager import ConfigManager
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
 
 
 @login_required
@@ -27,8 +29,9 @@ def setup(request):
 
 
 @login_required
-def see(request, label_slug, thread_slug, archive=False):
+def see(request, label_slug, thread_slug, archive=None):
     user_manager = UserManager.get(request.user)
+    config_manager = ConfigManager.prepare()
 
     # MailAccount
     accounts = request.user.mail_accounts.all().count()
@@ -51,6 +54,8 @@ def see(request, label_slug, thread_slug, archive=False):
             raise Http404("Thread not in label")
         return showThread(request, thread, label)
 
+    if archive is None:
+        archive = config_manager.get('default-view') == 'archive'
     return showLabel(request, label, archive)
 
 
@@ -60,7 +65,9 @@ def compose(request):
     initial_cc = request.GET.get('cc', '')
     initial_bcc = request.GET.get('bcc', '')
     up = request.user
+    cf = ConfigManager.prepare()
     composeForm = ComposeForm()
+    result_error = None
     if request.method == "POST":
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
@@ -74,22 +81,24 @@ def compose(request):
 
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
-            Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                        bcc=parse_address(bcc), titles=[u'کاربران'], initial_sender_labels=[u'فرستاده شده', u'کاربران'],
-                        attachments=attachments)
+            try:
+                Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
+                            bcc=parse_address(bcc), titles=[cf.get('inbox-folder')],
+                            initial_sender_labels=[Label.SENT_LABEL_NAME],
+                            attachments=attachments)
 
-            return HttpResponseRedirect(reverse('mail/home'))
-    #side_menu = Menu.objects.get(name='profile_menu')
-    #side_menu.set_user(request.user)
-    #side_menu.set_url(u'/personnel/userProfile')
+                return HttpResponseRedirect(reverse('mail/home'))
+            except ValidationError as e:
+                result_error = e.messages[0]
+
     return render_to_response('mail/composeEmail.html', {
         'user': up,
-        #'side_menu': side_menu,
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
         'mailForm': composeForm,
         'all_labels': Label.get_user_labels(up),
+        'send_error': result_error
     }, context_instance=RequestContext(request))
 
 
@@ -99,6 +108,7 @@ def showThread(request, thread, label=None):
     """
 
     up = request.user
+    cf = ConfigManager.prepare()
     address_book = AddressBook.get_addressbook_for_user(up, create_new=True)
     if label:
         UserManager.get()._cache_user(up)
@@ -123,7 +133,8 @@ def showThread(request, thread, label=None):
 
             if request.POST.get('re-fw', '') == 'forward':
                 Mail.create(content=content, subject=title, sender=up, receivers=parse_address(receivers),
-                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread, titles=['کاربران'],
+                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread,
+                            titles=[cf.get('inbox-folder')],
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
@@ -184,7 +195,8 @@ def showLabel(request, label, archive_mode):
     up = request.user
 
     tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
-    threads = tls if archive_mode else tls.filter(labels=UserManager.get(up).get_unread_label())[:100]
+    threads = tls if archive_mode else tls.filter(labels=UserManager.get(up).get_unread_label())
+    threads = threads[:50]  # TODO: how to view all mails?
     threads = [t for t in threads if t.is_thread_related(up)]
 
     env = {'headers': []}
@@ -196,6 +208,18 @@ def showLabel(request, label, archive_mode):
                                'archive': archive_mode,
                               },
                               context_instance=RequestContext(request))
+
+
+@ajax_view
+def mail_validate(request):
+    rl = []
+    rl.append(request.POST.get('receivers', ''))
+    rl.append(request.POST.get('cc', ''))
+    rl.append(request.POST.get('bcc', ''))
+    for r in rl:
+        if r and not Mail.validate_receiver(r):
+            return {"error": "گیرنده نامعتبر است."}
+    return 'Ok'
 
 
 @login_required
@@ -375,18 +399,13 @@ def search(request):
                 search_query = search_query & search_dic(tuple_keywords)
 
         answer = Thread.get_user_threads(up).filter(search_query).distinct()
-        #side_menu = Menu.objects.get(name='profile_menu')
-        #side_menu.set_user(request.user)
-        #side_menu.set_url(u'/personnel/userProfile')
         return render_to_response('mail/label.html', {
             'threads': answer,
             'label_title': 'نتایج جستجو',
-            #'side_menu': side_menu
         }, context_instance=RequestContext(request))
 
 
 def parse_address(input):
-    # input = input.replace(' ', ';')
     input = input.replace(',', ';')
     tokens = input.split(';')
     result = []
@@ -485,6 +504,12 @@ def add_contact(request):
         user = get_object_or_404(User, pk=user_id)
         contact_user_id = request.POST.get("contact_user_id", -1)
         contact_user = get_object_or_404(User, pk=contact_user_id)
+        if request.POST.get('action', 'add') == 'validate':
+            ab = AddressBook.get_addressbook_for_user(user, create_new=True)
+            if ab.has_contact_address(user.username) or contact_user == user:
+                return {'result': False}
+            else:
+                return {'result': True}
         contact = AddressBook.get_addressbook_for_user(user, create_new=True).add_contact_by_user(contact_user)
         return {'id': contact.id, 'display_name': contact.get_display_name()}
     except ValueError as e:
@@ -503,7 +528,7 @@ def contact_list(request):
             Q(display_name__startswith=q) | Q(first_name__startswith=q) | Q(last_name__startswith=q) | Q(
                 email__startswith=q))
         for c in all_contacts:
-            data['results'].append({'id': c.email, 'text': c.email+'@arshmail.ir'})#TODO: save as email
+            data['results'].append({'id': c.email, 'text': c.email + '@arshmail.ir'})#TODO: save as email
         return data
     except ValueError as e:
         pass

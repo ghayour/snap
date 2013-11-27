@@ -42,7 +42,7 @@ function autocomplete_label(item_element, item_type) {
                     response(data1);
                 });
         },
-        minLength: 1,
+        minLength: 2,
         focus: function (event, ui) {
             event.preventDefault();
             if (ui.item.value <= 0) {

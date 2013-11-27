@@ -12,7 +12,7 @@ $(function(){
         title: 'بازگشت',
         show: 'mailSystem.state.viewing != "threads"',
         action: function() {
-            window.location = arsh.dj.resolver.url('mail/home');
+            window.location = arsh.dj.resolver.url('mail/see_label',label_slug=$("#current_label").data('slug'));
         }
     });
     mailToolbar.addButton({
@@ -169,6 +169,7 @@ function forward_reply_handler(action_type){
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
     }
-    var FW_RE = $("#bottom-div");
-    content_place.append(FW_RE);
+    //TODO: move fw-re form according to selected mail
+//    var FW_RE = $("#bottom-div");
+//    content_place.append(FW_RE);
 }

@@ -102,6 +102,23 @@ class Mail(models.Model):
         self.thread = thread
 
     @staticmethod
+    def validate_receiver(receiver):
+        if isinstance(receiver, str) or isinstance(receiver, unicode):
+            receiver = receiver.strip()
+        try:
+            User.objects.get(username=receiver)
+            return True
+        except User.DoesNotExist:
+            pass
+        if isinstance(receiver, Contact):
+            try:
+                User.objects.get(username=receiver.email)
+                return True
+            except User.DoesNotExist:
+                pass
+        return False
+
+    @staticmethod
     def add_receiver(mail, thread, receiver_address, type='to', label_names=None, create_new_labels=True):
         """
         :param mail:
@@ -168,6 +185,12 @@ class Mail(models.Model):
         """
         #        Label.setup_initial_labels(sender)
         #        Label.setup_initial_labels(User.objects.get(id=1))
+
+        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
+        for t, rl in recipients.items():
+            for r in rl:
+                if not Mail.validate_receiver(r):
+                    raise ValidationError(u"گیرنده نامعتبر است.")
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -198,7 +221,6 @@ class Mail(models.Model):
 
         sent_count = 0
         recipients_count = 0
-        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
         for t, addresses in recipients.items():
             if addresses:
                 for address in addresses:
@@ -272,6 +294,7 @@ class Mail(models.Model):
             to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
                             attachments=attachments)
+
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
@@ -351,7 +374,7 @@ class Label(Slugged):
             #TODO: which account should be selected?
         except IndexError:
             account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
-                                   email=user.username + '@' + MailProvider.get_default_domain())
+                                                 email=user.username + '@' + MailProvider.get_default_domain())
         return Label.objects.create(title=title, user=user, account=account)
 
     def get_unread_count(self):
@@ -594,6 +617,7 @@ class ThreadLabel(models.Model):
 class AddressBook(models.Model):
     user = models.OneToOneField(User)
 
+
     def get_all_contacts(self):
         u'''
 
@@ -602,6 +626,32 @@ class AddressBook(models.Model):
         '''
 
         return Contact.objects.filter(address_book=self)
+
+    def has_contact(self, contact):
+        """
+        بررسی میکند که تماس داده شده
+        در این لیست وجود دارد یا نه.
+
+        :type contact: Contact
+        :return: bool
+        """
+        if not contact:
+            return False
+        if self.get_all_contacts().filter(id=contact.id):
+            return True
+        return False
+
+    def has_contact_address(self, address):
+        """
+        بررسی میکند آیا تماسی با آدرس داده شده
+        در لیست نشانی ها وجود دارد یا نه.
+        :type address: str
+        :return: bool
+        """
+        c = Contact.get_contact_by_address(address)
+        if c and c.address_book == self:
+            return True
+        return False
 
     def add_contact_by_user(self, contact_user):
         u'''
@@ -617,9 +667,9 @@ class AddressBook(models.Model):
 
         try:
             if contact_user == self.user:
-                raise ValueError(_('You can not add yourself to your contacts.'))
+                raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
             Contact.objects.get(address_book=self, email=contact_user.username)
-            raise ValueError(_('This user exits your contacts.'))
+            raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
         except Contact.DoesNotExist:
             return Contact.objects.create(address_book=self, display_name=contact_user.get_full_name(),
                                           first_name=contact_user.first_name, last_name=contact_user.last_name,
@@ -669,6 +719,20 @@ class Contact(models.Model):
         if self.display_name:
             return self.display_name
         return self.email
+
+    @classmethod
+    def get_contact_by_address(cls, address):
+        """
+        در صورت وجود، تماس با آدرس
+        داده شده را برمیگرداند.
+        :type address: str
+        :return: Contact or None
+        """
+        try:
+            c = cls.objects.get(email=address)
+            return c
+        except cls.DoesNotExist:
+            return None
 
 
 class ReadMail(models.Model):
