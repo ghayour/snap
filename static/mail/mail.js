@@ -7,6 +7,8 @@ fw_template = _.template( '<p></p>' +
     '<br><br>' +
     '<div> {{ content }} </div>'
 );
+
+arshmail = /^.+@arshmail.ir$/;
 function show_hide(element, force_hide, force_show){
     force_hide = typeof force_hide !== 'undefined' ? force_hide : false ;
     force_show = typeof force_show !== 'undefined' ? force_show : false ;
@@ -166,6 +168,27 @@ function update_message_type(){
 $(document).ready(function () {
      $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">');
     $("form.mail-form").submit(function(e){
+        var validation=true;
+        $("input.info").each(function(){
+           var l=$(this).val();
+            if(l!=""){
+            var list=l.split(',');
+
+                for(i=0;i<list.length;i++){
+                if(!arshmail.test(list[i]))
+                     {
+                         validation=false;
+                         return;
+                     }
+            }}
+
+        });
+        if(!validation){
+        alert('ارسال پیام به سرور(های) انتخابی امکان پذیر نیست!');
+            return false;
+        }
+
+
         result=true;
         $.ajax({
             type:"POST",
@@ -223,12 +246,12 @@ function disable_enter(){
 function setup_mail_form(){
     disable_enter();
     var lastResults = [];
-      var arshmail = /^.+@arshmail.ir$/;
         $(".info").select2({
                 multiple: true,
                 minimumInputLength: 3,
                 placeholder: "",
                 tokenSeparators: [","],
+
                 ajax: {
                     multiple: true,
                     url: arsh.dj.resolver.url('mail/contact/list'),
@@ -252,14 +275,7 @@ function setup_mail_form(){
                     }) ? "" : '');
                     return { id: term, text: text };
                 }
-            }).on("select2-selecting", function(e) { if(!arshmail.test(e.object.text))
-                     {
-                         alert('ارسال پیام به این سرور ممکن نیست');
-                         return false;
-                     }
-                    e.object.id=e.val=e.object.text.split('@')[0];
+            });
 
-
-        });
 
 }

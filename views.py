@@ -217,8 +217,10 @@ def mail_validate(request):
     rl.append(request.POST.get('cc', ''))
     rl.append(request.POST.get('bcc', ''))
     for r in rl:
-        if r and not Mail.validate_receiver(r):
-            return {"error": "گیرنده نامعتبر است."}
+        if r:
+            for c in r.split(','):
+                if not Mail.validate_receiver(c):
+                    return {"error": "گیرنده نامعتبر است."}
     return 'Ok'
 
 
@@ -506,7 +508,7 @@ def add_contact(request):
         contact_user = get_object_or_404(User, pk=contact_user_id)
         if request.POST.get('action', 'add') == 'validate':
             ab = AddressBook.get_addressbook_for_user(user, create_new=True)
-            if ab.has_contact_address(user.username) or contact_user == user:
+            if ab.has_contact_address(contact_user.username+'@'+MailProvider.get_default_domain()) or contact_user == user:
                 return {'result': False}
             else:
                 return {'result': True}
@@ -528,7 +530,7 @@ def contact_list(request):
             Q(display_name__startswith=q) | Q(first_name__startswith=q) | Q(last_name__startswith=q) | Q(
                 email__startswith=q))
         for c in all_contacts:
-            data['results'].append({'id': c.email, 'text': c.email + '@arshmail.ir'})#TODO: save as email
+            data['results'].append({'id': c.email, 'text': c.email})
         return data
     except ValueError as e:
         pass
