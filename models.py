@@ -135,6 +135,7 @@ class Mail(models.Model):
             receiver = receiver_address
 
         else:
+            #TODO: better code
             receiver_username = receiver_address
             if isinstance(receiver_address, str) or isinstance(receiver_address, unicode):
                 c = Contact.get_contact_by_address(receiver_address)
@@ -160,8 +161,12 @@ class Mail(models.Model):
                 labels.append(Label.get_label_for_user(label_name, receiver, create_new=True))
         else:
             labels = Label.objects.filter(user=receiver, title__in=label_names)
-        if len(labels) + thread.get_user_labels(receiver).count() == 0:
-            labels = [Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver)]
+        rc_labels = thread.get_user_labels(receiver)
+        rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver)
+        #TODO: check if first condition can be removed
+        if len(labels) + rc_labels.count() == 0 or not (
+                rc_labels.filter(id=rc_inbox.id) or rc_inbox in labels):
+            labels = [rc_inbox]
         for label in labels:
             thread.add_label(label)
 
