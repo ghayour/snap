@@ -20,6 +20,13 @@ from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
 
 
+def get_default_inbox():
+    cf = ConfigManager.prepare()
+    if cf.get('inbox-folder') == 'inbox':
+        return Label.INBOX_LABEL_NAME
+    return cf.get('inbox-folder')
+
+
 @login_required
 def setup(request):
     um = UserManager(request.user)
@@ -82,7 +89,7 @@ def compose(request):
             bcc = request.POST.get('bcc')
             try:
                 Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=[cf.get('inbox-folder')],
+                            bcc=parse_address(bcc), titles=[get_default_inbox()],
                             initial_sender_labels=[Label.SENT_LABEL_NAME],
                             attachments=attachments)
 
@@ -133,18 +140,19 @@ def showThread(request, thread, label=None):
             if request.POST.get('re-fw', '') == 'forward':
                 Mail.create(content=content, subject=title, sender=up, receivers=parse_address(receivers),
                             cc=parse_address(cc), bcc=parse_address(bcc), thread=thread,
-                            titles=[cf.get('inbox-folder')],
+                            titles=[get_default_inbox()],
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
                 Mail.reply(content=content, sender=up, in_reply_to=selected_mail, subject=title, thread=thread,
-                           attachments=attachments)  # TODO: enable in middle reply
+                           titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
         fw_re_form = FwReForm(user_id=up.id)
 
     labels = thread.get_user_labels(up)
+    labels = labels.exclude(title=Label.SENT_LABEL_NAME).exclude(title=Label.TRASH_LABEL_NAME)
     #TODO: MOVE TO METHOD
     allMails = thread.mails.all().select_related().order_by('created_at')
 
@@ -507,7 +515,8 @@ def add_contact(request):
         contact_user = get_object_or_404(User, pk=contact_user_id)
         if request.POST.get('action', 'add') == 'validate':
             ab = AddressBook.get_addressbook_for_user(user, create_new=True)
-            if ab.has_contact_address(contact_user.username+'@'+MailProvider.get_default_domain()) or contact_user == user:
+            if ab.has_contact_address(
+                                    contact_user.username + '@' + MailProvider.get_default_domain()) or contact_user == user:
                 return {'result': False}
             else:
                 return {'result': True}
