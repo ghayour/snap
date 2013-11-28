@@ -163,9 +163,7 @@ class Mail(models.Model):
             labels = Label.objects.filter(user=receiver, title__in=label_names)
         rc_labels = thread.get_user_labels(receiver)
         rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver)
-        #TODO: check if first condition can be removed
-        if len(labels) + rc_labels.count() == 0 or not (
-                rc_labels.filter(id=rc_inbox.id) or rc_inbox in labels):
+        if len(labels) + rc_labels.count() == 0:
             labels = [rc_inbox]
         for label in labels:
             thread.add_label(label)
@@ -252,7 +250,7 @@ class Mail(models.Model):
 
     @staticmethod
     def reply(content, sender, in_reply_to=None, subject=None, thread=None, include=[], exclude=[],
-              exclude_others=False,
+              titles=None, exclude_others=False,
               attachments=None):
         """ در پاسخ به یک نامه، یک میل جدید می‌فرستد.
 
@@ -270,6 +268,8 @@ class Mail(models.Model):
         :type include: str[]
         :param exclude: کسانی که از گیرندگان حذف می شوند
         :type exclude: str[]
+         :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+        :type titles: str[]
         """
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
 
@@ -307,7 +307,7 @@ class Mail(models.Model):
             logger.debug('no recipients can be selected to reply to, replying to sender')
             to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
-                            attachments=attachments)
+                            titles=titles, attachments=attachments)
 
 
         # if is_specific_reply:
@@ -424,6 +424,11 @@ class Label(Slugged):
             if create_new:
                 return Label.create(title=label_name, user=user)
             return None
+
+    @staticmethod
+    def get_initial_labels():
+        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
+                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME]
 
     @staticmethod
     def setup_initial_labels(user):

@@ -50,6 +50,9 @@ class UserManager:
             return Label.objects.get(title=label_name, user=self._user)
         except Label.DoesNotExist:
             if create:
+                if label_name in Label.get_initial_labels():
+                    self.setup_mailbox()
+                    return self.get_label(label_name)
                 return Label.create(title=label_name, user=self._user)
             return None
 
