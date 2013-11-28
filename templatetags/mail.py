@@ -55,14 +55,18 @@ def label_list(user, current_label=''):
             unread += len(t.get_unread_mails(user))
             if label.title != Label.SENT_LABEL_NAME:
                 total_unread_mails += unread
-        unread_str = ' <span class="badge">%d</span>' % unread if unread else ''
+        unread_str = ''
+        if label.title != Label.SENT_LABEL_NAME:
+            unread_str = ' <span class="badge">%d</span>' % unread if unread else ''
         url = reverse('mail/see_label', args=[label.slug])
         current_class = 'current' if label.title == current_label else ''
 
         if not label.account_name in ls:
             ls[label.account_name] = []
-        ls[label.account_name].append("<div class='sidebar-item'><a class='%s' href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
-                                    "<div class='sep-t'></div><div class='sep-b'></div></div>" % (current_class, url, unicode(label), unread_str))
+        ls[label.account_name].append(
+            "<div class='sidebar-item'><a class='%s' href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
+            "<div class='sep-t'></div><div class='sep-b'></div></div>" % (
+            current_class, url, unicode(label), unread_str))
     for account_name, cur_list in ls.iteritems():
         b.tag('h6', str(account_name))
         b.list(cur_list)

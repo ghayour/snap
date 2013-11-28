@@ -50,7 +50,7 @@ class UserManager:
             return Label.objects.get(title=label_name, user=self._user)
         except Label.DoesNotExist:
             if create:
-                return Label.objects.create(title=label_name, user=self._user)
+                return Label.create(title=label_name, user=self._user)
             return None
 
     def get_inbox(self):
