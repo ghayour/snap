@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import smtplib
-
+import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -541,11 +541,13 @@ def contact_list(request):
 
 @login_required
 def addressbook_edit (request):
-    user = request.user
-    contacts = AddressBook.objects.get(user = user).get_all_contacts()
-    contactform = ContactForm()
-    return render_to_response('mail/addressBook.html',{'contacts': contacts , 'cf':contactform},
-                                context_instance=RequestContext(request))
+   if request.is_ajax() and request.POST:
+
+       json.dumps()
+       return HttpResponse(data, content_type='application/json')
+   else:
+       raise Http404
+
 
 @login_required
 def addressbook_view(request):

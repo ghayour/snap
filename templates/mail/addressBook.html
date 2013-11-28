@@ -20,36 +20,39 @@
             </a>
           </h4>
         </div>
-        <div id="collapse{{ contact.id }}" class="panel-collapse collapse in">
+        <div id="collapse{{ contact.id }}" class="panel-collapse collapse ">
           <div class="panel-body">
+              <button id="enable" class="btn btn-default">  ویرایش</button>
               <table class="table table-bordered table-striped">
                   <tbody>
                     <tr>
                         <td>نام  </td>
                         <td>
-                            <a href="#" class="firstname" data-type="text" data-pk="1" data-url="/post" data-title="Enter username">{{ contact.first_name }}</a>
+                            <a href="#" class="myeditable" data-type="text" data-pk="{{ contact.id }}"  data-title="Enteruser name" >{{ contact.first_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td>نام خانوادگی </td>
                         <td>
-                            <a href="#" class="lastname" data-type="text" data-pk="1" data-url="/post" data-title="Enter username">{{ contact.last_name }}</a>
+                            <a href="#" class="myeditable" data-type="text" data-pk="{{ contact.id }}"  data-title="Enter username">{{ contact.last_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td> آدرس پست الکترونیکی</td>
                         <td>
-                            <a href="#" class="email" data-type="text" data-pk="1" data-url="/post" data-title="Enter username">{{ contact.email }}</a>
+                            <a href="#" class="myeditable" data-type="email" data-pk="{{ contact.id }}" data-title="Enter username">{{ contact.email }}</a>
                         </td>
                     </tr>
                   <tr>
                        <td> آدرس پست الکترونیکی دیگر </td>
                         <td>
-                            <a href="#" class="extraemail" data-type="text" data-pk="1" data-url="/post" data-title="Enter username">{{ contact.extra_email }}</a>
+                            <a href="#" class="myeditable" data-type="text" data-pk="{{ contact.id }}" data-title="Enter username">{{ contact.extra_email }}</a>
                         </td>
                     </tr>
                   </tbody>
               </table>
+              <button id="save-btn" type="submit" class="btn btn-primary"> اعمال تغییرات </button>
+
           </div>
         </div>
       </div>
