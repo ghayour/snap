@@ -46,6 +46,7 @@
     <hr/>
     {% label_list user label.title %}
     <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
+        {% csrf_token %}
         <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 250px"/>
     </form>
     <hr/>
