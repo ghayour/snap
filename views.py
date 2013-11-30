@@ -573,16 +573,6 @@ def addressbook_edit (request):
 
 
 
-#def addressbook_edit (request):
-#   user = request.user
-#   contacts = AddressBook.objects.get(user = user).get_all_contacts()
-#   contactform = ContactForm()
-#   return render_to_response('mail/edit_addressBook.html',{'contacts': contacts , 'cf':contactform},
-#                               context_instance=RequestContext(request))
-
-
-
-
 @login_required
 def addressbook_view(request):
     user = request.user
