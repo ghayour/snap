@@ -32,10 +32,6 @@ urlpatterns = patterns('arsh.user_mail.views',
     url(r'^mail/contact/add$', 'add_contact', name='mail/contact/add'),
     url(r'^contact/list$', 'contact_list', name='mail/contact/list'),
     url(r'^show/addressbook$', 'addressbook_view' , name='view/address_book'),
-    url(r'^edit/addressbook$', 'addressbook_edit' , name='view/address_book'),
-
-    url(r'^logout$', logout, {'next_page': settings.SITE_URL}, name='accounts/logout'),
-
-
+    url(r'^edit/addressbook$', 'addressbook_edit' , name='edit/address_book'),
 
 )

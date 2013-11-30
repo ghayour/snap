@@ -554,11 +554,33 @@ def contact_list(request):
 @login_required
 def addressbook_edit (request):
    if request.is_ajax() and request.POST:
+       user = request.user
+       value = request.POST.get('value')
+       field = request.POST.get('name')
+       pk = request.POST.get('pk')
+       contacts = AddressBook.objects.get(user = user).get_all_contacts()
+       newcontact = contacts.get(pk = pk)
+       if field == 'firstname':
+           newcontact.first_name = value
+       elif field == 'lastname':
+           newcontact.last_name = value
+       elif field == 'email' :
+           newcontact.email = value
+       elif field == 'ex_email':
+           newcontact.additional_email = value
+       newcontact.save()
+       return HttpResponse(json.dumps(value), content_type='application/json')
 
-       json.dumps()
-       return HttpResponse(data, content_type='application/json')
-   else:
-       raise Http404
+
+
+#def addressbook_edit (request):
+#   user = request.user
+#   contacts = AddressBook.objects.get(user = user).get_all_contacts()
+#   contactform = ContactForm()
+#   return render_to_response('mail/edit_addressBook.html',{'contacts': contacts , 'cf':contactform},
+#                               context_instance=RequestContext(request))
+
+
 
 
 @login_required
