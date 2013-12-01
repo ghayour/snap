@@ -388,10 +388,7 @@ def search_labels(keyword):
     label_list = keyword.split(u'،')
     search_query = Q()
     for label in label_list:
-        if not search_query:
-            search_query = Q(labels__title__contains=label)
-        else:
-            search_query = search_query & Q(labels__title__contains=label)
+        search_query = search_query | Q(labels__title__contains=label)
     return search_query
 
 

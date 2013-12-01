@@ -47,9 +47,24 @@
     {% label_list user label.title %}
     <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
         {% csrf_token %}
-        <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 250px"/>
+        <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 220px; float: right"/>
     </form>
+    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
     <hr/>
+    <br>
+    <div id="search_help">
+    <label>راهنمای جستجو</label>
+        <br>
+    جستجوی نامه بر اساس فرستنده، گیرنده، عنوان، محتوا و برچسب عمل میکند.
+        <br>
+درصورتیکه بخواهید نامه ای را براساس چند مورد از موارد بالا جستجو کنید، بین هرکدام کاراکتر ‘ ; ‘ قرار دهید.
+        <br>
+در جستجو بر اساس برچسب، با جداکردن نام برچسبها به کمک " ، " نامه ای که حداقل یکی از برچسبهای ذکر شده را داشته باشد، میابد.
+        <br>
+مثالی از نحوه وارد کردن عبارت جستجو:
+        <br>
+از:admin ; به:سارا ; عنوان:تست ; محتوا:سلام ; برچسب:علاقه مندی ها، مهم، صندوق ورودی
+    </div>
     <div id="fast-filter-box">
     </div>
 {% endblock %}
