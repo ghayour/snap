@@ -606,7 +606,7 @@ class ThreadLabel(models.Model):
             new_record = cls.objects.create(label=label, thread=thread)
             if mail:
                 new_record.mails.add(mail)
-                return True
+            return True
 
 
     @classmethod

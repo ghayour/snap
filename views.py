@@ -592,5 +592,5 @@ def addressbook_edit(request):
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
-    return render_to_response('mail/addressbook.html', {'contacts': contacts},
+    return render_to_response('mail/address_book.html', {'contacts': contacts},
                               context_instance=RequestContext(request))
