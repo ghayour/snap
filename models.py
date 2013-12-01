@@ -93,7 +93,7 @@ class Mail(models.Model):
     def get_summary(self):
         env = {'content': self.content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
-        return get_summary(env['content'], 50, striptags=True)
+        return get_summary(env['content'].replace('&nbsp;', ''), 50, striptags=True)
 
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)

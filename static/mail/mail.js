@@ -83,12 +83,13 @@ function manage_read_mails() {
 }
 
 function manage_mails_display() {
-//    var last_mail = $("div.request-mail").last();
     var last_mail = $("div.mail").last();
     last_mail.removeClass("other-mails");
     last_mail.find(".mail-content").removeClass("hide-element"); //Always show last mail opened
     $("div.mail-content.hide-element").parent().find(".mail-summery").removeClass("hide-element");
-    $("div.mail-header").click(function () {
+    $("div.mail-header").click(function (e) {
+        if( e.target !== this && !$(e.target).hasClass('mail-summery') )
+            return;
         show_hide_content($(this), false);
     });
 }
