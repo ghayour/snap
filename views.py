@@ -264,15 +264,20 @@ def add_label(request):
     if item_type == "mail":
         for mail_id in item_list:
             mail = Mail.objects.get(id=mail_id)
-            mail.add_label(label)
-        response_text = "success"
+            try:
+                mail.add_label(label)
+                response_text = "success"
+            except ValidationError:
+                response_text = "قبلا نامه یا نخ حاوی آن برچسب زده شده است."
 
     elif item_type == "thread":
         for thread_id in item_list:
             thread = Thread.objects.get(id=int(thread_id))
-            thread.add_label(label)
-        response_text = "success"
-
+            try:
+                thread.add_label(label)
+                response_text = "success"
+            except ValidationError:
+                response_text = "قبلا برچسب گذاری صورت گرفته است."
     else:
         response_text = "error"
 
@@ -311,16 +316,16 @@ def delete_label(request):
                 mail = Mail.objects.get(id=int(request.POST['item_id']))
                 mail.remove_label(label)
                 c["response_text"] = "success"
-                if current_label and not mail.thread.has_label(current_label):
-                    c["referrer"] = reverse('mail/home')
+                thread = mail.thread
 
         elif item_type == "thread":
             if request.POST.get('item_id', ''):
                 thread = Thread.objects.get(id=int(request.POST['item_id']))
                 thread.remove_label(label)
                 c["response_text"] = "success"
-                if current_label and not thread.has_label(current_label):
-                    c["referrer"] = reverse('mail/home')
+
+        if current_label and not thread.has_label(current_label):
+            c["referrer"] = reverse('mail/see_label', args=[request.POST.get('current_label_slug')])
     except:
         pass
 

@@ -184,19 +184,19 @@
                         {% endif %}
                         <span class="mail-date">{{ mail.created_at|shamsi }}</span>
                     </div>
-                    <div class="mail-header-label">
-                        <div class="mail-labels" id="label-list">
-                            {% for mail_label in mail_label_list %}
-                                <div class="mail-label delete-label">
-                                    <span class="mail-label-delete" item_type="mail"
-                                          item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>
-                                    <span class="mail-label-title">
-                                        <a href="{% url 'mail/see_label' mail_label.label.slug %}">{{ mail_label.label }}</a>
-                                    </span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+{#                    <div class="mail-header-label">#}
+{#                        <div class="mail-labels" id="label-list">#}
+{#                            {% for mail_label in mail_label_list %}#}
+{#                                <div class="mail-label delete-label">#}
+{#                                    <span class="mail-label-delete" item_type="mail"#}
+{#                                          item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>#}
+{#                                    <span class="mail-label-title">#}
+{#                                        <a href="{% url 'mail/see_label' mail_label.label.slug %}">{{ mail_label.label }}</a>#}
+{#                                    </span>#}
+{#                                </div>#}
+{#                            {% endfor %}#}
+{#                        </div>#}
+{#                    </div>#}
                 </div>
 
                 <div class="mail-content{{ mail.status }}">

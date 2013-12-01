@@ -138,17 +138,17 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
             function (data) {
                 if (data["response_text"] == 'success') {
                     alert('برچسب گذاري با موفقيت انجام شد.');
-                    $('input:checkbox[class="mail-checkbox"]:checked').each(function () {
-                        $(this).parent().nextAll("div").children("div#label-list").append(
-                            '<div class="mail-label delete-label">' +
-                                '<a class="mail-label-delete" item_type="mail" item_id=' +
-                                    item_id + 'label_id=' + data["label_id"] + '>X</a>' +
-                                '<span class="mail-label-title">' +
-                                    '<a href="' + data["label_url"] + '">' + label_name.split('(برچسب جدید)')[0] + '</a>' +
-                                '</span>' +
-                            '</div>'
-                        );
-                    });
+//                    $('input:checkbox[class="mail-checkbox"]:checked').each(function () {
+//                        $(this).parent().nextAll("div").children("div#label-list").append(
+//                            '<div class="mail-label delete-label">' +
+//                                '<span class="mail-label-delete" item_type="mail" item_id=' +
+//                                    item_id + ' label_id=' + data["label_id"] + '>X</span>' +
+//                                '<span class="mail-label-title">' +
+//                                    '<a href="' + data["label_url"] + '">' + label_name.split('(برچسب جدید)')[0] + '</a>' +
+//                                '</span>' +
+//                            '</div>'
+//                        );
+//                    });
 
                     $('.mail-tags').append(
                         '<div class="mail-tag delete-label">' +

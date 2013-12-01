@@ -314,7 +314,10 @@ class Mail(models.Model):
         MailReply.objects.create(first=in_reply_to, reply=reply)
 
     def add_label(self, label):
-        ThreadLabel.add(label=label, thread=self.thread, mail=self)
+        if not self.has_label(label):
+            ThreadLabel.add(label=label, thread=self.thread, mail=self)
+        else:
+            raise ValidationError('The Mail has been tagged before!')
 
     def remove_label(self, label):
         ThreadLabel.remove(label=label, thread=self.thread, mail=self)
@@ -483,9 +486,11 @@ class Thread(Slugged):
         super(Thread, self).save(*args, **kwargs)
 
     def add_label(self, label):
-        if not label in self.labels.all():
+        if not self.has_label(label):
             #noinspection PyUnresolvedReferences
             ThreadLabel.add(label=label, thread=self)
+        else:
+            raise ValidationError('Thread has been tagged before!')
 
     def remove_label(self, label):
         #noinspection PyUnresolvedReferences
@@ -593,7 +598,7 @@ class ThreadLabel(models.Model):
                 tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
 
             else: #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
-                pass
+                raise ValidationError('Mail or Thread has been tagged before!')
 
         except cls.DoesNotExist:
             new_record = cls.objects.create(label=label, thread=thread)
