@@ -48,6 +48,8 @@ def label_list(user, current_label=''):
     """ % (unread_label.id, user.id))
     b = Builder()
     ls = {}
+    initial = Label.get_initial_labels()
+    ordered_list = {}
     for label in labels:
         # unread = label.unread_threads_count
         unread = 0
@@ -63,10 +65,19 @@ def label_list(user, current_label=''):
 
         if not label.account_name in ls:
             ls[label.account_name] = []
-        ls[label.account_name].append(
-            "<div class='sidebar-item'><a class='%s' href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>"
-            "<div class='sep-t'></div><div class='sep-b'></div></div>" % (
-            current_class, url, unicode(label), unread_str))
+
+        row = """<div class='sidebar-item'><a class='%s' href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>
+        <div class='sep-t'></div><div class='sep-b'></div></div>""" % (current_class, url, unicode(label), unread_str)
+        if label.title in initial:
+            ordered_list[label.title] = (label.account_name, row)
+
+        ls[label.account_name].append(row)
+    for l in initial[::-1]:
+        l = ordered_list.get(l, None)
+        if l:
+            ls[l[0]].remove(l[1])
+            ls[l[0]].insert(0, l[1])
+
     for account_name, cur_list in ls.iteritems():
         b.tag('h6', str(account_name))
         b.list(cur_list)
