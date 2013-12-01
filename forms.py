@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 from crispy_forms.helper import FormHelper
 
-from arsh.user_mail.models import Mail, AddressBook
+from arsh.user_mail.models import Mail, AddressBook, Contact
 from arsh.user_mail.widgets import MultiFileInput
 from arsh.rich_form.layout.utils import LayoutUtils
 from arsh.rich_form.validation import ValidationService
@@ -97,3 +97,15 @@ class FwReForm(forms.ModelForm):
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
 
+class ContactForm(forms.ModelForm):
+
+    class Meta:
+        model = Contact
+        exclude = ('addressbook',)
+
+    def __init__(self , *args , **kwargs):
+        super(ContactForm , self).__init__(*args , **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-margin-30'

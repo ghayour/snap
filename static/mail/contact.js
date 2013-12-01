@@ -20,7 +20,7 @@ $(function(){
                         if (contact.errors) {
                             notify(contact.errors, {type: 'error'});
                         } else {
-                            notify(contact.display_name +' '+ 'آدرس موردنظر با موفقیت به لیست تماس اضافه شد.');
+                            notify('آدرس موردنظر با موفقیت به لیست تماس اضافه شد.');
                         }
                     });
                 });

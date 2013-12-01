@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls.defaults import patterns, url
 
+from django.conf import settings
+from django.contrib.auth.views import login, logout
+
 urlpatterns = patterns('arsh.user_mail.views',
     url(r'^compose$', 'compose', name='mail/compose'),
     url(r'^search/$', 'search', name='mail/search'),
@@ -28,4 +31,7 @@ urlpatterns = patterns('arsh.user_mail.views',
     url(r'^move-thread/$', 'move_thread', name='mail/move_thread'),
     url(r'^mail/contact/add$', 'add_contact', name='mail/contact/add'),
     url(r'^contact/list$', 'contact_list', name='mail/contact/list'),
+    url(r'^view/addressbook$', 'addressbook_view' , name='view/address_book'),
+    url(r'^edit/addressbook$', 'addressbook_edit' , name='edit/address_book'),
+
 )

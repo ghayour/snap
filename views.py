@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import smtplib
-
+import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -11,12 +11,13 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
+from django.views.generic import FormView
 
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
+from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
-from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
 
 
@@ -387,7 +388,10 @@ def search_labels(keyword):
     label_list = keyword.split(u'،')
     search_query = Q()
     for label in label_list:
-        search_query = search_query | Q(labels__title__contains=label)
+        if not search_query:
+            search_query = Q(labels__title__contains=label)
+        else:
+            search_query = search_query & Q(labels__title__contains=label)
     return search_query
 
 
@@ -542,3 +546,36 @@ def contact_list(request):
         return data
     except ValueError as e:
         pass
+
+#
+#class AddreessBookView (FormView):
+#    form_class = AddressBook
+
+@login_required
+def addressbook_edit (request):
+   if request.is_ajax() and request.POST:
+       user = request.user
+       value = request.POST.get('value')
+       field = request.POST.get('name')
+       pk = request.POST.get('pk')
+       contacts = AddressBook.objects.get(user = user).get_all_contacts()
+       newcontact = contacts.get(pk = pk)
+       if field == 'firstname':
+           newcontact.first_name = value
+       elif field == 'lastname':
+           newcontact.last_name = value
+       elif field == 'email' :
+           newcontact.email = value
+       elif field == 'ex_email':
+           newcontact.additional_email = value
+       newcontact.save()
+       return HttpResponse(json.dumps(value), content_type='application/json')
+
+
+
+@login_required
+def addressbook_view(request):
+    user = request.user
+    contacts = AddressBook.objects.get_or_create(user = user)[0].get_all_contacts()
+    return render_to_response('mail/addressbook.html', {'contacts': contacts} ,
+                              context_instance = RequestContext(request))
