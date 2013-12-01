@@ -63,9 +63,9 @@ $(function(){
                             $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
                                 $(this).closest("tr").remove();
                             });
-                            window.location = self.location;
-                            window.location.reload(true);
                         }
+                        ajaxLoader.show();
+                        window.location.reload();
                         //تغییر با توجه به اینکه در حالت آرشیو هست یا خیر
                         // تغییر نحوه نمایش بر اساس تفاوت خوانده شده ها با نخوانده ها
                     }

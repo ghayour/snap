@@ -244,6 +244,7 @@ def createLabel(request):
 
 @ajax_view
 def add_label(request):
+    c = {}
     item_list = []
     label_id = int(request.POST['label_id'])
     item_type = request.POST['item_type']
@@ -259,6 +260,7 @@ def add_label(request):
         label_name = request.POST['label_name']
         label_name = label_name.split(u'(برچسب جدید)')[0]
         label = Label.create(user=request.user, title=label_name.strip())
+        c['new_label'] = True
     label_url = "/mail/view/%s/" % label.slug
 
     if item_type == "mail":
@@ -280,8 +282,8 @@ def add_label(request):
                 response_text = "قبلا برچسب گذاری صورت گرفته است."
     else:
         response_text = "error"
-
-    return {"response_text": response_text, "label_url": label_url, "label_id": label.id}
+    c.update({"response_text": response_text, "label_url": label_url, "label_id": label.id})
+    return c
 
 
 def label_list(request):
@@ -334,6 +336,7 @@ def delete_label(request):
 
 @ajax_view
 def move_thread(request):
+    c = {"response_text": "error", }
     thread_list = []
     label_name = request.POST.get('label')
     if label_name:
@@ -377,8 +380,9 @@ def move_thread(request):
         else:
             thread.remove_label(current_label)  # todo: fix this
         thread.add_label(label)
+        c['response_text'] = "success"
 
-    return {"response_text": "success", }
+    return c
 
 
 def search_dic(token):

@@ -80,6 +80,10 @@ arsh.mail.ThreadHandler = arsh.mail.ObjectHandler.extend({
             function (data) {
                 if (data["response_text"] == 'success') {
                     alert('برچسب گذاري با موفقيت انجام شد.');
+                    if (data['new_label']){
+                        ajaxLoader.show();
+                        window.location.reload();
+                    }
                 }
                 else {
                     alert(data["response_text"]);
@@ -177,8 +181,8 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
                     if (data["response_text"] == 'success') {
                         alert('عملیات با موفقیت انجام شد.');
                         var current_label_slug = $("#current_label").attr('data-slug');
-                        var new_url = arsh.dj.resolver.url('mail/see_label',{label_slug:current_label_slug});
-                        window.location = new_url;
+                        ajaxLoader.show();
+                        window.location = arsh.dj.resolver.url('mail/see_label',{label_slug:current_label_slug});
                     }
                     else {
                         alert(data["response_text"]);

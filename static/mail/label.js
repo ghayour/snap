@@ -24,6 +24,7 @@ $(document).ready(function () {
                   if (data1["response_text"] == "success") {
                       alert('حذف برچسب باموفقیت انجام شد.');
                       if (data1["referrer"]) {
+                          ajaxLoader.show();
                           window.location = data1["referrer"];
                       }
                       item_element.closest(".delete-label").remove();
