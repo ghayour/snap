@@ -173,6 +173,29 @@ function forward_reply_handler(action_type){
         tinyMCE.get('id_content').setContent(get_fw_content(cur_mail));
     }
     else{
+        var link_row='<tr><td class="formlinks">'+
+                '<a id="replyto-link">افزودن پاسخ-به</a><span class="separator">|</span>'+
+                '<a id="cc-link" >افزودن رونوشت</a>'+
+                '<span class="separator">|</span>'+'<a id="bcc-link">افزودن رونوشت مخفی</a>'+
+                '</td></tr>';
+        $("tr").filter(function(){
+           if($(this).find("#div_id_bcc").length>=1 && ($(this).parent().find(".formlinks").length==0))
+           return true;
+            return false;
+        }).after(link_row);
+
+        $("#replyto-link").click(function(){
+            $("#id_receivers").closest('tr').toggle();
+
+        });
+         $("#cc-link").click(function(){
+             $("#id_cc").closest('tr').toggle();
+
+        });
+         $("#bcc-link").click(function(){
+             $("#id_bcc").closest('tr').toggle();
+
+        });
         show_hide_info_fields(false, true);
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));

@@ -145,7 +145,9 @@ def showThread(request, thread, label=None):
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
-                Mail.reply(content=content, sender=up, in_reply_to=selected_mail, subject=title, thread=thread,
+                Mail.reply(content=content, sender=up, receivers=parse_address(receivers),
+                           cc=parse_address(cc), bcc=parse_address(bcc), in_reply_to=selected_mail, subject=title,
+                           thread=thread,
                            titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
@@ -566,30 +568,29 @@ def contact_list(request):
 #    form_class = AddressBook
 
 @login_required
-def addressbook_edit (request):
-   if request.is_ajax() and request.POST:
-       user = request.user
-       value = request.POST.get('value')
-       field = request.POST.get('name')
-       pk = request.POST.get('pk')
-       contacts = AddressBook.objects.get(user = user).get_all_contacts()
-       newcontact = contacts.get(pk = pk)
-       if field == 'firstname':
-           newcontact.first_name = value
-       elif field == 'lastname':
-           newcontact.last_name = value
-       elif field == 'email' :
-           newcontact.email = value
-       elif field == 'ex_email':
-           newcontact.additional_email = value
-       newcontact.save()
-       return HttpResponse(json.dumps(value), content_type='application/json')
-
+def addressbook_edit(request):
+    if request.is_ajax() and request.POST:
+        user = request.user
+        value = request.POST.get('value')
+        field = request.POST.get('name')
+        pk = request.POST.get('pk')
+        contacts = AddressBook.objects.get(user=user).get_all_contacts()
+        newcontact = contacts.get(pk=pk)
+        if field == 'firstname':
+            newcontact.first_name = value
+        elif field == 'lastname':
+            newcontact.last_name = value
+        elif field == 'email':
+            newcontact.email = value
+        elif field == 'ex_email':
+            newcontact.additional_email = value
+        newcontact.save()
+        return HttpResponse(json.dumps(value), content_type='application/json')
 
 
 @login_required
 def addressbook_view(request):
     user = request.user
-    contacts = AddressBook.objects.get_or_create(user = user)[0].get_all_contacts()
-    return render_to_response('mail/addressbook.html', {'contacts': contacts} ,
-                              context_instance = RequestContext(request))
+    contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    return render_to_response('mail/addressbook.html', {'contacts': contacts},
+                              context_instance=RequestContext(request))

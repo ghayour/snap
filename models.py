@@ -138,9 +138,9 @@ class Mail(models.Model):
             #TODO: better code
             receiver_username = receiver_address
             if isinstance(receiver_address, str) or isinstance(receiver_address, unicode):
-                c = Contact.get_contact_by_address(receiver_address)
+                c = Contact.objects.filter(email=receiver_address)
                 if c:
-                    receiver_username = c.username
+                    receiver_username = c[0].username
                 else:
                     receiver_username = receiver_username.split('@')[0]
 
@@ -249,7 +249,7 @@ class Mail(models.Model):
         return mail
 
     @staticmethod
-    def reply(content, sender, in_reply_to=None, subject=None, thread=None, include=[], exclude=[],
+    def reply(content, sender,  receivers=None, cc=None, bcc=None, in_reply_to=None,  subject=None, thread=None, include=[], exclude=[],
               titles=None, exclude_others=False,
               attachments=None):
         """ در پاسخ به یک نامه، یک میل جدید می‌فرستد.
@@ -286,9 +286,10 @@ class Mail(models.Model):
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
-        to = [mail.sender.username] if mail.sender.username != sender.username else []
-        cc = []
-        bcc = []
+        if receivers:
+            to=receivers
+        else:
+            to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
