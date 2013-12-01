@@ -576,6 +576,6 @@ def addressbook_edit (request):
 @login_required
 def addressbook_view(request):
     user = request.user
-    contacts = AddressBook.objects.get(user = user).get_all_contacts()
+    contacts = AddressBook.objects.get_or_create(user = user)[0].get_all_contacts()
     return render_to_response('mail/addressbook.html', {'contacts': contacts} ,
                               context_instance = RequestContext(request))

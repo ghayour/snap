@@ -72,7 +72,7 @@
 {% block JS %}
     {{ block.super }}
     {% js 'bower_components/bootstrap-editable/js/bootstrap-editable.min.js' %}
-    {% js 'js/addressbook/aditable.js' %}
+    {% js 'mail/addressbook/editable.js' %}
     <script>
         function edit(pk){
        $(".myeditable"+pk).editable(
