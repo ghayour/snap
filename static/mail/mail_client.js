@@ -142,6 +142,10 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
             function (data) {
                 if (data["response_text"] == 'success') {
                     alert('برچسب گذاري با موفقيت انجام شد.');
+                    if (data['new_label']){
+                        ajaxLoader.show();
+                        window.location.reload();
+                    }
 //                    $('input:checkbox[class="mail-checkbox"]:checked').each(function () {
 //                        $(this).parent().nextAll("div").children("div#label-list").append(
 //                            '<div class="mail-label delete-label">' +

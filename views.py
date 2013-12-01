@@ -385,7 +385,7 @@ def move_thread(request):
     return c
 
 
-def search_dic(token):
+def get_search_query(token):
     return {
         u'از': Q(mails__sender__username__contains=token[1]) | Q(mails__sender__first_name__contains=token[1]) | Q(
             mails__sender__last_name__contains=token[1]),
@@ -395,7 +395,7 @@ def search_dic(token):
         u'عنوان': Q(mails__title__contains=token[1]),
         u'محتوا': Q(mails__content__contains=token[1]),
         u'برچسب': search_labels(token[1])
-    }.get(token[0], 1)
+    }.get(token[0], 0)
 
 
 def search_labels(keyword):
@@ -416,11 +416,16 @@ def search(request):
         tokens = parse_address(keywords)
         search_query = Q()
         for token in tokens:
-            tuple_keywords = token.split(':')
-            if not search_query:
-                search_query = search_dic(tuple_keywords)
-            else:
-                search_query = search_query & search_dic(tuple_keywords)
+            try:
+                tuple_keywords = token.split(':')
+                if not get_search_query(tuple_keywords):
+                    raise ValueError
+                if not search_query:
+                    search_query = get_search_query(tuple_keywords)
+                else:
+                    search_query = search_query and get_search_query(tuple_keywords)
+            except (IndexError, ValueError):
+                raise Http404(u"عبارت جستجو را به درستی وارد نمایید.")
 
         answer = Thread.get_user_threads(up).filter(search_query).distinct()
         return render_to_response('mail/label.html', {
