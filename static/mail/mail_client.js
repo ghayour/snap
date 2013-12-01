@@ -164,5 +164,33 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
                     alert(data["response_text"]);
                 }
             });
+    },
+
+    moveToLabel: function (label, label_id, label_name, current_label) {
+        var thread_id = $('#thread-id').val();
+        if (label == label_name)
+            label = '';
+        $.post(arsh.dj.resolver.url('mail/move_thread'),
+            {item_id: thread_id, label : label, current_label:current_label,
+                label_id: label_id, label_name: label_name},
+                function (data) {
+                    if (data["response_text"] == 'success') {
+                        alert('عملیات با موفقیت انجام شد.');
+                        var current_label_slug = $("#current_label").attr('data-slug');
+                        var new_url = arsh.dj.resolver.url('mail/see_label',{label_slug:current_label_slug});
+                        window.location = new_url;
+                    }
+                    else {
+                        alert(data["response_text"]);
+                    }
+                });
+    },
+
+        markAsSpam: function() {
+        this.moveToLabel('spam');
+    },
+
+    moveToTrash: function() {
+        this.moveToLabel('trash');
     }
 });

@@ -334,6 +334,7 @@ def delete_label(request):
 
 @ajax_view
 def move_thread(request):
+    thread_list = []
     label_name = request.POST.get('label')
     if label_name:
         real_title = Label.parse_label_title(label_name)
@@ -359,7 +360,11 @@ def move_thread(request):
     if request.POST.get('current_label', ''):
         current_label = Label.objects.get(id=int(request.POST.get('current_label')))
 
-    thread_list = request.POST.getlist('item_id[]')
+    if request.POST.get('item_id', ''):
+        thread_list.append(request.POST['item_id'])
+    else:
+        thread_list = request.POST.getlist('item_id[]')
+
     for thread_id in thread_list:
         try:
             thread = Thread.objects.get(id=int(thread_id))
