@@ -266,19 +266,17 @@ def add_label(request):
     if item_type == "mail":
         for mail_id in item_list:
             mail = Mail.objects.get(id=mail_id)
-            try:
-                mail.add_label(label)
+            if mail.add_label(label):
                 response_text = "success"
-            except ValidationError:
+            else:
                 response_text = "قبلا نامه یا نخ حاوی آن برچسب زده شده است."
 
     elif item_type == "thread":
         for thread_id in item_list:
             thread = Thread.objects.get(id=int(thread_id))
-            try:
-                thread.add_label(label)
+            if thread.add_label(label):
                 response_text = "success"
-            except ValidationError:
+            else:
                 response_text = "قبلا برچسب گذاری صورت گرفته است."
     else:
         response_text = "error"
