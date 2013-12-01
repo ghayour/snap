@@ -119,6 +119,14 @@ $(function(){
             forward_reply_handler("forward");
         }
     });
+     mailToolbar.addButton({
+        bootstrapIcon: 'user',
+        title: 'اطلاعات تماس',
+        action : function(){
+            window.location = arsh.dj.resolver.url('view/address_book');
+        }
+    });
+
     mailToolbar.addButton({
         bootstrapIcon: 'off',
         title: 'خروج',
