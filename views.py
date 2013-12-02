@@ -156,21 +156,12 @@ def showThread(request, thread, label=None):
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title=Label.SENT_LABEL_NAME).exclude(title=Label.TRASH_LABEL_NAME)
-    #TODO: MOVE TO METHOD
-    allMails = thread.mails.all().select_related().order_by('created_at')
+    allMails = thread.get_user_mails(up)
 
     tobeShown = {}
 
-    #TODO: JOIN!
     for mail in allMails:
-        if mail.sender_id == up.id:
-            tobeShown[mail] = mail.get_user_labels(up)
-        elif up.id in [user.id for user in mail.recipients.all()]:
-            tobeShown[mail] = mail.get_user_labels(up)
-            #TODO: above loop can be replace by thread.get_user_mails() please check if else is required!!
-        else:
-            pass # mail is not related to user
-
+        tobeShown[mail] = mail.get_user_labels(up)
     if not tobeShown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -485,7 +476,7 @@ def ajax_mark_thread(request):
 
     return HttpResponse(simplejson.dumps({'response_text': response_text, }))
 
-
+#TODO: correct that based on changes/where is used?
 @ajax_view
 def get_total_unread_mails(request):
     total_unread_mails = 0

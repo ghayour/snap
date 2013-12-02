@@ -91,9 +91,11 @@ class Mail(models.Model):
         return rec
 
     def get_summary(self):
+        from HTMLParser import HTMLParser
+
         env = {'content': self.content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
-        return get_summary(env['content'].replace('&nbsp;', ''), 50, striptags=True)
+        return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
@@ -210,7 +212,8 @@ class Mail(models.Model):
         # فقط میل‌هایی که کاربر شروع کرده در شاخه‌ی فرستاده شده‌هایش قرار می‌گیرد
         if not initial_sender_labels:
             initial_sender_labels = [Label.SENT_LABEL_NAME]
-        if not 'unread' in initial_sender_labels:
+            #check mail as unread only if it is not in sent label
+        if not 'unread' in initial_sender_labels and Label.SENT_LABEL_NAME not in initial_sender_labels:
             initial_sender_labels.append('unread')
         if sender:
             for label_name in initial_sender_labels:
@@ -249,7 +252,8 @@ class Mail(models.Model):
         return mail
 
     @staticmethod
-    def reply(content, sender,  receivers=None, cc=None, bcc=None, in_reply_to=None,  subject=None, thread=None, include=[], exclude=[],
+    def reply(content, sender, receivers=None, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
+              include=[], exclude=[],
               titles=None, exclude_others=False,
               attachments=None):
         """ در پاسخ به یک نامه، یک میل جدید می‌فرستد.
@@ -287,7 +291,7 @@ class Mail(models.Model):
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
         if receivers:
-            to=receivers
+            to = receivers
         else:
             to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
@@ -363,8 +367,13 @@ class MailReceiver(models.Model):
         if self.id is None:
             new = True
         models.Model.save(self, *args, **kwargs)
-        if new:
+        user_mails = self.mail.thread.get_user_mails(self.user)
+        #thread is marked as unread only if thread was not related to user until now
+        if new and len(user_mails) <= 1:
             self.mail.thread.mark_as_unread(self.user)
+        #this case is for mails which are sent in threads related to user(ex: as reply)
+        else:
+            self.mail.thread.mark_as_unread(self.user, mails=[self.mail])
 
 
 class Label(Slugged):
@@ -517,10 +526,13 @@ class Thread(Slugged):
         ReadMail.mark_as_read(user, self.mails.all())
         return self.remove_label(UserManager.get(user).get_unread_label())
 
-    def mark_as_unread(self, user=None):
+    def mark_as_unread(self, user=None, mails=None):
         from .UserManager import UserManager
 
-        ReadMail.mark_as_unread(user, self.mails.all())
+        unread = mails
+        if not unread:
+            unread = self.mails.all()
+        ReadMail.mark_as_unread(user, unread)
         return self.add_label(UserManager.get(user).get_unread_label())
 
     def get_last_mail(self):
