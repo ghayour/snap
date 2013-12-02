@@ -242,7 +242,7 @@ function setup_mail_form(){
     var lastResults = [];
         $(".info").select2({
                 multiple: true,
-                minimumInputLength: 3,
+                minimumInputLength: 2,
                 placeholder: "",
                 tokenSeparators: [","],
 
