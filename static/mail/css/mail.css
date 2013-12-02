@@ -422,3 +422,13 @@ div#sidebar li .sidebar-item a.current:before {
     margin-top: 5px;
     text-align: right;
 }
+
+tr.unread{
+    font-weight: bold;
+}
+tr.read{
+    font-weight: normal;
+}
+table.dataTable th{
+    text-align: right;
+}

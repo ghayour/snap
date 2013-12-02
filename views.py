@@ -16,9 +16,9 @@ from django.views.generic import FormView
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
+from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.config_manager import ConfigManager
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
 
 def get_default_inbox():

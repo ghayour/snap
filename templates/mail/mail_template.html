@@ -29,9 +29,9 @@
 
 {% block css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{{ STATIC_URL }}/mail/css/mail.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="{{ STATIC_URL }}lib/datatables/datatables.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="{{ STATIC_URL }}lib/select2/select2.css" type="text/css" media="screen"/>
+    {% css 'mail/css/mail.css' %}
     {% css 'mail/toolbar/toolbar.css' %}
     {% css 'mail/loader/loader.css' %}
 
