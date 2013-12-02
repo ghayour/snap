@@ -4,7 +4,7 @@
 {% load config_helper%}
 {% load date_maker %}
 {% load url from future %}
-{% load pdate %}
+{% load shamsi_template_tags %}
 
 {% block js %}
     {{ block.super }}
@@ -71,8 +71,7 @@
                 {% for row in thread.rows %}
                     <td>{{ row }}</td>
                 {% endfor %}
-                <td class="Center">{{ thread.firstMail.created_at|shamsi}}
-{#                        relative }}#}
+                <td class="Center">{{ thread.firstMail.created_at|pdate}}
                 </td>
             </tr>
         {% endfor %}

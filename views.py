@@ -376,8 +376,8 @@ def move_thread(request):
     return c
 
 
-def get_search_query(token):
-    return {
+def get_search_query(token, user):
+    dict_query = {
         u'از': Q(mails__sender__username__contains=token[1]) | Q(mails__sender__first_name__contains=token[1]) | Q(
             mails__sender__last_name__contains=token[1]),
         u'به': Q(mails__recipients__username__contains=token[1]) | Q(
@@ -385,15 +385,21 @@ def get_search_query(token):
             mails__recipients__last_name__contains=token[1]),
         u'عنوان': Q(mails__title__contains=token[1]),
         u'محتوا': Q(mails__content__contains=token[1]),
-        u'برچسب': search_labels(token[1])
-    }.get(token[0], 0)
+        u'برچسب': search_labels
+    }
+    rs = dict_query.get(token[0], 0)
+    if hasattr(rs, '__call__'):
+        return rs(token[1], user)
+    return rs
 
 
-def search_labels(keyword):
+def search_labels(keyword, user):
     label_list = keyword.split(u'،')
     search_query = Q()
+    user_labels = Label.get_user_labels(user)
     for label in label_list:
-        search_query = search_query | Q(labels__title__contains=label)
+        if label:
+            search_query = search_query | (Q(labels__title__contains=label) & Q(labels__in=user_labels))
     return search_query
 
 
@@ -409,12 +415,13 @@ def search(request):
         for token in tokens:
             try:
                 tuple_keywords = token.split(':')
-                if not get_search_query(tuple_keywords):
+                query = get_search_query(tuple_keywords, up)
+                if not query:
                     raise ValueError
                 if not search_query:
-                    search_query = get_search_query(tuple_keywords)
+                    search_query = query
                 else:
-                    search_query = search_query and get_search_query(tuple_keywords)
+                    search_query = search_query & query
             except (IndexError, ValueError):
                 raise Http404(u"عبارت جستجو را به درستی وارد نمایید.")
 
@@ -422,6 +429,7 @@ def search(request):
         return render_to_response('mail/label.html', {
             'threads': answer,
             'label_title': 'نتایج جستجو',
+            'search_exp': keywords
         }, context_instance=RequestContext(request))
 
 
@@ -554,9 +562,6 @@ def contact_list(request):
     except ValueError as e:
         pass
 
-#
-#class AddreessBookView (FormView):
-#    form_class = AddressBook
 
 @login_required
 def addressbook_edit(request):

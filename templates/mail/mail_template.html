@@ -47,7 +47,7 @@
     {% label_list user label.title %}
     <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
         {% csrf_token %}
-        <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 220px; float: right"/>
+        <input id="mail-search-input" type="text" value="{{ search_exp }}" name="keywords" placeholder="جستجو" style="width: 220px; float: right"/>
     </form>
     <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
     <hr/>
