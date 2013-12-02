@@ -626,15 +626,17 @@ class ThreadLabel(models.Model):
         try:
             tl = cls.objects.get(label=label, thread=thread)
         except cls.DoesNotExist:
-            raise ValidationError(_('This thread has not been tagged whit such a label.'))
+            return False
 
         if mail:
             if mail in tl.mails.all():
                 tl.mails.remove(mail)
                 if not tl.mails.all():
                     tl.delete()
+                return True
         else:
             tl.delete()
+            return True
 
     @classmethod
     def has_label(cls, label, mail):
@@ -687,8 +689,8 @@ class AddressBook(models.Model):
         :type address: str
         :return: bool
         """
-        c = Contact.get_contact_by_address(address)
-        if c and c.address_book == self:
+        c = Contact.get_contact_by_address(address, book=self)
+        if c:
             return True
         return False
 
@@ -766,18 +768,18 @@ class Contact(models.Model):
         return self.email.split('@')[0]
 
     @classmethod
-    def get_contact_by_address(cls, address):
+    def get_contact_by_address(cls, address, book=None):
         """
         در صورت وجود، تماس با آدرس
         داده شده را برمیگرداند.
         :type address: str
         :return: Contact or None
         """
-        try:
-            c = cls.objects.get(email=address)
-            return c
-        except cls.DoesNotExist:
-            return None
+        if book:
+            c = cls.objects.filter(email=address, address_book=book)
+        else:
+            c = cls.objects.filter(email=address)
+        return c
 
 
 class ReadMail(models.Model):

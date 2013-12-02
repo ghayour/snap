@@ -242,10 +242,13 @@ def add_label(request):
     item_list = []
     label_id = int(request.POST['label_id'])
     item_type = request.POST['item_type']
+    response_text = u"تغییری داده نشد."
     if request.POST.get('item_id', ''):
         item_list.append(request.POST['item_id'])
     else:
         item_list = request.POST.getlist('item_id[]')
+    if not item_list:
+        response_text = u"یک نامه برای برچسب گذاری انتخاب شود."
 
     if label_id >= 0:
         # existing label
@@ -472,16 +475,19 @@ def ajax_mark_thread(request):
         thread_list = request.POST.getlist('item_id[]')
     action = request.POST.get('action', '')
     response_text = "success"
-    if action == 'read':
-        for thread_id in thread_list:
-            thread = Thread.objects.get(id=int(thread_id))
-            thread.mark_as_read(request.user)
-    elif action == 'unread':
-        for thread_id in thread_list:
-            thread = Thread.objects.get(id=int(thread_id))
-            thread.mark_as_unread(request.user)
+    if not thread_list:
+        response_text = u"حداقل یک نامه باید انتخاب شود."
     else:
-        response_text = "error"
+        if action == 'read':
+            for thread_id in thread_list:
+                thread = Thread.objects.get(id=int(thread_id))
+                thread.mark_as_read(request.user)
+        elif action == 'unread':
+            for thread_id in thread_list:
+                thread = Thread.objects.get(id=int(thread_id))
+                thread.mark_as_unread(request.user)
+        else:
+            response_text = u"عملیات درخواستی امکان پذیر نیست."
 
     return HttpResponse(simplejson.dumps({'response_text': response_text, }))
 
