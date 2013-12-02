@@ -143,7 +143,10 @@ $(function() {
 
 function update_message_type(message_type){
     $("#message-type").val(message_type);
-    $("legend").text(_t(message_type));
+    var txt="پاسخ" ;
+    if(message_type=='forward')
+        var txt="ارجاع" ;
+    $("legend").text(txt);
 }
 
 function forward_reply_handler(action_type){

@@ -159,13 +159,6 @@ function get_re_subject(mail){
 function get_re_content(last_mail){
     return '';
 }
-
-function update_message_type(){
-    var message_type = $("input:checked[name=re-fw]").val();
-  $("#message-type").val(message_type);
-  $("legend").text(_t(message_type));
-}
-
 $(document).ready(function () {
      $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">');
     $("form.mail-form").submit(function(e){

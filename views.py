@@ -184,6 +184,7 @@ def showThread(request, thread, label=None):
         'thread': thread,
         'label': label,
         'labels': labels,
+        'ordered_mails': allMails,
         'mails': tobeShown,
         'fw_re_form': fw_re_form,
         'referrer': referrer,
