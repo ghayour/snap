@@ -4,7 +4,8 @@ import logging
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
+from django.db.models import Count
 from django.utils.translation import ugettext_lazy as _
 from model_utils.choices import Choices
 
@@ -12,7 +13,6 @@ from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
 
-__docformat__ = 'reStructuredText'
 logger = logging.getLogger()
 
 FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
@@ -412,7 +412,22 @@ class Label(Slugged):
         """
         from .UserManager import UserManager
 
-        return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
+        unread_label = UserManager.get(self.user).get_unread_label()
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM user_mail_threadlabel tl
+            WHERE
+                tl.label_id={label1}
+              AND
+                (
+                  SELECT COUNT(*)
+                  FROM user_mail_threadlabel tl2
+                  WHERE tl2.label_id={label2} AND tl2.thread_id=tl.thread_id
+                )>0
+        """.format(label1=unread_label.id, label2=self.id))
+        row = cursor.fetchone()
+        return row[0]
 
     def is_deleted_label(self):
         return self.title in [self.TRASH_LABEL_NAME, self.SPAM_LABEL_NAME]

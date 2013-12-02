@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls.defaults import patterns, url
 
-from django.conf import settings
-from django.contrib.auth.views import login, logout
+from .services import mailbox_info
 
 urlpatterns = patterns('arsh.user_mail.views',
     url(r'^compose$', 'compose', name='mail/compose'),
@@ -34,4 +33,5 @@ urlpatterns = patterns('arsh.user_mail.views',
     url(r'^view/addressbook$', 'addressbook_view' , name='view/address_book'),
     url(r'^edit/addressbook$', 'addressbook_edit' , name='edit/address_book'),
 
+    url(r'^s/mailbox-info$', mailbox_info, name='mail/s/mailbox-info'),
 )
