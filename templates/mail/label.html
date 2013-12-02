@@ -1,6 +1,7 @@
 {% extends 'mail/mail_template.html' %}
 {% load mail %}
-{% load user_manager %}
+{% load user_manager%}
+{% load config_helper%}
 {% load date_maker %}
 {% load url from future %}
 {% load pdate %}
@@ -39,20 +40,20 @@
             {% for header in env.headers %}
                 <th>{{ header }}</th>
             {% endfor %}
-            <th>تاریخ ایجاد درخواست</th>
+            <th>{{ ''|get_title }}</th>
         </tr>
         </thead>
         <tbody>
         {% for thread in threads %}
             {% if thread.is_unread %}
-            <tr style=" font-weight: bold;">
+            <tr class="unread">
             {% else %}
-            <tr style="font-weight: normal">
+            <tr class="read">
             {% endif %}
                 <td class="Center" style="width: 20px;"><input type="checkbox" class="thread-checkbox"
                                                                value="{{ thread.id }}"/></td>
                 <td style="width: 20%;">
-                <a class="contact sender" data-style="text-decoration: none" data-contact-user-id="{{ thread.firstMail.sender_id }}" href="#">{{ thread.firstMail.sender_id|get_user_full_name }}</a>
+                <a class="sender" data-style="text-decoration: none" data-contact-user-id="{{ thread.firstMail.sender_id }}" href="#">{{ thread.firstMail.sender_id|get_user_full_name }}</a>
                 </td>
                 <td style="width: 20%;">
                     {% if label %}
