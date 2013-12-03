@@ -41,7 +41,10 @@ $(function(){
         bootstrapIcon: 'trash',
         title: 'حذف',
         action: function() {
-            mailSystem.moveToTrash();
+            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
+            if(doIt){
+                mailSystem.moveToTrash();
+            }
         }
     });
     mailToolbar.addButton({
