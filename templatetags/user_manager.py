@@ -34,6 +34,7 @@ def get_thread_senders(thread, user):
         if sender == user:
             s = s + u"من" + u'، '
         else:
-            s = s + sender.username + u'، '
+            s = s + sender.get_full_name() + u'، '
+
     
-    return s + '(%s)' % mail_counts
+    return s[:-2] + ' (%d)' % mail_counts
