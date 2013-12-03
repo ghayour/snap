@@ -30,31 +30,31 @@
                    <tr>
                         <td> نام کاربری </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="displayname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter display name" >{{ contact.display_name }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="displayname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter display name" data-url="/edit/addressbook">{{ contact.display_name }}</a>
                         </td>
                     </tr>
                     <tr>
                         <td>نام  </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="firstname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter first name" >{{ contact.first_name }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="firstname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter first name" data-url="/edit/addressbook">{{ contact.first_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td>نام خانوادگی </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="lastname" data-type="text" data-pk="{{ contact.id }}"  data-title="Enter last name">{{ contact.last_name }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="lastname" data-type="text" data-pk="{{ contact.id }}"  data-title="Enter last name" data-url="/edit/addressbook">{{ contact.last_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td> آدرس پست الکترونیکی</td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="email" data-type="email" data-pk="{{ contact.id }}" data-title="Enter email">{{ contact.email }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="email" data-type="email" data-pk="{{ contact.id }}" data-title="Enter email" data-url="/edit/addressbook">{{ contact.email }}</a>
                         </td>
                     </tr>
                   <tr>
                        <td> آدرس پست الکترونیکی دیگر </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="ex_email" data-type="text" data-pk="{{ contact.id }}" data-title="Enter uadditional email">{{ contact.additional_email }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="ex_email" data-type="text" data-pk="{{ contact.id }}" data-title="Enter uadditional email" data-url="/edit/addressbook">{{ contact.additional_email }}</a>
                         </td>
                     </tr>
                   </tbody>
@@ -88,13 +88,15 @@
     {% js 'mail/addressbook/editable.js' %}
     <script>
         function edit(pk){
-       $(".myeditable"+pk).editable(
-        {
-        toggleDisabled : true,
-        type: "text",
-        url: '/edit/addressbook'
 
-        });
+       $(".myeditable"+pk).editable(
+               'toggleDisabled'
+{#        {#}
+{#        type: "text",#}
+{#        url: '/edit/addressbook'#}
+{##}
+{#        }#}
+       );
 
         }
     </script>
