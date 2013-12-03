@@ -85,7 +85,9 @@ def compose(request):
             subject = composeForm.cleaned_data['title']
             content = composeForm.cleaned_data['content']
             label_ids = request.POST.get('labels').split(',')
-            initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
+            initial_labels = []
+            if label_ids and label_ids[0]:
+                initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
             initial_labels.append(Label.SENT_LABEL_NAME)
 
             attachments = request.FILES.getlist('attachments[]')

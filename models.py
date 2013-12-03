@@ -100,6 +100,7 @@ class Mail(models.Model):
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
 
+
     def set_thread(self, thread):
         self.thread = thread
 
@@ -387,7 +388,8 @@ class Label(Slugged):
     SPAM_LABEL_NAME = u'هرزنامه'
     ARCHIVE_LABEL_NAME = u'بایگانی'
     STARRED_LABEL_NAME = u'مهم'
-
+    TODO_LABEL_NAME = u'کارها'
+    COMPLETED_LABEL_NAME = u'کارها/انجام شده'
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
