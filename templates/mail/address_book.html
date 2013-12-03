@@ -22,11 +22,8 @@
         </div>
         <div id="collapse{{ contact.id }}" class="panel-collapse collapse ">
           <div class="panel-body">
-              <button id="{{ contact.id }}" class="btn btn-primary" onclick="edit(id)">  ویرایش
-             <form method="post" action="">{% csrf_token %}
-                 <input value="{{ contact.id }}" type="hidden" name="pk">
-                 <button type="submit" class="btn btn-danger"> حذف </button>
-             </form>
+              <button id="{{ contact.id }}" class="btn btn-primary" onclick="edit(id)" >  ویرایش </button>
+
 
               <table class="table table-bordered table-striped">
                   <tbody>
@@ -63,6 +60,11 @@
                   </tbody>
               </table>
 
+
+               <form method="post" action="">{% csrf_token %}
+                 <input value="{{ contact.id }}" type="hidden" name="pk">
+                 <button type="submit" class="btn btn-danger"> حذف </button>
+             </form>
           </div>
         </div>
       </div>
