@@ -23,6 +23,8 @@ $(document).ready(function () {
                   var data1 = JSON.parse(data);
                   if (data1["response_text"] == "success") {
                       alert('حذف برچسب باموفقیت انجام شد.');
+                      if(data1["archive_text"])
+                        alert(data1["archive_text"]);
                       if (data1["referrer"]) {
                           ajaxLoader.show();
                           window.location = data1["referrer"];

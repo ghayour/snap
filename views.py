@@ -155,7 +155,7 @@ def showThread(request, thread, label=None):
         fw_re_form = FwReForm(user_id=up.id)
 
     labels = thread.get_user_labels(up)
-    labels = labels.exclude(title=Label.SENT_LABEL_NAME).exclude(title=Label.TRASH_LABEL_NAME)
+    labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     allMails = thread.get_user_mails(up)
 
     tobeShown = {}
@@ -320,6 +320,10 @@ def delete_label(request):
                 thread = Thread.objects.get(id=int(request.POST['item_id']))
                 thread.remove_label(label)
                 c["response_text"] = "success"
+                label_count = len(thread.get_user_labels(request.user))
+                if label_count == 0 or (label_count == 1 and thread.is_unread()):
+                    thread.add_label(Label.get_label_for_user(Label.ARCHIVE_LABEL_NAME, request.user))
+                    c["archive_text"] = u"به بایگانی منتقل گردید."
 
         if current_label and not thread.has_label(current_label):
             c["referrer"] = reverse('mail/see_label', args=[request.POST.get('current_label_slug')])

@@ -386,6 +386,7 @@ class Label(Slugged):
     UNREAD_LABEL_NAME = u'unread'
     TRASH_LABEL_NAME = u'زباله دان'
     SPAM_LABEL_NAME = u'هرزنامه'
+    ARCHIVE_LABEL_NAME = u'بایگانی'
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
@@ -456,7 +457,7 @@ class Label(Slugged):
     @staticmethod
     def get_initial_labels():
         return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME]
+                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
 
     @staticmethod
     def setup_initial_labels(user):
@@ -469,7 +470,7 @@ class Label(Slugged):
         :return: None
         """
         labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                  Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME]
+                  Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
         for label in labels:
             if not Label.objects.filter(title=label, user=user).count():
                 Label.create(title=label, user=user)
@@ -634,7 +635,6 @@ class ThreadLabel(models.Model):
             if mail:
                 new_record.mails.add(mail)
             return True
-
 
     @classmethod
     def remove(cls, label, thread, mail=None):
