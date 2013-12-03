@@ -13,6 +13,7 @@ from arsh.rich_form.validation import ValidationService
 
 class ComposeForm(forms.ModelForm):
     attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+    labels = forms.CharField(label=u'برچسب های اولیه', required=False)
 
     class Meta:
         model = Mail
@@ -24,6 +25,8 @@ class ComposeForm(forms.ModelForm):
         super(ComposeForm, self).__init__(*args, **kwargs)
 
         self.fields['title'].widget.attrs['style'] = 'min-width:60%'
+        self.fields['labels'].widget.attrs['class'] = 'initial-labels'
+        self.fields['labels'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
 
@@ -48,7 +51,7 @@ class ComposeForm(forms.ModelForm):
         self.helper.form_id = 'compose-form'
         self.helper.form_class = 'form margin-30'
         self.helper.layout = LayoutUtils(has_submit=True, has_reset=False,
-                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'content',
+                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'labels', 'content',
                                                        'attachments']).generate_table_layout(self, 1)
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
@@ -96,6 +99,7 @@ class FwReForm(forms.ModelForm):
                                                        'attachments']).generate_table_layout(self, 1)
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
+
 
 class ContactForm(forms.ModelForm):
 

@@ -84,6 +84,10 @@ def compose(request):
         if composeForm.is_valid():
             subject = composeForm.cleaned_data['title']
             content = composeForm.cleaned_data['content']
+            label_ids = request.POST.get('labels').split(',')
+            initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
+            initial_labels.append(Label.SENT_LABEL_NAME)
+
             attachments = request.FILES.getlist('attachments[]')
 
             cc = request.POST.get('cc')
@@ -91,7 +95,7 @@ def compose(request):
             try:
                 Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
                             bcc=parse_address(bcc), titles=[get_default_inbox()],
-                            initial_sender_labels=[Label.SENT_LABEL_NAME],
+                            initial_sender_labels=initial_labels,
                             attachments=attachments)
 
                 return HttpResponseRedirect(reverse('mail/home'))
@@ -281,16 +285,25 @@ def add_label(request):
     return c
 
 
+@ajax_view
 def label_list(request):
     start = request.GET.get('name_startsWith')
+    request_type = request.GET.get('request_type')
     labels = Label.objects.filter(user=request.user, title__startswith=start)
+    if request_type == 'list':
+        #prepare label list for compose form
+        data = {'results': []}
+        labels = labels.exclude(title__in=Label.get_initial_labels())
+        for label in labels:
+            data['results'].append({'id': label.id, 'text': label.title})
+        return data
     if request.GET.get('current_label', ''):
         labels.exclude(id=int(request.GET.get('current_label')))
 
     jsonText = '['
     new_label_text = u'(برچسب جدید)'
     for label in labels:
-        if not label.is_deleted_label():
+        if not label.limited_labels():
             jsonText += '{"value":"' + str(label.id) + '" , "label":"' + label.title + '"},'
     if not UserManager.get(request.user).get_label(start.strip()):
         jsonText += '{"value":"' + '-1' + '" , "label":"' + start + ' ' + new_label_text + ' "},'
@@ -373,7 +386,7 @@ def move_thread(request):
             thread = Thread.objects.get(id=int(thread_id))
         except (ValueError, Thread.DoesNotExist):
             raise Http404('Invalid thread id')
-        if label.is_deleted_label():
+        if label.limited_labels():
             for lbl in thread.labels.all():
                 if lbl.title != Label.UNREAD_LABEL_NAME:
                     thread.remove_label(lbl)

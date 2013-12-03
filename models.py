@@ -148,7 +148,6 @@ class Mail(models.Model):
 
             if isinstance(receiver_address, Contact):
                 receiver_username = receiver_address.username
-                #TODO: write a method to add contact by email address
             try:
                 receiver = User.objects.get(username=receiver_username)
             except User.DoesNotExist:
@@ -213,7 +212,7 @@ class Mail(models.Model):
         if not initial_sender_labels:
             initial_sender_labels = [Label.SENT_LABEL_NAME]
             #check mail as unread only if it is not in sent label
-        if not 'unread' in initial_sender_labels and Label.SENT_LABEL_NAME not in initial_sender_labels:
+        if not 'unread' in initial_sender_labels and not Label.SENT_LABEL_NAME in initial_sender_labels:
             initial_sender_labels.append('unread')
         if sender:
             for label_name in initial_sender_labels:
@@ -387,6 +386,8 @@ class Label(Slugged):
     TRASH_LABEL_NAME = u'زباله دان'
     SPAM_LABEL_NAME = u'هرزنامه'
     ARCHIVE_LABEL_NAME = u'بایگانی'
+    STARRED_LABEL_NAME = u'مهم'
+
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
@@ -430,7 +431,7 @@ class Label(Slugged):
         row = cursor.fetchone()
         return row[0]
 
-    def is_deleted_label(self):
+    def limited_labels(self):
         return self.title in [self.TRASH_LABEL_NAME, self.SPAM_LABEL_NAME]
 
     @staticmethod
@@ -457,7 +458,7 @@ class Label(Slugged):
     @staticmethod
     def get_initial_labels():
         return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.STARRED_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
 
     @staticmethod
     def setup_initial_labels(user):
@@ -469,8 +470,7 @@ class Label(Slugged):
         :rtype user: django.contrib.auth.models.User
         :return: None
         """
-        labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                  Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+        labels = Label.get_initial_labels()
         for label in labels:
             if not Label.objects.filter(title=label, user=user).count():
                 Label.create(title=label, user=user)

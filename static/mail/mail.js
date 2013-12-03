@@ -270,6 +270,28 @@ function setup_mail_form(){
                     return { id: term, text: text };
                 }
             });
+        $(".initial-labels").select2({
+                multiple: true,
+                minimumInputLength: 2,
+                placeholder: "",
+                tokenSeparators: [","],
+                ajax: {
+                url: arsh.dj.resolver.url('mail/label_list'),
+                dataType: "json",
+                type: "GET",
+                data: function (term, page) {
+                    return {
+                        name_startsWith: term,
+                        request_type: 'list'
+                    };
+                },
+                results: function (data, page) {
+                    lastResults = data.results;
+                    return data;
+                }
+            }
+
+            });
 
 
 }
