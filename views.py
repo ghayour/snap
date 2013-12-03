@@ -387,14 +387,14 @@ def move_thread(request):
         except (ValueError, Thread.DoesNotExist):
             raise Http404('Invalid thread id')
         if label.limited_labels():
-            for lbl in thread.labels.all():
-                if lbl.title != Label.UNREAD_LABEL_NAME:
-                    thread.remove_label(lbl)
+            for lbl in thread.get_user_labels(request.user).exclude(title=Label.UNREAD_LABEL_NAME):
+                thread.remove_label(lbl)
+                if lbl.title == Label.TRASH_LABEL_NAME:
+                    return {'response_text': 'success'}
         else:
             thread.remove_label(current_label)  # todo: fix this
         thread.add_label(label)
         c['response_text'] = "success"
-
     return c
 
 
