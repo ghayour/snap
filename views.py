@@ -320,8 +320,9 @@ def delete_label(request):
                 thread = Thread.objects.get(id=int(request.POST['item_id']))
                 thread.remove_label(label)
                 c["response_text"] = "success"
-                label_count = len(thread.get_user_labels(request.user))
-                if label_count == 0 or (label_count == 1 and thread.is_unread()):
+                label_count = len(thread.get_user_labels(request.user).exclude(
+                    title__in=[Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME]))
+                if label_count == 0:
                     thread.add_label(Label.get_label_for_user(Label.ARCHIVE_LABEL_NAME, request.user))
                     c["archive_text"] = u"به بایگانی منتقل گردید."
 
