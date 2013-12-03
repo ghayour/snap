@@ -673,7 +673,6 @@ class ThreadLabel(models.Model):
 class AddressBook(models.Model):
     user = models.OneToOneField(User)
 
-
     def get_all_contacts(self):
         u'''
 
@@ -724,16 +723,15 @@ class AddressBook(models.Model):
         try:
             if contact_user == self.user:
                 raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
-            Contact.objects.get(address_book=self,
-                                email=contact_user.username + '@' + MailProvider.get_default_domain())
-            raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
+            if self.has_contact_address(contact_user.username + '@' + MailProvider.get_default_domain()):
+                raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
+            else:
+                raise Contact.DoesNotExist
         except Contact.DoesNotExist:
             return Contact.objects.create(address_book=self, display_name=contact_user.get_full_name(),
                                           first_name=contact_user.first_name, last_name=contact_user.last_name,
                                           email=contact_user.username + '@' + MailProvider.get_default_domain())
 
-
-    #TODO: write a method to add contact by email address
 
     @staticmethod
     def get_addressbook_for_user(user, create_new=False):
