@@ -10,7 +10,7 @@
 
 {% block content %}
     {% if contacts %}
-        <div class="panel-group" id="accordion">
+        <div class="panel-group" id="accordion" xmlns="http://www.w3.org/1999/html">
              {%  for contact in contacts %}
       <div class="panel panel-default">
         <div class="panel-heading">
@@ -22,31 +22,42 @@
         </div>
         <div id="collapse{{ contact.id }}" class="panel-collapse collapse ">
           <div class="panel-body">
-              <button id="{{ contact.id }}" class="btn btn-primary" onclick="edit(id)">  ویرایش</button>
+              <button id="{{ contact.id }}" class="btn btn-primary" onclick="edit(id)">  ویرایش
+             <form method="post" action="">{% csrf_token %}
+                 <input value="{{ contact.id }}" type="hidden" name="pk">
+                 <button type="submit" class="btn btn-danger"> حذف </button>
+             </form>
+
               <table class="table table-bordered table-striped">
                   <tbody>
+                   <tr>
+                        <td> نام کاربری </td>
+                        <td>
+                            <a href="#" class="myeditable{{ contact.id }}" id="displayname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter display name" >{{ contact.display_name }}</a>
+                        </td>
+                    </tr>
                     <tr>
                         <td>نام  </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="firstname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enteruser name" >{{ contact.first_name }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="firstname" data-type="text"  data-pk="{{ contact.id }}"  data-title="Enter first name" >{{ contact.first_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td>نام خانوادگی </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="lastname" data-type="text" data-pk="{{ contact.id }}"  data-title="Enter username">{{ contact.last_name }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="lastname" data-type="text" data-pk="{{ contact.id }}"  data-title="Enter last name">{{ contact.last_name }}</a>
                         </td>
                     </tr>
                   <tr>
                         <td> آدرس پست الکترونیکی</td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="email" data-type="email" data-pk="{{ contact.id }}" data-title="Enter username">{{ contact.email }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="email" data-type="email" data-pk="{{ contact.id }}" data-title="Enter email">{{ contact.email }}</a>
                         </td>
                     </tr>
                   <tr>
                        <td> آدرس پست الکترونیکی دیگر </td>
                         <td>
-                            <a href="#" class="myeditable{{ contact.id }}" id="ex_email" data-type="text" data-pk="{{ contact.id }}" data-title="Enter username">{{ contact.additional_email }}</a>
+                            <a href="#" class="myeditable{{ contact.id }}" id="ex_email" data-type="text" data-pk="{{ contact.id }}" data-title="Enter uadditional email">{{ contact.additional_email }}</a>
                         </td>
                     </tr>
                   </tbody>

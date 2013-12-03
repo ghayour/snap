@@ -32,6 +32,5 @@ urlpatterns = patterns('arsh.user_mail.views',
     url(r'^contact/list$', 'contact_list', name='mail/contact/list'),
     url(r'^view/addressbook$', 'addressbook_view' , name='view/address_book'),
     url(r'^edit/addressbook$', 'addressbook_edit' , name='edit/address_book'),
-
     url(r'^s/mailbox-info$', mailbox_info, name='mail/s/mailbox-info'),
 )

@@ -599,6 +599,8 @@ def addressbook_edit(request):
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
         newcontact = contacts.get(pk=pk)
+        if field == 'displayname':
+            newcontact.display_name = value
         if field == 'firstname':
             newcontact.first_name = value
         elif field == 'lastname':
@@ -609,11 +611,23 @@ def addressbook_edit(request):
             newcontact.additional_email = value
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
-
-
+@login_required
+def contact_delete(request):
+    user = request.user
+    if request.method == "POST":
+        pk = request.POST.get('pk')
+        contacts = AddressBook.objects.get(user = user).get_all_contacts()
+        contacts.get(pk = pk).delete()
+    return render_to_response('mail/address_book.html', {'contacts': contacts},
+                              context_instance=RequestContext(request))
 @login_required
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    if request.method == "POST":
+        pk = request.POST.get('pk')
+        contacts = AddressBook.objects.get(user = user).get_all_contacts()
+        contacts.get(pk = pk).delete()
+
     return render_to_response('mail/address_book.html', {'contacts': contacts},
                               context_instance=RequestContext(request))
