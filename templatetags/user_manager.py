@@ -24,3 +24,16 @@ def get_user_full_name(user):
         return u'ناشناس'
     u = UserManager.get(None).get_user(user)
     return u.get_full_name() or u.username
+
+@register.filter
+def get_thread_senders(thread, user):
+    mail_counts = len(thread.get_user_mails(user))
+    senders = thread.get_participants(user)['senders']
+    s = ''
+    for sender in senders:
+        if sender == user:
+            s = s + u"من" + u'، '
+        else:
+            s = s + sender.username + u'، '
+    
+    return s + '(%s)' % mail_counts

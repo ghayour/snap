@@ -574,10 +574,6 @@ class Thread(Slugged):
     def get_unread_mails(self, user):
         return [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
 
-    @staticmethod
-    def get_user_threads(user):
-        return Thread.objects.filter(labels__user=user)
-
     def is_thread_related(self, user):
         u"""
         یک کاربر به عنوان ورودی میگیرد و بررسی میکند آیا این
@@ -613,6 +609,24 @@ class Thread(Slugged):
                 if mail not in mail_list:
                     mail_list.append(mail)
         return mail_list
+
+    def get_participants(self, related_user=None):
+        threadMails = self.mails.all()
+
+        if related_user:
+            threadMails = threadMails.filter(sender=related_user)|threadMails.filter(recipients=related_user)
+
+        sender_ids = threadMails.values_list('sender', flat=True).distinct()
+        senders = [User.objects.get(id=user_id) for user_id in sender_ids]
+
+        recipient_ids = threadMails.values_list('recipients', flat=True).distinct()
+        recipients = [User.objects.get(id=user_id) for user_id in recipient_ids]
+
+        return {'senders': senders, 'recipients': recipients}
+
+    @staticmethod
+    def get_user_threads(user):
+        return Thread.objects.filter(labels__user=user)
 
 
 class ThreadLabel(models.Model):
