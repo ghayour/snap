@@ -278,6 +278,8 @@ def add_label(request):
         for thread_id in item_list:
             thread = Thread.objects.get(id=int(thread_id))
             if thread.add_label(label):
+                if label.title==Label.COMPLETED_LABEL_NAME:
+                    thread.complete_todo()
                 response_text = "success"
             else:
                 response_text = "قبلا برچسب گذاری صورت گرفته است."

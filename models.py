@@ -19,6 +19,7 @@ FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
 
 
 class MailDomain(Named):
+
     def get_provider(self):
         try:
             return MailProvider.objects.get(domains=self)
@@ -626,6 +627,13 @@ class Thread(Slugged):
         recipients = User.objects.filter(id__in=recipient_ids)
 
         return {'senders': senders, 'recipients': recipients}
+
+    def complete_todo(self):
+        ls = self.get_participants()
+        p_all = ls['senders'] | ls['recipients']
+        for p in p_all:
+            self.add_label(Label.get_label_for_user(Label.COMPLETED_LABEL_NAME, p, create_new=True))
+
 
     @staticmethod
     def get_user_threads(user):
