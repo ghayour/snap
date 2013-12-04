@@ -98,6 +98,7 @@ class Mail(models.Model):
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
+
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
 
@@ -649,6 +650,24 @@ class Thread(Slugged):
                 if not r == mail.sender and not r in mail.recipients.all():
                     Mail.add_receiver(mail, self, r, type='cc', label_names=[Label.REQUEST_LABEL_NAME],
                                       create_new_labels=True)
+
+    def get_deadline(self):
+        import re
+        #TODO:check this search
+        mail=self.firstMail
+        sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
+                        mail.content)
+        if sub:
+            try:
+                d_str = sub.group(0).split(':')
+                days = d_str[1].split(u'\u0631\u0648\u0632')
+                if days:
+                    d = days[0]
+                    sd = mail.created_at.date()
+                    deadline = sd + datetime.timedelta(days=int(d))
+                    return deadline
+            except Exception:
+                return None
 
 
     @staticmethod
