@@ -100,7 +100,6 @@ class Mail(models.Model):
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
 
-
     def set_thread(self, thread):
         self.thread = thread
 
@@ -196,8 +195,6 @@ class Mail(models.Model):
         :type titles: str[]
         :rtype: arsh.mail.models.mail
         """
-        #        Label.setup_initial_labels(sender)
-        #        Label.setup_initial_labels(User.objects.get(id=1))
 
         recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
         for t, rl in recipients.items():
@@ -262,6 +259,12 @@ class Mail(models.Model):
         :type content: unicode
         :param sender: فرستنده‌ی پاسخ
         :type sender: User
+        :param receivers: آدرس دریافت کنندگان اصلی
+        :type receivers: str[]
+        :param cc: آدرس دریافت کنندگان رونوشت
+        :type cc: str[]
+        :param bcc: آدرس دریافت کنندگان مخفی
+        :type bcc: str[]
         :param in_reply_to: این نامه پاسخ به کدام نامه است
         :type in_reply_to: Mail
         :param subject: عنوان نامه
@@ -611,16 +614,16 @@ class Thread(Slugged):
         return mail_list
 
     def get_participants(self, related_user=None):
-        threadMails = self.mails.all()
+        thread_mails = self.mails.all()
 
         if related_user:
-            threadMails = threadMails.filter(sender=related_user)|threadMails.filter(recipients=related_user)
+            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
 
-        sender_ids = threadMails.values_list('sender', flat=True).distinct()
-        senders = [User.objects.get(id=user_id) for user_id in sender_ids]
+        sender_ids = thread_mails.values_list('sender', flat=True).distinct()
+        senders = User.objects.filter(id__in=sender_ids)
 
-        recipient_ids = threadMails.values_list('recipients', flat=True).distinct()
-        recipients = [User.objects.get(id=user_id) for user_id in recipient_ids]
+        recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
+        recipients = User.objects.filter(id__in=recipient_ids)
 
         return {'senders': senders, 'recipients': recipients}
 

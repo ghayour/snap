@@ -30,7 +30,7 @@ def get_thread_senders(thread, user):
     mail_counts = len(thread.get_user_mails(user))
     senders = thread.get_participants(user)['senders']
     s = ''
-    for sender in senders:
+    for sender in senders.all():
         if sender == user:
             s = s + u"من" + u'، '
         else:
