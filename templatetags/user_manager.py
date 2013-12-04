@@ -2,7 +2,9 @@
 from django import template
 
 from arsh.user_mail.UserManager import UserManager
+from arsh.user_mail.models import AddressBook
 
+from django.shortcuts import render_to_response, get_object_or_404
 
 __docformat__ = 'reStructuredText'
 
@@ -31,10 +33,17 @@ def get_thread_senders(thread, user):
     senders = thread.get_participants(user)['senders']
     s = ''
     for sender in senders.all():
+        full_name = sender.get_full_name()
+        #add_book = AddressBook.objects.get(user = user).get_all_contacts()
+        #email = sender.email
+        #x = add_book.get_object_or_404(email = email)
         if sender == user:
             s = s + u"من" + u'، '
         else:
-            s = s + sender.get_full_name() + u'، '
+            if full_name == '':
+                s = s + sender.username + u'، '
+            else:
+                s = s + sender.get_full_name() + u', '
 
     
     return s[:-2] + ' (%d)' % mail_counts

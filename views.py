@@ -619,18 +619,6 @@ def addressbook_edit(request):
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
 
-
-@login_required
-def contact_delete(request):
-    user = request.user
-    if request.method == "POST":
-        pk = request.POST.get('pk')
-        contacts = AddressBook.objects.get(user=user).get_all_contacts()
-        contacts.get(pk=pk).delete()
-    return render_to_response('mail/address_book.html', {'contacts': contacts},
-                              context_instance=RequestContext(request))
-
-
 @login_required
 def addressbook_view(request):
     user = request.user
