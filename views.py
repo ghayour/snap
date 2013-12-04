@@ -18,6 +18,7 @@ from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.config_manager import ConfigManager
+from arsh.user_mail.mail_admin import MailAdmin
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
 
@@ -39,13 +40,12 @@ def setup(request):
 def see(request, label_slug, thread_slug, archive=None):
     user_manager = UserManager.get(request.user)
     config_manager = ConfigManager.prepare()
+    mail_admin = MailAdmin.prepare()
 
     # MailAccount
-    accounts = request.user.mail_accounts.all().count()
-    if not accounts:
+    if not mail_admin.user_has_mail_account(request.user):
         # creating a arshmail account for this new user
-        MailAccount.objects.create(user=request.user, provider=MailProvider.get_default_provider(),
-                                   email=request.user.username + '@' + MailProvider.get_default_domain())
+        mail_admin.create_arsh_mail_account(request.user)
 
     # label
     label = get_object_or_404(Label, user=request.user, slug=label_slug) if label_slug else user_manager.get_label(

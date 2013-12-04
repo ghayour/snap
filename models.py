@@ -194,15 +194,17 @@ class Mail(models.Model):
         :rtype: arsh.mail.models.mail
         """
 
-        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
+        recipients = {'to': receivers or [], 'cc': cc or [], 'bcc': bcc or []}
         recipients_users = []
         for t, rl in recipients.items():
-            if rl:
-                for r in rl[0].split(','):
-                    rc = Mail.get_valid_receiver(r)
-                    if not rc:
-                        raise ValidationError(u"گیرنده نامعتبر است.")
-                    recipients_users.append(rc)
+            if rl and isinstance(rl[0], basestring) and ',' in rl[0]:
+                print 'RL must be a array!!!', rl
+                rl = ','.join(rl).split(',')
+            for r in rl:
+                rc = Mail.get_valid_receiver(r)
+                if not rc:
+                    raise ValidationError(u"گیرنده نامعتبر است.")
+                recipients_users.append(rc)
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -388,6 +390,7 @@ class Label(Slugged):
     """
 
     INBOX_LABEL_NAME = u'صندوق ورودی'
+    CHAT_LABEL_NAME = u'چت'
     SENT_LABEL_NAME = u'فرستاده شده'
     UNREAD_LABEL_NAME = u'unread'
     TRASH_LABEL_NAME = u'زباله دان'
