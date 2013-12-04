@@ -5,7 +5,6 @@ import logging
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.db.models import Count
 from django.utils.translation import ugettext_lazy as _
 from model_utils.choices import Choices
 
@@ -13,13 +12,14 @@ from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
 
+__docformat__ = 'reStructuredText'
+
 logger = logging.getLogger()
 
 FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
 
 
 class MailDomain(Named):
-
     def get_provider(self):
         try:
             return MailProvider.objects.get(domains=self)
@@ -105,20 +105,32 @@ class Mail(models.Model):
         self.thread = thread
 
     @staticmethod
-    def validate_receiver(receiver):
-        if isinstance(receiver, str) or isinstance(receiver, unicode):
-            receiver = receiver.strip().split('@')[0]
-        try:
-            User.objects.get(username=receiver)
-            return True
-        except User.DoesNotExist:
-            pass
-        if isinstance(receiver, Contact):
+    def get_valid_receiver(val):
+        if isinstance(val, User):
+            receiver = val
+        else:
+            #TODO: better code
+            receiver_username = val
+            if isinstance(val, str) or isinstance(val, unicode):
+                c = Contact.objects.filter(email=val)
+                if c:
+                    receiver_username = c[0].username
+                else:
+                    receiver_username = receiver_username.split('@')[0]
+
+            if isinstance(val, Contact):
+                receiver_username = val.username
             try:
-                User.objects.get(username=receiver.username)
-                return True
+                receiver = User.objects.get(username=receiver_username)
             except User.DoesNotExist:
-                pass
+                receiver = None
+        return receiver
+
+    @staticmethod
+    def validate_receiver(receiver):
+        rc = Mail.get_valid_receiver(receiver)
+        if rc:
+            return True
         return False
 
     @staticmethod
@@ -134,27 +146,11 @@ class Mail(models.Model):
         if not label_names:
             label_names = []
 
-        if isinstance(receiver_address, User):
-            receiver = receiver_address
-
-        else:
-            #TODO: better code
-            receiver_username = receiver_address
-            if isinstance(receiver_address, str) or isinstance(receiver_address, unicode):
-                c = Contact.objects.filter(email=receiver_address)
-                if c:
-                    receiver_username = c[0].username
-                else:
-                    receiver_username = receiver_username.split('@')[0]
-
-            if isinstance(receiver_address, Contact):
-                receiver_username = receiver_address.username
-            try:
-                receiver = User.objects.get(username=receiver_username)
-            except User.DoesNotExist:
-                logger.warn('Sending mail failed: user with username %s does not exists' % receiver_address)
-                #TODO: send failed delivery report to sender
-                return False
+        receiver = Mail.get_valid_receiver(receiver_address)
+        if not receiver:
+            logger.warn('Sending mail failed: user with username %s does not exists' % receiver_address)
+            #TODO: send failed delivery report to sender
+            return False
 
         label_names = set(label_names)  # unique
         if create_new_labels:
@@ -198,11 +194,14 @@ class Mail(models.Model):
         """
 
         recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
+        recipients_users = []
         for t, rl in recipients.items():
             if rl:
                 for r in rl[0].split(','):
-                    if not Mail.validate_receiver(r):
+                    rc = Mail.get_valid_receiver(r)
+                    if not rc:
                         raise ValidationError(u"گیرنده نامعتبر است.")
+                    recipients_users.append(rc)
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -245,6 +244,8 @@ class Mail(models.Model):
                     sent = Mail.add_receiver(mail, thread, address, t, titles)
                     if sent:
                         sent_count += 1
+        if sender and thread.has_label(Label.get_label_for_user(Label.REQUEST_LABEL_NAME, sender)):
+            thread.set_new_request(recipients_users)
 
         logger.debug('mail sent to %d/%d of recipients' % (sent_count, recipients_count))
         return mail
@@ -394,6 +395,7 @@ class Label(Slugged):
     STARRED_LABEL_NAME = u'مهم'
     TODO_LABEL_NAME = u'کارها'
     COMPLETED_LABEL_NAME = u'کارها/انجام شده'
+    REQUEST_LABEL_NAME = u'درخواست ها'
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
@@ -463,8 +465,8 @@ class Label(Slugged):
 
     @staticmethod
     def get_initial_labels():
-        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.STARRED_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME, Label.REQUEST_LABEL_NAME,
+                Label.STARRED_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
 
     @staticmethod
     def setup_initial_labels(user):
@@ -633,6 +635,20 @@ class Thread(Slugged):
         p_all = ls['senders'] | ls['recipients']
         for p in p_all:
             self.add_label(Label.get_label_for_user(Label.COMPLETED_LABEL_NAME, p, create_new=True))
+
+    def set_new_request(self, new_recipients):
+        """
+          آماده سازی ترد به صورت یک درخواست.
+          تمامی گیرندگان جدید باید به میل های قبلی ترد
+          اضافه شوند و این ترد در برچسب درخواست آنها وارد شود.
+        :return:None
+        """
+
+        for mail in self.mails.all():
+            for r in new_recipients:
+                if not r == mail.sender and not r in mail.recipients.all():
+                    Mail.add_receiver(mail, self, r, type='cc', label_names=[Label.REQUEST_LABEL_NAME],
+                                      create_new_labels=True)
 
 
     @staticmethod

@@ -89,6 +89,11 @@ def compose(request):
             if label_ids and label_ids[0]:
                 initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
             initial_labels.append(Label.SENT_LABEL_NAME)
+            recipient_labels = [get_default_inbox()]
+            if Label.REQUEST_LABEL_NAME in initial_labels:
+                recipient_labels.append(Label.REQUEST_LABEL_NAME)
+            if Label.TODO_LABEL_NAME in initial_labels:
+                recipient_labels.append(Label.TODO_LABEL_NAME)
 
             attachments = request.FILES.getlist('attachments[]')
 
@@ -96,7 +101,7 @@ def compose(request):
             bcc = request.POST.get('bcc')
             try:
                 Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=[get_default_inbox()],
+                            bcc=parse_address(bcc), titles=recipient_labels,
                             initial_sender_labels=initial_labels,
                             attachments=attachments)
 
@@ -140,19 +145,19 @@ def showThread(request, thread, label=None):
         if fw_re_form.is_valid():
             content = fw_re_form.cleaned_data['content']
             title = fw_re_form.cleaned_data['title']
-            receivers = fw_re_form.cleaned_data['receivers']
-            cc = fw_re_form.cleaned_data['cc']
-            bcc = fw_re_form.cleaned_data['bcc']
+            receivers = parse_address(fw_re_form.cleaned_data['receivers'])
+            cc = parse_address(fw_re_form.cleaned_data['cc'])
+            bcc = parse_address(fw_re_form.cleaned_data['bcc'])
 
             if request.POST.get('re-fw', '') == 'forward':
-                Mail.create(content=content, subject=title, sender=up, receivers=parse_address(receivers),
-                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread,
+                Mail.create(content=content, subject=title, sender=up, receivers=receivers,
+                            cc=cc, bcc=bcc, thread=thread,
                             titles=[get_default_inbox()],
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
-                Mail.reply(content=content, sender=up, receivers=parse_address(receivers),
-                           cc=parse_address(cc), bcc=parse_address(bcc), in_reply_to=selected_mail, subject=title,
+                Mail.reply(content=content, sender=up, receivers=receivers,
+                           cc=cc, bcc=bcc, in_reply_to=selected_mail, subject=title,
                            thread=thread,
                            titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
@@ -278,7 +283,7 @@ def add_label(request):
         for thread_id in item_list:
             thread = Thread.objects.get(id=int(thread_id))
             if thread.add_label(label):
-                if label.title==Label.COMPLETED_LABEL_NAME:
+                if label.title == Label.COMPLETED_LABEL_NAME:
                     thread.complete_todo()
                 response_text = "success"
             else:
@@ -297,7 +302,7 @@ def label_list(request):
     if request_type == 'list':
         #prepare label list for compose form
         data = {'results': []}
-        labels = labels.exclude(title__in=Label.get_initial_labels())
+        #labels = labels.exclude(title__in=Label.get_initial_labels())
         for label in labels:
             data['results'].append({'id': label.id, 'text': label.title})
         return data
@@ -613,23 +618,27 @@ def addressbook_edit(request):
             newcontact.additional_email = value
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
+
+
 @login_required
 def contact_delete(request):
     user = request.user
     if request.method == "POST":
         pk = request.POST.get('pk')
-        contacts = AddressBook.objects.get(user = user).get_all_contacts()
-        contacts.get(pk = pk).delete()
+        contacts = AddressBook.objects.get(user=user).get_all_contacts()
+        contacts.get(pk=pk).delete()
     return render_to_response('mail/address_book.html', {'contacts': contacts},
                               context_instance=RequestContext(request))
+
+
 @login_required
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
     if request.method == "POST":
         pk = request.POST.get('pk')
-        contacts = AddressBook.objects.get(user = user).get_all_contacts()
-        contacts.get(pk = pk).delete()
+        contacts = AddressBook.objects.get(user=user).get_all_contacts()
+        contacts.get(pk=pk).delete()
 
     return render_to_response('mail/address_book.html', {'contacts': contacts},
                               context_instance=RequestContext(request))
