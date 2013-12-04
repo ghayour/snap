@@ -72,7 +72,7 @@
                 {% for row in thread.rows %}
                     <td>{{ row }}</td>
                 {% endfor %}
-                <td class="Center">{{ thread.firstMail.created_at|relative}}
+                <td class="Center">{{ thread.get_last_mail.created_at|relative}}
                 </td>
             </tr>
         {% endfor %}
