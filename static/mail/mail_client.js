@@ -80,6 +80,7 @@ arsh.mail.ThreadHandler = arsh.mail.ObjectHandler.extend({
             function (data) {
                 if (data["response_text"] == 'success') {
                     alert('برچسب گذاري با موفقيت انجام شد.');
+                    $('input:checkbox:checked').attr('checked',false);
                     if (data['new_label']){
                         ajaxLoader.show();
                         window.location.reload();
@@ -142,6 +143,7 @@ arsh.mail.MailHandler = arsh.mail.ObjectHandler.extend({
             function (data) {
                 if (data["response_text"] == 'success') {
                     alert('برچسب گذاري با موفقيت انجام شد.');
+                    $('input:checkbox:checked').attr('checked',false);
                     if (data['new_label']){
                         ajaxLoader.show();
                         window.location.reload();
