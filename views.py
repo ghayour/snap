@@ -222,7 +222,17 @@ def showLabel(request, label, archive_mode):
                               },
                               context_instance=RequestContext(request))
 
+def manage_label(request):
+    user = request.user
+    labels = Label.objects.filter(user = user)
+    print labels
+    return render_to_response('mail/manage_label.html' ,
+                              {'labels':labels},
+                              context_instance = RequestContext(request))
 
+
+
+    pass
 @ajax_view
 def mail_validate(request):
     rl = []

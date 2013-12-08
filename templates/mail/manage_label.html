@@ -1,0 +1,21 @@
+{% extends 'mail/mail_template.html' %}
+
+{% load layout i18n%}
+{% load url from future %}
+{% load rich_form_template_tags %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+    <table id="user" class="table table-bordered table-striped" style="clear: both">
+                <tbody>
+                {% for l in labels %}
+                    <tr>
+                    <td width="20%"> {{ l }}</td>
+                    <td width="20%"> show /hide </td>
+                    <td width="20%"><a href="address_book.html"> <span class="glyphicon glyphicon-trash"></span> </a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+{% endblock content %}
