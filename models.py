@@ -344,8 +344,15 @@ class Mail(models.Model):
 
 
 def get_file_path(instance, filename):
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
+    import base64
+
+    name = filename.split('.')
+    base_name = name[0]
+    ext = ''
+    if len(name) > 1:
+        ext = '.' + name[-1]
+    safe_name = base64.urlsafe_b64encode(base_name.encode("utf-8"))
+    return "uploads/attachments/%s/%s/%s" % (instance.mail.thread.id, instance.mail.id, safe_name + ext)
 
 
 class Attachment(models.Model):
@@ -657,7 +664,7 @@ class Thread(Slugged):
     def get_deadline(self):
         import re
         #TODO:check this search
-        mail=self.firstMail
+        mail = self.firstMail
         sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
                         mail.content)
         if sub:
