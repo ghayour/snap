@@ -54,7 +54,8 @@
             });
             $("#fw-re-form").submit(function () {
                 var receiver = $("#id_receivers").val();
-                if (!receiver && $("#message-type").val() == 'forward') {
+                var upload = $('button[type="submit"]').click().val();
+                if (!receiver && $("#message-type").val() == 'forward' && !upload ) {
                     notify("حداقل یک گیرنده را انتخاب کنید.");
                     return false;
                 }
@@ -225,6 +226,7 @@
                 <div id='ReFwForm'>
                     <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
+                        <button name=" upload" type="submit" value="upload">    upload   </button>
                         {% crispy fw_re_form fw_re_form.helper %}
                     </form>
                 </div>

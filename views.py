@@ -149,7 +149,7 @@ def showThread(request, thread, label=None):
             cc = parse_address(fw_re_form.cleaned_data['cc'])
             bcc = parse_address(fw_re_form.cleaned_data['bcc'])
 
-            if request.POST.get('re-fw', '') == 'forward':
+            if request.POST.get('re-fw', '') == 'forward' and request.POST.get('upload','') != 'upload':
                 Mail.create(content=content, subject=title, sender=up, receivers=receivers,
                             cc=cc, bcc=bcc, thread=thread,
                             titles=[get_default_inbox()],
