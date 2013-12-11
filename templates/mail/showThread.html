@@ -6,6 +6,7 @@
 {% load layout i18n %}
 {% load crispy_forms_tags %}
 {% load rich_form_template_tags %}
+{% load pdate %}
 
 {% block css %}
     {{ block.super }}
@@ -94,22 +95,6 @@
                 showAllMails();
             });
 
-            // not used
-            $(".mail-reply").on('click', function () {
-                var mail_id = $(this).parent().parent().data("db");
-                $.post(arsh.dj.resolver.url('mail/reply'), {'mail_id': mail_id}, function (data) {
-                    if (data.length) {
-                        var mails = $(".mail.hide-element");
-                        mails.each(function () {
-                            var id = $(this).data("db");
-                            var index = data.indexOf(id);
-                            if (index != -1) {
-                                $("#mail-" + data[index]).removeClass("hide-element");
-                            }
-                        });
-                    }
-                });
-            });
 
 
 
@@ -143,10 +128,9 @@
 
     <div class="thread" data-user-id="{{ user.id }}">
     <input id="user-id" type="hidden" value="{{ user.id }}">
-        {% for mail, mail_label_list in mails.items %}
+        {% for mail in ordered_mails %}
             <div id="mail-{{ mail.pk }}" class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
                 <div class="mail-header in-line">
-                    <div>
                         <input class="mail-checkbox" type="checkbox" value="{{ mail.pk }}">
                         <span class="mail-sender">
                             <div class="icon list-item">
@@ -182,21 +166,23 @@
                              alt="{% trans "attachment" %}" title="{% trans "attachment" %}">
                     </span>
                         {% endif %}
-                        <span class="mail-date">{{ mail.created_at|shamsi }}</span>
-                    </div>
-                    <div class="mail-header-label">
-                        <div class="mail-labels" id="label-list">
-                            {% for mail_label in mail_label_list %}
-                                <div class="mail-label delete-label">
-                                    <span class="mail-label-delete" item_type="mail"
-                                          item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>
-                                    <span class="mail-label-title">
-                                        <a href="{% url 'mail/see_label' mail_label.label.slug %}">{{ mail_label.label }}</a>
-                                    </span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                        <span class="mail-date">{{ mail.created_at|shamsi }}
+{#                                |relative}} #}
+                            </span>
+
+{#                use filters to get mail_label_list#}
+
+{#                            {% for mail_label in mail_label_list %}#}
+{#                                <div class="mail-label delete-label">#}
+{#                                    <span class="mail-label-delete" item_type="mail"#}
+{#                                          item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>#}
+{#                                    <span class="mail-label-title">#}
+{#                                        <a href="{% url 'mail/see_label' mail_label.label.slug %}">{{ mail_label.label }}</a>#}
+{#                                    </span>#}
+{#                                </div>#}
+{#                            {% endfor %}#}
+{#                        </div>#}
+{#                    </div>#}
                 </div>
 
                 <div class="mail-content{{ mail.status }}">
@@ -239,6 +225,7 @@
                 <div id='ReFwForm'>
                     <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
+{#                        <button name=" upload" type="submit" value="upload">    upload   </button>#}
                         {% crispy fw_re_form fw_re_form.helper %}
                     </form>
                 </div>

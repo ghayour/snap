@@ -8,28 +8,37 @@ $(document).ready(function () {
     });
 
       $(".mail-tags").on("click", ".mail-tag-delete, .mail-label-delete",function(){
-        var item_element = $(this);
-        var item_id = item_element.attr("item_id");
-        var item_type = item_element.attr("item_type");
-        var label_id = item_element.attr("label_id");
-        var current_label = $("#current_label").val();
-        var url = arsh.dj.resolver.url('mail/delete_label');
-        $.post(url,
-            { item_id: item_id,item_type:item_type, label_id: label_id, current_label:current_label},
-            function (data) {
-                var data1 = JSON.parse(data);
-                if (data1["response_text"]=="success"){
-                    alert('حذف برچسب باموفقیت انجام شد.');
-                    if (data1["referrer"]){
-                        window.location = data["referrer"];
-                    }
-                    item_element.closest(".delete-label").remove();
-                }
-                else{
-                    alert(data1["response_text"]);
-                }
-            });
-    });
+          var doIt=confirm('آیا مطمئنید که می‌خواهید این برچسب را حذف کنید؟');
+          if(doIt){
+              var item_element = $(this);
+              var item_id = item_element.attr("item_id");
+              var item_type = item_element.attr("item_type");
+              var label_id = item_element.attr("label_id");
+              var current_label_element = $("#current_label");
+              var current_label = current_label_element.val();
+              var current_label_slug = current_label_element.attr('data-slug');
+              var url = arsh.dj.resolver.url('mail/delete_label');
+              $.post(url,
+                  { item_id: item_id, item_type: item_type, label_id: label_id, current_label: current_label,
+                      current_label_slug: current_label_slug},
+                  function (data) {
+                      var data1 = JSON.parse(data);
+                      if (data1["response_text"] == "success") {
+                          alert('حذف برچسب باموفقیت انجام شد.');
+                          if (data1["archive_text"])
+                              alert(data1["archive_text"]);
+                          if (data1["referrer"]) {
+                              ajaxLoader.show();
+                              window.location = data1["referrer"];
+                          }
+                          item_element.closest(".delete-label").remove();
+                      }
+                      else {
+                          alert(data1["response_text"]);
+                      }
+                  });
+          }
+      });
 });
 
 function autocomplete_label(item_element, item_type) {

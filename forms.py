@@ -13,6 +13,7 @@ from arsh.rich_form.validation import ValidationService
 
 class ComposeForm(forms.ModelForm):
     attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+    labels = forms.CharField(label=u'برچسب های اولیه', required=False)
 
     class Meta:
         model = Mail
@@ -24,20 +25,22 @@ class ComposeForm(forms.ModelForm):
         super(ComposeForm, self).__init__(*args, **kwargs)
 
         self.fields['title'].widget.attrs['style'] = 'min-width:60%'
+        self.fields['labels'].widget.attrs['class'] = 'initial-labels'
+        self.fields['labels'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
 
-        self.fields['receivers'] = forms.CharField(required=False)
+        self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'
         self.fields['receivers'].widget.attrs['type'] = 'hidden'
         self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['cc'] = forms.CharField(required=False)
+        self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
         self.fields['cc'].widget.attrs['class'] = 'info'
         self.fields['cc'].widget.attrs['type'] = 'hidden'
         self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['bcc'] = forms.CharField(required=False)
+        self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
         self.fields['bcc'].widget.attrs['class'] = 'info'
         self.fields['bcc'].widget.attrs['type'] = 'hidden'
         self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
@@ -48,7 +51,7 @@ class ComposeForm(forms.ModelForm):
         self.helper.form_id = 'compose-form'
         self.helper.form_class = 'form margin-30'
         self.helper.layout = LayoutUtils(has_submit=True, has_reset=False,
-                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'content',
+                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'labels', 'content',
                                                        'attachments']).generate_table_layout(self, 1)
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
@@ -71,17 +74,17 @@ class FwReForm(forms.ModelForm):
 
         self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:70%'})
 
-        self.fields['receivers'] = forms.CharField(required=False)
+        self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'
         self.fields['receivers'].widget.attrs['type'] = 'hidden'
         self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['cc'] = forms.CharField(required=False)
+        self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
         self.fields['cc'].widget.attrs['class'] = 'info'
         self.fields['cc'].widget.attrs['type'] = 'hidden'
         self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['bcc'] = forms.CharField(required=False)
+        self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
         self.fields['bcc'].widget.attrs['class'] = 'info'
         self.fields['bcc'].widget.attrs['type'] = 'hidden'
         self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
@@ -96,6 +99,7 @@ class FwReForm(forms.ModelForm):
                                                        'attachments']).generate_table_layout(self, 1)
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
+
 
 class ContactForm(forms.ModelForm):
 

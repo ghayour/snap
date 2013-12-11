@@ -4,7 +4,7 @@ import logging
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from model_utils.choices import Choices
 
@@ -13,6 +13,7 @@ from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
 
 __docformat__ = 'reStructuredText'
+
 logger = logging.getLogger()
 
 FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
@@ -91,9 +92,12 @@ class Mail(models.Model):
         return rec
 
     def get_summary(self):
+        from HTMLParser import HTMLParser
+
         env = {'content': self.content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
-        return get_summary(env['content'], 50, striptags=True)
+        return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
+
 
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
@@ -102,20 +106,32 @@ class Mail(models.Model):
         self.thread = thread
 
     @staticmethod
-    def validate_receiver(receiver):
-        if isinstance(receiver, str) or isinstance(receiver, unicode):
-            receiver = receiver.strip().split('@')[0]
-        try:
-            User.objects.get(username=receiver)
-            return True
-        except User.DoesNotExist:
-            pass
-        if isinstance(receiver, Contact):
+    def get_valid_receiver(val):
+        if isinstance(val, User):
+            receiver = val
+        else:
+            #TODO: better code
+            receiver_username = val
+            if isinstance(val, str) or isinstance(val, unicode):
+                c = Contact.objects.filter(email=val)
+                if c:
+                    receiver_username = c[0].username
+                else:
+                    receiver_username = receiver_username.split('@')[0]
+
+            if isinstance(val, Contact):
+                receiver_username = val.username
             try:
-                User.objects.get(username=receiver.username)
-                return True
+                receiver = User.objects.get(username=receiver_username)
             except User.DoesNotExist:
-                pass
+                receiver = None
+        return receiver
+
+    @staticmethod
+    def validate_receiver(receiver):
+        rc = Mail.get_valid_receiver(receiver)
+        if rc:
+            return True
         return False
 
     @staticmethod
@@ -131,28 +147,11 @@ class Mail(models.Model):
         if not label_names:
             label_names = []
 
-        if isinstance(receiver_address, User):
-            receiver = receiver_address
-
-        else:
-            #TODO: better code
-            receiver_username = receiver_address
-            if isinstance(receiver_address, str) or isinstance(receiver_address, unicode):
-                c = Contact.get_contact_by_address(receiver_address)
-                if c:
-                    receiver_username = c.username
-                else:
-                    receiver_username = receiver_username.split('@')[0]
-
-            if isinstance(receiver_address, Contact):
-                receiver_username = receiver_address.username
-                #TODO: write a method to add contact by email address
-            try:
-                receiver = User.objects.get(username=receiver_username)
-            except User.DoesNotExist:
-                logger.warn('Sending mail failed: user with username %s does not exists' % receiver_address)
-                #TODO: send failed delivery report to sender
-                return False
+        receiver = Mail.get_valid_receiver(receiver_address)
+        if not receiver:
+            logger.warn('Sending mail failed: user with username %s does not exists' % receiver_address)
+            #TODO: send failed delivery report to sender
+            return False
 
         label_names = set(label_names)  # unique
         if create_new_labels:
@@ -194,15 +193,18 @@ class Mail(models.Model):
         :type titles: str[]
         :rtype: arsh.mail.models.mail
         """
-        #        Label.setup_initial_labels(sender)
-        #        Label.setup_initial_labels(User.objects.get(id=1))
 
-        recipients = {'to': receivers, 'cc': cc, 'bcc': bcc}
+        recipients = {'to': receivers or [], 'cc': cc or [], 'bcc': bcc or []}
+        recipients_users = []
         for t, rl in recipients.items():
-            if rl:
-                for r in rl[0].split(','):
-                    if not Mail.validate_receiver(r):
-                        raise ValidationError(u"گیرنده نامعتبر است.")
+            if rl and isinstance(rl[0], basestring) and ',' in rl[0]:
+                print 'RL must be a array!!!', rl
+                rl = ','.join(rl).split(',')
+            for r in rl:
+                rc = Mail.get_valid_receiver(r)
+                if not rc:
+                    raise ValidationError(u"گیرنده نامعتبر است.")
+                recipients_users.append(rc)
         if thread is None:
             logger.debug('creating new thread for mail')
             thread = Thread.objects.create(title=subject)
@@ -210,7 +212,8 @@ class Mail(models.Model):
         # فقط میل‌هایی که کاربر شروع کرده در شاخه‌ی فرستاده شده‌هایش قرار می‌گیرد
         if not initial_sender_labels:
             initial_sender_labels = [Label.SENT_LABEL_NAME]
-        if not 'unread' in initial_sender_labels:
+            #check mail as unread only if it is not in sent label
+        if not 'unread' in initial_sender_labels and not Label.SENT_LABEL_NAME in initial_sender_labels:
             initial_sender_labels.append('unread')
         if sender:
             for label_name in initial_sender_labels:
@@ -244,12 +247,15 @@ class Mail(models.Model):
                     sent = Mail.add_receiver(mail, thread, address, t, titles)
                     if sent:
                         sent_count += 1
+        if sender and thread.has_label(Label.get_label_for_user(Label.REQUEST_LABEL_NAME, sender)):
+            thread.set_new_request(recipients_users)
 
         logger.debug('mail sent to %d/%d of recipients' % (sent_count, recipients_count))
         return mail
 
     @staticmethod
-    def reply(content, sender, in_reply_to=None, subject=None, thread=None, include=[], exclude=[],
+    def reply(content, sender, receivers=None, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
+              include=[], exclude=[],
               titles=None, exclude_others=False,
               attachments=None):
         """ در پاسخ به یک نامه، یک میل جدید می‌فرستد.
@@ -258,6 +264,12 @@ class Mail(models.Model):
         :type content: unicode
         :param sender: فرستنده‌ی پاسخ
         :type sender: User
+        :param receivers: آدرس دریافت کنندگان اصلی
+        :type receivers: str[]
+        :param cc: آدرس دریافت کنندگان رونوشت
+        :type cc: str[]
+        :param bcc: آدرس دریافت کنندگان مخفی
+        :type bcc: str[]
         :param in_reply_to: این نامه پاسخ به کدام نامه است
         :type in_reply_to: Mail
         :param subject: عنوان نامه
@@ -286,9 +298,10 @@ class Mail(models.Model):
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
-        to = [mail.sender.username] if mail.sender.username != sender.username else []
-        cc = []
-        bcc = []
+        if receivers:
+            to = receivers
+        else:
+            to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
@@ -314,7 +327,10 @@ class Mail(models.Model):
         MailReply.objects.create(first=in_reply_to, reply=reply)
 
     def add_label(self, label):
-        ThreadLabel.add(label=label, thread=self.thread, mail=self)
+        if not self.has_label(label):
+            return ThreadLabel.add(label=label, thread=self.thread, mail=self)
+        else:
+            return False
 
     def remove_label(self, label):
         ThreadLabel.remove(label=label, thread=self.thread, mail=self)
@@ -328,8 +344,15 @@ class Mail(models.Model):
 
 
 def get_file_path(instance, filename):
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
+    import base64
+
+    name = filename.split('.')
+    base_name = name[0]
+    ext = ''
+    if len(name) > 1:
+        ext = '.' + name[-1]
+    safe_name = base64.urlsafe_b64encode(base_name.encode("utf-8"))
+    return "uploads/attachments/%s/%s/%s" % (instance.mail.thread.id, instance.mail.id, safe_name + ext)
 
 
 class Attachment(models.Model):
@@ -359,8 +382,13 @@ class MailReceiver(models.Model):
         if self.id is None:
             new = True
         models.Model.save(self, *args, **kwargs)
-        if new:
+        user_mails = self.mail.thread.get_user_mails(self.user)
+        #thread is marked as unread only if thread was not related to user until now
+        if new and len(user_mails) <= 1:
             self.mail.thread.mark_as_unread(self.user)
+        #this case is for mails which are sent in threads related to user(ex: as reply)
+        else:
+            self.mail.thread.mark_as_unread(self.user, mails=[self.mail])
 
 
 class Label(Slugged):
@@ -369,10 +397,16 @@ class Label(Slugged):
     """
 
     INBOX_LABEL_NAME = u'صندوق ورودی'
+    CHAT_LABEL_NAME = u'چت'
     SENT_LABEL_NAME = u'فرستاده شده'
     UNREAD_LABEL_NAME = u'unread'
     TRASH_LABEL_NAME = u'زباله دان'
     SPAM_LABEL_NAME = u'هرزنامه'
+    ARCHIVE_LABEL_NAME = u'بایگانی'
+    STARRED_LABEL_NAME = u'مهم'
+    TODO_LABEL_NAME = u'کارها'
+    COMPLETED_LABEL_NAME = u'کارها/انجام شده'
+    REQUEST_LABEL_NAME = u'درخواست ها'
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
@@ -399,9 +433,24 @@ class Label(Slugged):
         """
         from .UserManager import UserManager
 
-        return self.threads.filter(labels=UserManager.get(self.user).get_unread_label()).count()
+        unread_label = UserManager.get(self.user).get_unread_label()
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM user_mail_threadlabel tl
+            WHERE
+                tl.label_id={label1}
+              AND
+                (
+                  SELECT COUNT(*)
+                  FROM user_mail_threadlabel tl2
+                  WHERE tl2.label_id={label2} AND tl2.thread_id=tl.thread_id
+                )>0
+        """.format(label1=unread_label.id, label2=self.id))
+        row = cursor.fetchone()
+        return row[0]
 
-    def is_deleted_label(self):
+    def limited_labels(self):
         return self.title in [self.TRASH_LABEL_NAME, self.SPAM_LABEL_NAME]
 
     @staticmethod
@@ -427,8 +476,8 @@ class Label(Slugged):
 
     @staticmethod
     def get_initial_labels():
-        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME]
+        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME, Label.REQUEST_LABEL_NAME,
+                Label.STARRED_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
 
     @staticmethod
     def setup_initial_labels(user):
@@ -440,8 +489,7 @@ class Label(Slugged):
         :rtype user: django.contrib.auth.models.User
         :return: None
         """
-        labels = [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME,
-                  Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME]
+        labels = Label.get_initial_labels()
         for label in labels:
             if not Label.objects.filter(title=label, user=user).count():
                 Label.create(title=label, user=user)
@@ -483,9 +531,11 @@ class Thread(Slugged):
         super(Thread, self).save(*args, **kwargs)
 
     def add_label(self, label):
-        if not label in self.labels.all():
+        if not self.has_label(label):
             #noinspection PyUnresolvedReferences
-            ThreadLabel.add(label=label, thread=self)
+            return ThreadLabel.add(label=label, thread=self)
+        else:
+            return False
 
     def remove_label(self, label):
         #noinspection PyUnresolvedReferences
@@ -511,10 +561,13 @@ class Thread(Slugged):
         ReadMail.mark_as_read(user, self.mails.all())
         return self.remove_label(UserManager.get(user).get_unread_label())
 
-    def mark_as_unread(self, user=None):
+    def mark_as_unread(self, user=None, mails=None):
         from .UserManager import UserManager
 
-        ReadMail.mark_as_unread(user, self.mails.all())
+        unread = mails
+        if not unread:
+            unread = self.mails.all()
+        ReadMail.mark_as_unread(user, unread)
         return self.add_label(UserManager.get(user).get_unread_label())
 
     def get_last_mail(self):
@@ -537,10 +590,6 @@ class Thread(Slugged):
 
     def get_unread_mails(self, user):
         return [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
-
-    @staticmethod
-    def get_user_threads(user):
-        return Thread.objects.filter(labels__user=user)
 
     def is_thread_related(self, user):
         u"""
@@ -578,6 +627,63 @@ class Thread(Slugged):
                     mail_list.append(mail)
         return mail_list
 
+    def get_participants(self, related_user=None):
+        thread_mails = self.mails.all()
+
+        if related_user:
+            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+
+        sender_ids = thread_mails.values_list('sender', flat=True).distinct()
+        senders = User.objects.filter(id__in=sender_ids)
+
+        recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
+        recipients = User.objects.filter(id__in=recipient_ids)
+
+        return {'senders': senders, 'recipients': recipients}
+
+    def complete_todo(self):
+        ls = self.get_participants()
+        p_all = ls['senders'] | ls['recipients']
+        for p in p_all:
+            self.add_label(Label.get_label_for_user(Label.COMPLETED_LABEL_NAME, p, create_new=True))
+
+    def set_new_request(self, new_recipients):
+        """
+          آماده سازی ترد به صورت یک درخواست.
+          تمامی گیرندگان جدید باید به میل های قبلی ترد
+          اضافه شوند و این ترد در برچسب درخواست آنها وارد شود.
+        :return:None
+        """
+
+        for mail in self.mails.all():
+            for r in new_recipients:
+                if not r == mail.sender and not r in mail.recipients.all():
+                    Mail.add_receiver(mail, self, r, type='cc', label_names=[Label.REQUEST_LABEL_NAME],
+                                      create_new_labels=True)
+
+    def get_deadline(self):
+        import re
+        #TODO:check this search
+        mail = self.firstMail
+        sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
+                        mail.content)
+        if sub:
+            try:
+                d_str = sub.group(0).split(':')
+                days = d_str[1].split(u'\u0631\u0648\u0632')
+                if days:
+                    d = days[0]
+                    sd = mail.created_at.date()
+                    deadline = sd + datetime.timedelta(days=int(d))
+                    return deadline
+            except Exception:
+                return None
+
+
+    @staticmethod
+    def get_user_threads(user):
+        return Thread.objects.filter(labels__user=user)
+
 
 class ThreadLabel(models.Model):
     thread = models.ForeignKey(Thread)
@@ -591,30 +697,33 @@ class ThreadLabel(models.Model):
             if mail and tl.mails.all():
                 #برچسب متعلق به کل نخ نباشد
                 tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
+                return True
 
             else: #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
-                pass
+                return False
 
         except cls.DoesNotExist:
             new_record = cls.objects.create(label=label, thread=thread)
             if mail:
                 new_record.mails.add(mail)
-
+            return True
 
     @classmethod
     def remove(cls, label, thread, mail=None):
         try:
             tl = cls.objects.get(label=label, thread=thread)
         except cls.DoesNotExist:
-            raise ValidationError(_('This thread has not been tagged whit such a label.'))
+            return False
 
         if mail:
             if mail in tl.mails.all():
                 tl.mails.remove(mail)
                 if not tl.mails.all():
                     tl.delete()
+                return True
         else:
             tl.delete()
+            return True
 
     @classmethod
     def has_label(cls, label, mail):
@@ -635,7 +744,6 @@ class ThreadLabel(models.Model):
 
 class AddressBook(models.Model):
     user = models.OneToOneField(User)
-
 
     def get_all_contacts(self):
         u'''
@@ -667,8 +775,8 @@ class AddressBook(models.Model):
         :type address: str
         :return: bool
         """
-        c = Contact.get_contact_by_address(address)
-        if c and c.address_book == self:
+        c = Contact.get_contact_by_address(address, book=self)
+        if c:
             return True
         return False
 
@@ -687,16 +795,15 @@ class AddressBook(models.Model):
         try:
             if contact_user == self.user:
                 raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
-            Contact.objects.get(address_book=self,
-                                email=contact_user.username + '@' + MailProvider.get_default_domain())
-            raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
+            if self.has_contact_address(contact_user.username + '@' + MailProvider.get_default_domain()):
+                raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
+            else:
+                raise Contact.DoesNotExist
         except Contact.DoesNotExist:
             return Contact.objects.create(address_book=self, display_name=contact_user.get_full_name(),
                                           first_name=contact_user.first_name, last_name=contact_user.last_name,
                                           email=contact_user.username + '@' + MailProvider.get_default_domain())
 
-
-    #TODO: write a method to add contact by email address
 
     @staticmethod
     def get_addressbook_for_user(user, create_new=False):
@@ -746,18 +853,18 @@ class Contact(models.Model):
         return self.email.split('@')[0]
 
     @classmethod
-    def get_contact_by_address(cls, address):
+    def get_contact_by_address(cls, address, book=None):
         """
         در صورت وجود، تماس با آدرس
         داده شده را برمیگرداند.
         :type address: str
         :return: Contact or None
         """
-        try:
-            c = cls.objects.get(email=address)
-            return c
-        except cls.DoesNotExist:
-            return None
+        if book:
+            c = cls.objects.filter(email=address, address_book=book)
+        else:
+            c = cls.objects.filter(email=address)
+        return c
 
 
 class ReadMail(models.Model):

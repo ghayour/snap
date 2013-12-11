@@ -316,7 +316,7 @@ a, a:active, a:visited {
     font-size: 17px;
     font-family: tahoma, serif;
     border-radius: 0 3px 3px 0 ;
-    height: 21px !important;
+    height: 25px !important;
     padding: 2px 3px;
     width: 12px;
     cursor: pointer;
@@ -403,4 +403,32 @@ div#sidebar li .sidebar-item a.current:before {
     background: none repeat scroll 0 0 #FFEDF0;
     border: 1px solid #B5142F;
     color: #B5142F;
+}
+#search_help_icon{
+    display: inline-block;
+    background: url('../images/help-about-icon.png') no-repeat;
+    background-size: 100% 100%;
+    width: 25px;
+    height: 25px;
+    float: left;
+}
+#search_help{
+    display: none;
+    background-color: #bce8f1;
+    font-family: tahoma, serif;
+    color: #000000;
+    font-size: 12px;
+    direction: rtl;
+    margin-top: 5px;
+    text-align: right;
+}
+
+tr.unread{
+    font-weight: bold;
+}
+tr.read{
+    font-weight: normal;
+}
+table.dataTable th{
+    text-align: right;
 }

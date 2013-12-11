@@ -9,6 +9,7 @@ class ConfigManager(Singleton):
     DEFAULT_CONFIG = {
         'default-view': 'new',
         'inbox-folder': u'کاربران',
+        'system-state': 'requests',
     }
 
     def __init__(self):

@@ -83,12 +83,13 @@ function manage_read_mails() {
 }
 
 function manage_mails_display() {
-//    var last_mail = $("div.request-mail").last();
     var last_mail = $("div.mail").last();
     last_mail.removeClass("other-mails");
     last_mail.find(".mail-content").removeClass("hide-element"); //Always show last mail opened
     $("div.mail-content.hide-element").parent().find(".mail-summery").removeClass("hide-element");
-    $("div.mail-header").click(function () {
+    $("div.mail-header").click(function (e) {
+        if( e.target !== this && !$(e.target).hasClass('mail-summery') )
+            return;
         show_hide_content($(this), false);
     });
 }
@@ -158,13 +159,6 @@ function get_re_subject(mail){
 function get_re_content(last_mail){
     return '';
 }
-
-function update_message_type(){
-    var message_type = $("input:checked[name=re-fw]").val();
-  $("#message-type").val(message_type);
-  $("legend").text(_t(message_type));
-}
-
 $(document).ready(function () {
      $("#top_menu ul").append('<img id="total-spinner" class="left-aligned hidden" src="' + arsh.dj.resolver.site_url + 'static/images/ajax-loader.gif">');
     $("form.mail-form").submit(function(e){
@@ -248,7 +242,7 @@ function setup_mail_form(){
     var lastResults = [];
         $(".info").select2({
                 multiple: true,
-                minimumInputLength: 3,
+                minimumInputLength: 2,
                 placeholder: "",
                 tokenSeparators: [","],
 
@@ -275,6 +269,28 @@ function setup_mail_form(){
                     }) ? "" : '');
                     return { id: term, text: text };
                 }
+            });
+        $(".initial-labels").select2({
+                multiple: true,
+                minimumInputLength: 2,
+                placeholder: "",
+                tokenSeparators: [","],
+                ajax: {
+                url: arsh.dj.resolver.url('mail/label_list'),
+                dataType: "json",
+                type: "GET",
+                data: function (term, page) {
+                    return {
+                        name_startsWith: term,
+                        request_type: 'list'
+                    };
+                },
+                results: function (data, page) {
+                    lastResults = data.results;
+                    return data;
+                }
+            }
+
             });
 
 

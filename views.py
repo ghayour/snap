@@ -16,9 +16,10 @@ from django.views.generic import FormView
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
+from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.config_manager import ConfigManager
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, Contact, MailAccount, MailProvider
+from arsh.user_mail.mail_admin import MailAdmin
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
 
 
 def get_default_inbox():
@@ -39,13 +40,12 @@ def setup(request):
 def see(request, label_slug, thread_slug, archive=None):
     user_manager = UserManager.get(request.user)
     config_manager = ConfigManager.prepare()
+    mail_admin = MailAdmin.prepare()
 
     # MailAccount
-    accounts = request.user.mail_accounts.all().count()
-    if not accounts:
+    if not mail_admin.user_has_mail_account(request.user):
         # creating a arshmail account for this new user
-        MailAccount.objects.create(user=request.user, provider=MailProvider.get_default_provider(),
-                                   email=request.user.username + '@' + MailProvider.get_default_domain())
+        mail_admin.create_arsh_mail_account(request.user)
 
     # label
     label = get_object_or_404(Label, user=request.user, slug=label_slug) if label_slug else user_manager.get_label(
@@ -84,14 +84,25 @@ def compose(request):
         if composeForm.is_valid():
             subject = composeForm.cleaned_data['title']
             content = composeForm.cleaned_data['content']
+            label_ids = request.POST.get('labels').split(',')
+            initial_labels = []
+            if label_ids and label_ids[0]:
+                initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
+            initial_labels.append(Label.SENT_LABEL_NAME)
+            recipient_labels = [get_default_inbox()]
+            if Label.REQUEST_LABEL_NAME in initial_labels:
+                recipient_labels.append(Label.REQUEST_LABEL_NAME)
+            if Label.TODO_LABEL_NAME in initial_labels:
+                recipient_labels.append(Label.TODO_LABEL_NAME)
+
             attachments = request.FILES.getlist('attachments[]')
 
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
             try:
                 Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=[get_default_inbox()],
-                            initial_sender_labels=[Label.SENT_LABEL_NAME],
+                            bcc=parse_address(bcc), titles=recipient_labels,
+                            initial_sender_labels=initial_labels,
                             attachments=attachments)
 
                 return HttpResponseRedirect(reverse('mail/home'))
@@ -134,18 +145,20 @@ def showThread(request, thread, label=None):
         if fw_re_form.is_valid():
             content = fw_re_form.cleaned_data['content']
             title = fw_re_form.cleaned_data['title']
-            receivers = fw_re_form.cleaned_data['receivers']
-            cc = fw_re_form.cleaned_data['cc']
-            bcc = fw_re_form.cleaned_data['bcc']
+            receivers = parse_address(fw_re_form.cleaned_data['receivers'])
+            cc = parse_address(fw_re_form.cleaned_data['cc'])
+            bcc = parse_address(fw_re_form.cleaned_data['bcc'])
 
             if request.POST.get('re-fw', '') == 'forward':
-                Mail.create(content=content, subject=title, sender=up, receivers=parse_address(receivers),
-                            cc=parse_address(cc), bcc=parse_address(bcc), thread=thread,
+                Mail.create(content=content, subject=title, sender=up, receivers=receivers,
+                            cc=cc, bcc=bcc, thread=thread,
                             titles=[get_default_inbox()],
                             attachments=attachments)
 
             elif request.POST.get('re-fw', '') == 'reply':
-                Mail.reply(content=content, sender=up, in_reply_to=selected_mail, subject=title, thread=thread,
+                Mail.reply(content=content, sender=up, receivers=receivers,
+                           cc=cc, bcc=bcc, in_reply_to=selected_mail, subject=title,
+                           thread=thread,
                            titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
@@ -153,22 +166,13 @@ def showThread(request, thread, label=None):
         fw_re_form = FwReForm(user_id=up.id)
 
     labels = thread.get_user_labels(up)
-    labels = labels.exclude(title=Label.SENT_LABEL_NAME).exclude(title=Label.TRASH_LABEL_NAME)
-    #TODO: MOVE TO METHOD
-    allMails = thread.mails.all().select_related().order_by('created_at')
+    labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
+    allMails = thread.get_user_mails(up)
 
     tobeShown = {}
 
-    #TODO: JOIN!
     for mail in allMails:
-        if mail.sender_id == up.id:
-            tobeShown[mail] = mail.get_user_labels(up)
-        elif up.id in [user.id for user in mail.recipients.all()]:
-            tobeShown[mail] = mail.get_user_labels(up)
-            #TODO: above loop can be replace by thread.get_user_mails() please check if else is required!!
-        else:
-            pass # mail is not related to user
-
+        tobeShown[mail] = mail.get_user_labels(up)
     if not tobeShown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -191,6 +195,7 @@ def showThread(request, thread, label=None):
         'thread': thread,
         'label': label,
         'labels': labels,
+        'ordered_mails': allMails,
         'mails': tobeShown,
         'fw_re_form': fw_re_form,
         'referrer': referrer,
@@ -217,7 +222,17 @@ def showLabel(request, label, archive_mode):
                               },
                               context_instance=RequestContext(request))
 
+def manage_label(request):
+    user = request.user
+    labels = Label.objects.filter(user = user)
+    print labels
+    return render_to_response('mail/manage_label.html' ,
+                              {'labels':labels},
+                              context_instance = RequestContext(request))
 
+
+
+    pass
 @ajax_view
 def mail_validate(request):
     rl = []
@@ -244,13 +259,17 @@ def createLabel(request):
 
 @ajax_view
 def add_label(request):
+    c = {}
     item_list = []
     label_id = int(request.POST['label_id'])
     item_type = request.POST['item_type']
+    response_text = u"تغییری داده نشد."
     if request.POST.get('item_id', ''):
         item_list.append(request.POST['item_id'])
     else:
         item_list = request.POST.getlist('item_id[]')
+    if not item_list:
+        response_text = u"یک نامه برای برچسب گذاری انتخاب شود."
 
     if label_id >= 0:
         # existing label
@@ -259,36 +278,51 @@ def add_label(request):
         label_name = request.POST['label_name']
         label_name = label_name.split(u'(برچسب جدید)')[0]
         label = Label.create(user=request.user, title=label_name.strip())
+        c['new_label'] = True
     label_url = "/mail/view/%s/" % label.slug
 
     if item_type == "mail":
         for mail_id in item_list:
             mail = Mail.objects.get(id=mail_id)
-            mail.add_label(label)
-        response_text = "success"
+            if mail.add_label(label):
+                response_text = "success"
+            else:
+                response_text = "قبلا نامه یا نخ حاوی آن برچسب زده شده است."
 
     elif item_type == "thread":
         for thread_id in item_list:
             thread = Thread.objects.get(id=int(thread_id))
-            thread.add_label(label)
-        response_text = "success"
-
+            if thread.add_label(label):
+                if label.title == Label.COMPLETED_LABEL_NAME:
+                    thread.complete_todo()
+                response_text = "success"
+            else:
+                response_text = "قبلا برچسب گذاری صورت گرفته است."
     else:
         response_text = "error"
+    c.update({"response_text": response_text, "label_url": label_url, "label_id": label.id})
+    return c
 
-    return {"response_text": response_text, "label_url": label_url, "label_id": label.id}
 
-
+@ajax_view
 def label_list(request):
     start = request.GET.get('name_startsWith')
+    request_type = request.GET.get('request_type')
     labels = Label.objects.filter(user=request.user, title__startswith=start)
+    if request_type == 'list':
+        #prepare label list for compose form
+        data = {'results': []}
+        #labels = labels.exclude(title__in=Label.get_initial_labels())
+        for label in labels:
+            data['results'].append({'id': label.id, 'text': label.title})
+        return data
     if request.GET.get('current_label', ''):
         labels.exclude(id=int(request.GET.get('current_label')))
 
     jsonText = '['
     new_label_text = u'(برچسب جدید)'
     for label in labels:
-        if not label.is_deleted_label():
+        if not label.limited_labels():
             jsonText += '{"value":"' + str(label.id) + '" , "label":"' + label.title + '"},'
     if not UserManager.get(request.user).get_label(start.strip()):
         jsonText += '{"value":"' + '-1' + '" , "label":"' + start + ' ' + new_label_text + ' "},'
@@ -311,16 +345,22 @@ def delete_label(request):
                 mail = Mail.objects.get(id=int(request.POST['item_id']))
                 mail.remove_label(label)
                 c["response_text"] = "success"
-                if current_label and not mail.thread.has_label(current_label):
-                    c["referrer"] = reverse('mail/home')
+                thread = mail.thread
 
         elif item_type == "thread":
             if request.POST.get('item_id', ''):
                 thread = Thread.objects.get(id=int(request.POST['item_id']))
                 thread.remove_label(label)
                 c["response_text"] = "success"
-                if current_label and not thread.has_label(current_label):
-                    c["referrer"] = reverse('mail/home')
+                thread_labels = thread.get_user_labels(request.user).exclude(
+                    title__in=[Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME])
+                thread_labels_count = len(thread_labels)
+                if thread_labels_count == 0:
+                    thread.add_label(Label.get_label_for_user(Label.ARCHIVE_LABEL_NAME, request.user, True))
+                    c["archive_text"] = u"به بایگانی منتقل گردید."
+
+        if current_label and not thread.has_label(current_label):
+            c["referrer"] = reverse('mail/see_label', args=[request.POST.get('current_label_slug')])
     except:
         pass
 
@@ -329,6 +369,8 @@ def delete_label(request):
 
 @ajax_view
 def move_thread(request):
+    c = {"response_text": "error", }
+    thread_list = []
     label_name = request.POST.get('label')
     if label_name:
         real_title = Label.parse_label_title(label_name)
@@ -354,25 +396,30 @@ def move_thread(request):
     if request.POST.get('current_label', ''):
         current_label = Label.objects.get(id=int(request.POST.get('current_label')))
 
-    thread_list = request.POST.getlist('item_id[]')
+    if request.POST.get('item_id', ''):
+        thread_list.append(request.POST['item_id'])
+    else:
+        thread_list = request.POST.getlist('item_id[]')
+
     for thread_id in thread_list:
         try:
             thread = Thread.objects.get(id=int(thread_id))
         except (ValueError, Thread.DoesNotExist):
             raise Http404('Invalid thread id')
-        if label.is_deleted_label():
-            for lbl in thread.labels.all():
-                if lbl.title != Label.UNREAD_LABEL_NAME:
-                    thread.remove_label(lbl)
+        if label.limited_labels():
+            for lbl in thread.get_user_labels(request.user).exclude(title=Label.UNREAD_LABEL_NAME):
+                thread.remove_label(lbl)
+                if lbl.title == Label.TRASH_LABEL_NAME:
+                    return {'response_text': 'success'}
         else:
             thread.remove_label(current_label)  # todo: fix this
         thread.add_label(label)
+        c['response_text'] = "success"
+    return c
 
-    return {"response_text": "success", }
 
-
-def search_dic(token):
-    return {
+def get_search_query(token, user):
+    dict_query = {
         u'از': Q(mails__sender__username__contains=token[1]) | Q(mails__sender__first_name__contains=token[1]) | Q(
             mails__sender__last_name__contains=token[1]),
         u'به': Q(mails__recipients__username__contains=token[1]) | Q(
@@ -380,18 +427,21 @@ def search_dic(token):
             mails__recipients__last_name__contains=token[1]),
         u'عنوان': Q(mails__title__contains=token[1]),
         u'محتوا': Q(mails__content__contains=token[1]),
-        u'برچسب': search_labels(token[1])
-    }.get(token[0], 1)
+        u'برچسب': search_labels
+    }
+    rs = dict_query.get(token[0], 0)
+    if hasattr(rs, '__call__'):
+        return rs(token[1], user)
+    return rs
 
 
-def search_labels(keyword):
+def search_labels(keyword, user):
     label_list = keyword.split(u'،')
     search_query = Q()
+    user_labels = Label.get_user_labels(user)
     for label in label_list:
-        if not search_query:
-            search_query = Q(labels__title__contains=label)
-        else:
-            search_query = search_query & Q(labels__title__contains=label)
+        if label:
+            search_query = search_query | (Q(labels__title__contains=label) & Q(labels__in=user_labels))
     return search_query
 
 
@@ -405,16 +455,23 @@ def search(request):
         tokens = parse_address(keywords)
         search_query = Q()
         for token in tokens:
-            tuple_keywords = token.split(':')
-            if not search_query:
-                search_query = search_dic(tuple_keywords)
-            else:
-                search_query = search_query & search_dic(tuple_keywords)
+            try:
+                tuple_keywords = token.split(':')
+                query = get_search_query(tuple_keywords, up)
+                if not query:
+                    raise ValueError
+                if not search_query:
+                    search_query = query
+                else:
+                    search_query = search_query & query
+            except (IndexError, ValueError):
+                raise Http404(u"عبارت جستجو را به درستی وارد نمایید.")
 
         answer = Thread.get_user_threads(up).filter(search_query).distinct()
         return render_to_response('mail/label.html', {
             'threads': answer,
             'label_title': 'نتایج جستجو',
+            'search_exp': keywords
         }, context_instance=RequestContext(request))
 
 
@@ -456,20 +513,23 @@ def ajax_mark_thread(request):
         thread_list = request.POST.getlist('item_id[]')
     action = request.POST.get('action', '')
     response_text = "success"
-    if action == 'read':
-        for thread_id in thread_list:
-            thread = Thread.objects.get(id=int(thread_id))
-            thread.mark_as_read(request.user)
-    elif action == 'unread':
-        for thread_id in thread_list:
-            thread = Thread.objects.get(id=int(thread_id))
-            thread.mark_as_unread(request.user)
+    if not thread_list:
+        response_text = u"حداقل یک نامه باید انتخاب شود."
     else:
-        response_text = "error"
+        if action == 'read':
+            for thread_id in thread_list:
+                thread = Thread.objects.get(id=int(thread_id))
+                thread.mark_as_read(request.user)
+        elif action == 'unread':
+            for thread_id in thread_list:
+                thread = Thread.objects.get(id=int(thread_id))
+                thread.mark_as_unread(request.user)
+        else:
+            response_text = u"عملیات درخواستی امکان پذیر نیست."
 
     return HttpResponse(simplejson.dumps({'response_text': response_text, }))
 
-
+#TODO: correct that based on changes/where is used?
 @ajax_view
 def get_total_unread_mails(request):
     total_unread_mails = 0
@@ -547,35 +607,37 @@ def contact_list(request):
     except ValueError as e:
         pass
 
-#
-#class AddreessBookView (FormView):
-#    form_class = AddressBook
 
 @login_required
-def addressbook_edit (request):
-   if request.is_ajax() and request.POST:
-       user = request.user
-       value = request.POST.get('value')
-       field = request.POST.get('name')
-       pk = request.POST.get('pk')
-       contacts = AddressBook.objects.get(user = user).get_all_contacts()
-       newcontact = contacts.get(pk = pk)
-       if field == 'firstname':
-           newcontact.first_name = value
-       elif field == 'lastname':
-           newcontact.last_name = value
-       elif field == 'email' :
-           newcontact.email = value
-       elif field == 'ex_email':
-           newcontact.additional_email = value
-       newcontact.save()
-       return HttpResponse(json.dumps(value), content_type='application/json')
-
-
+def addressbook_edit(request):
+    if request.is_ajax() and request.POST:
+        user = request.user
+        value = request.POST.get('value')
+        field = request.POST.get('name')
+        pk = request.POST.get('pk')
+        contacts = AddressBook.objects.get(user=user).get_all_contacts()
+        newcontact = contacts.get(pk=pk)
+        if field == 'displayname':
+            newcontact.display_name = value
+        if field == 'firstname':
+            newcontact.first_name = value
+        elif field == 'lastname':
+            newcontact.last_name = value
+        elif field == 'email':
+            newcontact.email = value
+        elif field == 'ex_email':
+            newcontact.additional_email = value
+        newcontact.save()
+        return HttpResponse(json.dumps(value), content_type='application/json')
 
 @login_required
 def addressbook_view(request):
     user = request.user
-    contacts = AddressBook.objects.get_or_create(user = user)[0].get_all_contacts()
-    return render_to_response('mail/addressbook.html', {'contacts': contacts} ,
-                              context_instance = RequestContext(request))
+    contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    if request.method == "POST":
+        pk = request.POST.get('pk')
+        contacts = AddressBook.objects.get(user=user).get_all_contacts()
+        contacts.get(pk=pk).delete()
+
+    return render_to_response('mail/address_book.html', {'contacts': contacts},
+                              context_instance=RequestContext(request))

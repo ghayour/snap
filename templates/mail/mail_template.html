@@ -11,7 +11,8 @@
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MetaData.js"></script>
     <script type='text/javascript' src="{{ STATIC_URL }}js/multiple-file-upload/jquery.MultiFile.js"></script>
     {% js 'bower_components/blockui/jquery.blockUI.js' %}
-    <script type="text/javascript" src="{{ STATIC_URL }}lib/select2/select2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/select2/select2.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}lib/select2/select2_locale_fa.js"></script>
 
     {% js 'mail/base.js' %}
     {% js 'mail/ui.js' %}
@@ -29,9 +30,9 @@
 
 {% block css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{{ STATIC_URL }}/mail/css/mail.css" type="text/css" media="screen"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}lib/datatables/datatables.css" type="text/css" media="screen"/>
-    <link rel="stylesheet" href="{{ STATIC_URL }}lib/select2/select2.css" type="text/css" media="screen"/>
+    {% css 'lib/datatables/datatables.css' %}
+    {% css 'lib/select2/select2.css' %}
+    {% css 'mail/css/mail.css' %}
     {% css 'mail/toolbar/toolbar.css' %}
     {% css 'mail/loader/loader.css' %}
 
@@ -47,9 +48,24 @@
     {% label_list user label.title %}
     <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
         {% csrf_token %}
-        <input id="mail-search-input" type="text" name="keywords" placeholder="جستجو" style="width: 250px"/>
+        <input id="mail-search-input" type="text" value="{{ search_exp }}" name="keywords" placeholder="جستجو" style="width: 220px; float: right"/>
     </form>
+    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
     <hr/>
+    <br>
+    <div id="search_help">
+    <label>راهنمای جستجو</label>
+        <br>
+    جستجوی نامه بر اساس فرستنده، گیرنده، عنوان، محتوا و برچسب عمل میکند.
+        <br>
+درصورتیکه بخواهید نامه ای را براساس چند مورد از موارد بالا جستجو کنید، بین هرکدام کاراکتر ‘ ; ‘ قرار دهید.
+        <br>
+در جستجو بر اساس برچسب، با جداکردن نام برچسبها به کمک " ، " نامه ای که حداقل یکی از برچسبهای ذکر شده را داشته باشد، میابد.
+        <br>
+مثالی از نحوه وارد کردن عبارت جستجو:
+        <br>
+از:admin ; به:سارا ; عنوان:تست ; محتوا:سلام ; برچسب:علاقه مندی ها، مهم، صندوق ورودی
+    </div>
     <div id="fast-filter-box">
     </div>
 {% endblock %}

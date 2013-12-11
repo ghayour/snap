@@ -41,7 +41,10 @@ $(function(){
         bootstrapIcon: 'trash',
         title: 'حذف',
         action: function() {
-            mailSystem.moveToTrash();
+            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
+            if(doIt){
+                mailSystem.moveToTrash();
+            }
         }
     });
     mailToolbar.addButton({
@@ -63,9 +66,9 @@ $(function(){
                             $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
                                 $(this).closest("tr").remove();
                             });
-                            window.location = self.location;
-                            window.location.reload(true);
                         }
+                        ajaxLoader.show();
+                        window.location.reload();
                         //تغییر با توجه به اینکه در حالت آرشیو هست یا خیر
                         // تغییر نحوه نمایش بر اساس تفاوت خوانده شده ها با نخوانده ها
                     }
@@ -143,7 +146,10 @@ $(function() {
 
 function update_message_type(message_type){
     $("#message-type").val(message_type);
-    $("legend").text(_t(message_type));
+    var txt="پاسخ" ;
+    if(message_type=='forward')
+        var txt="ارجاع" ;
+    $("legend").text(txt);
 }
 
 function forward_reply_handler(action_type){
@@ -173,6 +179,29 @@ function forward_reply_handler(action_type){
         tinyMCE.get('id_content').setContent(get_fw_content(cur_mail));
     }
     else{
+        var link_row='<tr><td class="formlinks">'+
+                '<a id="replyto-link">افزودن پاسخ-به</a><span class="separator">|</span>'+
+                '<a id="cc-link" >افزودن رونوشت</a>'+
+                '<span class="separator">|</span>'+'<a id="bcc-link">افزودن رونوشت مخفی</a>'+
+                '</td></tr>';
+        $("tr").filter(function(){
+           if($(this).find("#div_id_bcc").length>=1 && ($(this).parent().find(".formlinks").length==0))
+           return true;
+            return false;
+        }).after(link_row);
+
+        $("#replyto-link").click(function(){
+            $("#id_receivers").closest('tr').toggle();
+
+        });
+         $("#cc-link").click(function(){
+             $("#id_cc").closest('tr').toggle();
+
+        });
+         $("#bcc-link").click(function(){
+             $("#id_bcc").closest('tr').toggle();
+
+        });
         show_hide_info_fields(false, true);
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
