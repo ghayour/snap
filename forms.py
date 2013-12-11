@@ -12,7 +12,10 @@ from arsh.rich_form.validation import ValidationService
 
 
 class ComposeForm(forms.ModelForm):
+    # attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiuploaderField, required=False)
     attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+    # attachments = MultiuploaderField(label= u"فایل ضمیمه" ,required=False)
+
     labels = forms.CharField(label=u'برچسب های اولیه', required=False)
 
     class Meta:
