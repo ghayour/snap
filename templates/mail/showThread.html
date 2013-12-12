@@ -225,15 +225,12 @@
                 <div id='ReFwForm'>
                     <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
-{#                        <button name=" upload" type="submit" value="upload">    upload   </button>#}
                         {% crispy fw_re_form fw_re_form.helper %}
-                        {% multiuploader_noscript form.uploadedFiles.html_name %}
 
                             <input id="send" type="submit" value="Send" class="button">
                             <a id="showUpload" type="button" class="button"><i class="attachment"></i>Attach files</a>
 
                     </form>
-                    {% multiuploader_form form_type="default" template="multiuploader/form.html" target_form_fieldname=forms.edit.uploadedFiles.html_name js_prefix="jQuery" send_button_selector="input[name=_edit]" wrapper_element_id="fileUploads" lock_while_uploading=True number_files_attached=forms.attached_count %}
 
                 </div>
             </fieldset>
