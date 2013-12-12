@@ -224,10 +224,15 @@ def showLabel(request, label, archive_mode):
 
 def manage_label(request):
     user = request.user
-    labels = Label.objects.filter(user = user)
-    print labels
+    label = Label.objects.filter(user = user)
+    initial = Label.get_initial_labels()
+    init_label = []
+    for l in initial:
+        init_label.append(Label.objects.filter(title = l))
+        label = label.exclude(title = l)
     return render_to_response('mail/manage_label.html' ,
-                              {'labels':labels},
+                              {'labels':label ,
+                               'init_label':init_label },
                               context_instance = RequestContext(request))
 
 
@@ -637,7 +642,8 @@ def addressbook_view(request):
     if request.method == "POST":
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
-        contacts.get(pk=pk).delete()
+        delete_contact = contacts.get(pk = pk)
+        delete_contact.delete()
 
     return render_to_response('mail/address_book.html', {'contacts': contacts},
                               context_instance=RequestContext(request))

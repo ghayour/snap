@@ -9,13 +9,31 @@
 {% block content %}
     <table id="user" class="table table-bordered table-striped" style="clear: both">
                 <tbody>
-                {% for l in labels %}
+                {% for l in init_label %}
                     <tr>
-                    <td width="20%"> {{ l }}</td>
-                    <td width="20%"> show /hide </td>
-                    <td width="20%"><a href="address_book.html"> <span class="glyphicon glyphicon-trash"></span> </a></td>
+                    <td width="10%"> {{ l.title }}</td>
+                    <td width="10%"> show /hide </td>
+                    </tr>
+                {% endfor %}
+                 {% for l in labels %}
+                    <tr id={{ l.id }}>
+                    <td width="10%"><span class="name"> {{ l.title }} </span> </td>
+                    <td width="10%"> show /hide </td>
+                    <td width="10%"><span class="glyphicon glyphicon-trash"></span></td>
+                    <td width="10%"><span class="glyphicon glyphicon-edit" onclick="edit({{ l.id }})"></span></td>
+
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
 {% endblock content %}
+{% block js %}
+    {{ block.super }}
+     {% js 'bower_components/bootstrap-editable/js/bootstrap-editable.min.js' %}
+     {% js 'mail/addressbook/editable.js' %}
+      <script type="text/javascript">
+        function edit(id){
+                $('#'+ id).firstChild.editable()
+                };
+      </script>
+{% endblock js %}
