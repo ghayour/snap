@@ -185,9 +185,11 @@ class Mail(models.Model):
         else:
             labels = Label.objects.filter(user=receiver, title__in=label_names)
         rc_labels = thread.get_user_labels(receiver)
-        rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver)
+        #TODO: I add create_new=True to next line
+        rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver,create_new=True)
         if len(labels) + rc_labels.count() == 0:
             labels = [rc_inbox]
+        # Bug was! here: label is none and cause error in rest of the code
         for label in labels:
             thread.add_label(label)
 

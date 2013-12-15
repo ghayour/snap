@@ -8,10 +8,19 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test.client import Client
 
-from arsh.user_mail.models import Mail, Label, Thread
+from arsh.user_mail.models import Mail, Label, Thread,MailDomain,MailAccount,MailProvider
 
 def random_string(length=10):
     return u''.join(random.choice(string.ascii_letters) for x in range(length))
+
+class MailDomainFactory(factory.DjangoModelFactory):
+    FACTORY_FOR =MailDomain
+    name =factory.LazyAttribute(lambda t: random_string())
+
+class MailProviderFactory(factory.DjangoModelFactory):
+    FACTORY_FOR =MailProvider
+
+    #domains =MailDomainFactory.create(name='arshmail.ir')
 
 class ThreadFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Thread
@@ -45,6 +54,8 @@ class MailTest(TestCase):
         """
         user1 = UserFactory.create()
         user2 = UserFactory.create()
+        mail_provider=MailProviderFactory.create()
+        mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
         mail = MailFactory.create(content=u'This is test', sender=user1)#, subject=u'Test subject', receivers=None)
         # Testing functions:
         mail.add_receiver(mail, mail.thread, user2.email)
