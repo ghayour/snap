@@ -21,8 +21,8 @@ FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
 
 class MailDomain(Named):
     class Meta:
-        verbose_name=u"دامنه میل"
-        verbose_name_plural=u"دامنه‌های میل"
+        verbose_name = u"دامنه میل"
+        verbose_name_plural = u"دامنه‌های میل"
 
     def get_provider(self):
         try:
@@ -33,8 +33,8 @@ class MailDomain(Named):
 
 class MailProvider(Named):
     class Meta:
-        verbose_name=u"ارائه دهنده میل"
-        verbose_name_plural=u"ارائه دهندگان میل"
+        verbose_name = u"ارائه دهنده میل"
+        verbose_name_plural = u"ارائه دهندگان میل"
 
     domains = models.ManyToManyField(MailDomain, related_name='+')  # with implicit unique constraint
 
@@ -49,8 +49,8 @@ class MailProvider(Named):
 
 class MailAccount(models.Model):
     class Meta:
-        verbose_name=u"حساب کاربری میل"
-        verbose_name_plural=u"حساب‌های کاربری میل"
+        verbose_name = u"حساب کاربری میل"
+        verbose_name_plural = u"حساب‌های کاربری میل"
 
     user = models.ForeignKey(User, related_name='mail_accounts')
     provider = models.ForeignKey(MailProvider, related_name='mail_accounts')
@@ -62,8 +62,8 @@ class MailAccount(models.Model):
 
 class ProviderImapSettings(Named):
     class Meta:
-        verbose_name=u"تنظیمات ارايه دهنده آی.مپ"
-        verbose_name_plural=u"تنظیمات ارائه‌دهندگان آی.مپ"
+        verbose_name = u"تنظیمات ارايه دهنده آی.مپ"
+        verbose_name_plural = u"تنظیمات ارائه‌دهندگان آی.مپ"
 
     IMAP_SECURITY_TYPES = Choices(('N', 'none'), ('T', 'starttls'), ('S', 'ssl'))
     IMAP_AUTHENTICATION_METHOD = Choices(('p', 'password'), ('e', 'encrypted_password'), ('n', 'ntlm'),
@@ -78,8 +78,8 @@ class ProviderImapSettings(Named):
 
 class ImapMailAccount(MailAccount):
     class Meta:
-        verbose_name=u"حساب کاربری آی.مپ"
-        verbose_name_plural=u"حساب‌های کاربری آی.مپ"
+        verbose_name = u"حساب کاربری آی.مپ"
+        verbose_name_plural = u"حساب‌های کاربری آی.مپ"
 
     password = models.CharField(max_length=100)
     selected_imap_settings = models.ForeignKey(ProviderImapSettings)
@@ -90,8 +90,8 @@ class ImapMailAccount(MailAccount):
 
 class DatabaseMailAccount(MailAccount):
     class Meta:
-        verbose_name=u"حساب کاربری محلی - پایگاه داده"
-        verbose_name_plural=u"حساب‌های کاربری محلی - پایگاه داده"
+        verbose_name = u"حساب کاربری محلی - پایگاه داده"
+        verbose_name_plural = u"حساب‌های کاربری محلی - پایگاه داده"
 
     def can_compose(self):
         return True
@@ -352,7 +352,6 @@ class Mail(models.Model):
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
 
-
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
 
@@ -424,8 +423,8 @@ class Label(Slugged):
     """
 
     class Meta:
-        verbose_name=u"برچسب"
-        verbose_name_plural=u"برچسب‌ها"
+        verbose_name = u"برچسب"
+        verbose_name_plural = u"برچسب‌ها"
 
     INBOX_LABEL_NAME = u'صندوق ورودی'
     CHAT_LABEL_NAME = u'چت'
@@ -551,8 +550,8 @@ class Label(Slugged):
 
 class Thread(Slugged):
     class Meta:
-        verbose_name=u"نخ"
-        verbose_name_plural=u"نخ‌ها"
+        verbose_name = u"نخ"
+        verbose_name_plural = u"نخ‌ها"
 
     title = models.CharField(max_length=255)
     firstMail = models.ForeignKey(Mail, null=True, related_name='headThread')
@@ -722,8 +721,8 @@ class Thread(Slugged):
 
 class ThreadLabel(models.Model):
     class Meta:
-        verbose_name=u"برچسب نخ"
-        verbose_name_plural=u"برچسب‌های نخ"
+        verbose_name = u"برچسب نخ"
+        verbose_name_plural = u"برچسب‌های نخ"
 
     thread = models.ForeignKey(Thread)
     label = models.ForeignKey(Label)
@@ -738,7 +737,8 @@ class ThreadLabel(models.Model):
                 tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
                 return True
 
-            else: #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
+            else:
+            #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
                 return False
 
         except cls.DoesNotExist:
@@ -783,8 +783,8 @@ class ThreadLabel(models.Model):
 
 class AddressBook(models.Model):
     class Meta:
-        verbose_name=u"دفتر آدرس"
-        verbose_name_plural=u"دفترهای آدرس"
+        verbose_name = u"دفتر آدرس"
+        verbose_name_plural = u"دفترهای آدرس"
 
     user = models.OneToOneField(User)
 
@@ -815,7 +815,7 @@ class AddressBook(models.Model):
         """
         بررسی میکند آیا تماسی با آدرس داده شده
         در لیست نشانی ها وجود دارد یا نه.
-        :type address: str
+        :type address: unicode
         :return: bool
         """
         c = Contact.get_contact_by_address(address, book=self)
@@ -872,8 +872,8 @@ class AddressBook(models.Model):
 
 class Contact(models.Model):
     class Meta:
-        verbose_name=u"اطلاعات تماس‌ها"
-        verbose_name_plural=u"اطلاعات تماس"
+        verbose_name = u"اطلاعات تماس‌ها"
+        verbose_name_plural = u"اطلاعات تماس"
 
     address_book = models.ForeignKey(AddressBook)
     display_name = models.CharField(_('display_name'), max_length=30, blank=True, null=True)
@@ -937,7 +937,8 @@ class ReadMail(models.Model):
                 mail.status = ' unread'
 
     @staticmethod
-    def mark_as_read(user, mails, respond=False):
+    def mark_as_read(user, mails):
+     #, respond=False):
         unread = len(mails)
         for mail in mails:
             if not ReadMail.has_read(user, mail):
