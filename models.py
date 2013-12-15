@@ -25,6 +25,7 @@ class MailDomain(Named):
         verbose_name_plural = u"دامنه‌های میل"
 
     def get_provider(self):
+        #TODO: ask about this part logic
         try:
             return MailProvider.objects.get(domains=self)
         except MailProvider.DoesNotExist:
@@ -99,6 +100,7 @@ class DatabaseMailAccount(MailAccount):
 
 class Mail(models.Model):
     sender = models.ForeignKey(User, related_name='sender', verbose_name=u'فرستنده')
+    #TODO: ask: what if  reciever is out of this system!
     recipients = models.ManyToManyField(User, through='MailReceiver')
     title = models.CharField(max_length=300, verbose_name=u'عنوان')
     content = models.TextField(verbose_name=u'متن نامه')
@@ -382,7 +384,7 @@ class Attachment(models.Model):
     attachment = models.FileField(upload_to=get_file_path, verbose_name=u'فایل ضمیمه', null=True, blank=True)
 
 
-#TODO: implement this in showThread, etc.
+#TODO: implement this in show_thread, etc.
 class MailReply(models.Model):
     class Meta:
         verbose_name=u"پاسخ میل"
