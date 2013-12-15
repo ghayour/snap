@@ -20,6 +20,10 @@ FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
 
 
 class MailDomain(Named):
+    class Meta:
+        verbose_name=u"دامنه میل"
+        verbose_name_plural=u"دامنه‌های میل"
+
     def get_provider(self):
         try:
             return MailProvider.objects.get(domains=self)
@@ -28,6 +32,10 @@ class MailDomain(Named):
 
 
 class MailProvider(Named):
+    class Meta:
+        verbose_name=u"ارائه دهنده میل"
+        verbose_name_plural=u"ارائه دهندگان میل"
+
     domains = models.ManyToManyField(MailDomain, related_name='+')  # with implicit unique constraint
 
     @classmethod
@@ -40,6 +48,10 @@ class MailProvider(Named):
 
 
 class MailAccount(models.Model):
+    class Meta:
+        verbose_name=u"حساب کاربری میل"
+        verbose_name_plural=u"حساب‌های کاربری میل"
+
     user = models.ForeignKey(User, related_name='mail_accounts')
     provider = models.ForeignKey(MailProvider, related_name='mail_accounts')
     email = models.CharField(max_length=100)
@@ -49,6 +61,10 @@ class MailAccount(models.Model):
 
 
 class ProviderImapSettings(Named):
+    class Meta:
+        verbose_name=u"تنظیمات ارايه دهنده آی.مپ"
+        verbose_name_plural=u"تنظیمات ارائه‌دهندگان آی.مپ"
+
     IMAP_SECURITY_TYPES = Choices(('N', 'none'), ('T', 'starttls'), ('S', 'ssl'))
     IMAP_AUTHENTICATION_METHOD = Choices(('p', 'password'), ('e', 'encrypted_password'), ('n', 'ntlm'),
                                          ('c', 'tls_certificate'), ('k', 'kerberos'))
@@ -61,6 +77,10 @@ class ProviderImapSettings(Named):
 
 
 class ImapMailAccount(MailAccount):
+    class Meta:
+        verbose_name=u"حساب کاربری آی.مپ"
+        verbose_name_plural=u"حساب‌های کاربری آی.مپ"
+
     password = models.CharField(max_length=100)
     selected_imap_settings = models.ForeignKey(ProviderImapSettings)
 
@@ -69,6 +89,10 @@ class ImapMailAccount(MailAccount):
 
 
 class DatabaseMailAccount(MailAccount):
+    class Meta:
+        verbose_name=u"حساب کاربری محلی - پایگاه داده"
+        verbose_name_plural=u"حساب‌های کاربری محلی - پایگاه داده"
+
     def can_compose(self):
         return True
 
@@ -285,6 +309,7 @@ class Mail(models.Model):
         """
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
 
+        to=""
         if not thread and not in_reply_to:
             raise ValueError('No mail specified to reply to it!')
         if not thread:
@@ -316,9 +341,12 @@ class Mail(models.Model):
         for username in include:
             if not username in to:
                 to.append(username)
-        if len(to) + len(cc) + len(bcc) == 0:
-            logger.debug('no recipients can be selected to reply to, replying to sender')
-            to = [sender.username]
+        if len(to)==0:
+            if len(cc)==0:
+                if  len(bcc) == 0:
+        #if (to==None) and (bcc==None) and (cc==None) :
+                    logger.debug('no recipients can be selected to reply to, replying to sender')
+                    to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
 
@@ -344,15 +372,8 @@ class Mail(models.Model):
 
 
 def get_file_path(instance, filename):
-    import base64
-
-    name = filename.split('.')
-    base_name = name[0]
-    ext = ''
-    if len(name) > 1:
-        ext = '.' + name[-1]
-    safe_name = base64.urlsafe_b64encode(base_name.encode("utf-8"))
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.thread.id, instance.mail.id, safe_name + ext)
+    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
 
 
 class Attachment(models.Model):
@@ -362,6 +383,10 @@ class Attachment(models.Model):
 
 #TODO: implement this in showThread, etc.
 class MailReply(models.Model):
+    class Meta:
+        verbose_name=u"پاسخ میل"
+        verbose_name_plural=u"پاسخ‌های میل"
+
     first = models.ForeignKey(Mail, related_name='+')
     reply = models.ForeignKey(Mail, related_name='+')
 
@@ -395,6 +420,10 @@ class Label(Slugged):
     u""" این مدل یک برچسب را نشان می‌دهد. هر برچسب وابسته به یک کاربر است و برچسب‌های
         کاربران مختلف، حتی اگر نام این برچسب‌ها یکی باشند، متفاوت هستند.
     """
+
+    class Meta:
+        verbose_name=u"برچسب"
+        verbose_name_plural=u"برچسب‌ها"
 
     INBOX_LABEL_NAME = u'صندوق ورودی'
     CHAT_LABEL_NAME = u'چت'
@@ -519,6 +548,10 @@ class Label(Slugged):
 
 
 class Thread(Slugged):
+    class Meta:
+        verbose_name=u"نخ"
+        verbose_name_plural=u"نخ‌ها"
+
     title = models.CharField(max_length=255)
     firstMail = models.ForeignKey(Mail, null=True, related_name='headThread')
     labels = models.ManyToManyField(Label, through='ThreadLabel', related_name='threads')
@@ -664,7 +697,7 @@ class Thread(Slugged):
     def get_deadline(self):
         import re
         #TODO:check this search
-        mail = self.firstMail
+        mail=self.firstMail
         sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
                         mail.content)
         if sub:
@@ -686,6 +719,10 @@ class Thread(Slugged):
 
 
 class ThreadLabel(models.Model):
+    class Meta:
+        verbose_name=u"برچسب نخ"
+        verbose_name_plural=u"برچسب‌های نخ"
+
     thread = models.ForeignKey(Thread)
     label = models.ForeignKey(Label)
     mails = models.ManyToManyField(Mail, null=True, blank=True)
@@ -743,6 +780,10 @@ class ThreadLabel(models.Model):
 
 
 class AddressBook(models.Model):
+    class Meta:
+        verbose_name=u"دفتر آدرس"
+        verbose_name_plural=u"دفترهای آدرس"
+
     user = models.OneToOneField(User)
 
     def get_all_contacts(self):
@@ -828,6 +869,10 @@ class AddressBook(models.Model):
 
 
 class Contact(models.Model):
+    class Meta:
+        verbose_name=u"اطلاعات تماس‌ها"
+        verbose_name_plural=u"اطلاعات تماس"
+
     address_book = models.ForeignKey(AddressBook)
     display_name = models.CharField(_('display_name'), max_length=30, blank=True, null=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True, null=True)
@@ -868,6 +913,7 @@ class Contact(models.Model):
 
 
 class ReadMail(models.Model):
+
     mail = models.ForeignKey(Mail, blank=False)
     reader = models.ForeignKey(User, blank=False)
     date = models.DateTimeField(auto_now_add=True)
