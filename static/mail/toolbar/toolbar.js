@@ -15,7 +15,7 @@ arsh.ui.Toolbar = arsh.ui.BaseComponent.extend({
     },
 
     _setupDiv: function() {
-        this.div.addClass('toolbar-component bordered');
+        this.div.addClass('toolbar-component');
     },
 
     redraw: function () {

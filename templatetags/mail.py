@@ -79,7 +79,7 @@ def label_list(user, current_label=''):
             ls[l[0]].insert(0, l[1])
 
     for account_name, cur_list in ls.iteritems():
-        b.tag('h6', str(account_name))
+        b.tag('h6', str(account_name), class_name='center')
         b.list(cur_list)
         b.hr()
     return b.render()
