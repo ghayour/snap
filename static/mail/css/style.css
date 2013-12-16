@@ -66,6 +66,10 @@ div#content-box {
 #content {
 }
 
+#refresh-button {
+    margin-right: 8px;
+}
+
 
 /**********
  * Header *
@@ -209,6 +213,11 @@ button.aui-btn {
 }
 
 a.aui-btn {
+    display: inline-block;
+}
+
+a.aui-btn:hover {
+    text-decoration: none;
 }
 
 button.btn-narrow-red, a.btn-narrow-red {
@@ -220,9 +229,45 @@ button.btn-narrow-red, a.btn-narrow-red {
     padding: 3px 0 5px;
     text-align: center;
     width: 127px;
-    display: inline-block;
 }
 
 button.btn-narrow-red:hover, a.btn-narrow-red:hover {
-    background-color: #ff4445
+    background-color: #ff4445;
+}
+
+a.aui-btn.btn-narrow-reload {
+    background: url(../images/reload-ico.png) #ff4545 no-repeat center;
+    height: 26px;
+    width: 26px;
+    padding: 3px 0 5px;
+    margin-bottom: -9px;
+}
+
+a.aui-btn.btn-narrow-reload:hover {
+    background-color: red;
+}
+
+/************************
+ * UI Components: Menus *
+ ************************/
+.box-menu li a {
+    color: #919191;
+    padding-right: 26px
+}
+
+.box-menu li {
+    background-color: #ededed;
+    color: #919191;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 14px;
+    height: 28px;
+    padding: 5px 10px
+}
+
+.box-menu li:hover {
+    background-color: #dfdfdf
+}
+
+.box-menu li a span.badge {
+    float: left;
 }

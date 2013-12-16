@@ -4,6 +4,14 @@ var ajaxLoader;
 var mailSystem = new arsh.mail.Client();
 
 
+/* General JS code */
+$(function() {
+    $('#refresh-button').click(function() {
+        window.location.reload();
+    });
+});
+
+
 /* Toolbar Creation */
 $(function(){
     mailToolbar = new arsh.ui.Toolbar({'div': '#action-bar'});
@@ -13,14 +21,6 @@ $(function(){
         show: 'mailSystem.state.viewing != "threads"',
         action: function() {
             window.location = arsh.dj.resolver.url('mail/see_label',label_slug=$("#current_label").data('slug'));
-        }
-    });
-    mailToolbar.addButton({
-        bootstrapIcon: 'refresh',
-        title: 'بازآوری',
-        show: 'mailSystem.state.viewing == "threads"',
-        action: function() {
-            window.location.reload();
         }
     });
     mailToolbar.addButton({

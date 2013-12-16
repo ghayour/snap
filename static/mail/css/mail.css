@@ -342,30 +342,6 @@ input.label-input {
 /***************
  * UI Elements *
  ***************/
-div#sidebar li {
-    font-family: 'Droid Arabic Naskh', 'B Mitra bold', 'B Yekan', 'B Nazanin', 'BNazanin', Tahoma, serif;
-    padding: 0;
-    width: auto;
-    background-color: inherit;
-    margin: 7px 10px;
-    text-align: right;
-    font-weight: bold;
-}
-
-div#sidebar li a {
-    position: static;
-    top: 0;
-}
-
-div#sidebar li .sidebar-item a.current {
-    color: black;
-    cursor: default;
-}
-
-div#sidebar li .sidebar-item a.current:before {
-    content: '> ';
-}
-
 #compose-mail label{
     width: 80px;
 }

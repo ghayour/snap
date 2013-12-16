@@ -66,8 +66,7 @@ def label_list(user, current_label=''):
         if not label.account_name in ls:
             ls[label.account_name] = []
 
-        row = """<div class='sidebar-item'><a class='%s' href='%s'>%s%s</a></div><div class='sidebar-item-seperator'>
-        <div class='sep-t'></div><div class='sep-b'></div></div>""" % (current_class, url, unicode(label), unread_str)
+        row = """<a class='%s' href='%s'>%s%s</a>""" % (current_class, url, unicode(label), unread_str)
         if label.title in initial:
             ordered_list[label.title] = (label.account_name, row)
 
@@ -80,7 +79,9 @@ def label_list(user, current_label=''):
 
     for account_name, cur_list in ls.iteritems():
         b.tag('h6', str(account_name), class_name='center')
+        b.open_tag('div', class_name='box-menu')
         b.list(cur_list)
+        b.close_tag('div')
         b.hr()
     return b.render()
 
