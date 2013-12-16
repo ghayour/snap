@@ -2,11 +2,11 @@
 import datetime
 import logging
 
+from model_utils import Choices
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
-from model_utils.choices import Choices
 
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
