@@ -224,11 +224,24 @@ def showLabel(request, label, archive_mode):
 
 def manage_label(request):
     user = request.user
-    label = Label.objects.filter(user = user)
+
+    if request.is_ajax() and request.POST:
+        action = request.POST.get('name')
+        id = request.POST.get('id')
+        l = Label.objects.get(user = user , id = id)
+        if action == 'delete':
+            l.delete()
+        else:
+            title = request.POST.get('value')
+            l.title = title
+            l.save()
+
+
+    label = Label.get_user_labels(user)
     initial = Label.get_initial_labels()
     init_label = []
     for l in initial:
-        init_label.append(Label.objects.filter(title = l))
+        init_label.append(Label.get_label_for_user(l , user))
         label = label.exclude(title = l)
     return render_to_response('mail/manage_label.html' ,
                               {'labels':label ,
