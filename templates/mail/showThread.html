@@ -225,9 +225,13 @@
                 <div id='ReFwForm'>
                     <form id="fw-re-form" class="mail-form MultiFile-intercepted" enctype="multipart/form-data" method="POST">
                         {% csrf_token %}
-{#                        <button name=" upload" type="submit" value="upload">    upload   </button>#}
                         {% crispy fw_re_form fw_re_form.helper %}
+
+                            <input id="send" type="submit" value="Send" class="button">
+                            <a id="showUpload" type="button" class="button"><i class="attachment"></i>Attach files</a>
+
                     </form>
+
                 </div>
             </fieldset>
         </div>
