@@ -221,13 +221,13 @@ def showLabel(request, label, archive_mode):
                                'archive': archive_mode,
                               },
                               context_instance=RequestContext(request))
-
+@login_required
 def manage_label(request):
     user = request.user
 
     if request.is_ajax() and request.POST:
         action = request.POST.get('name')
-        id = request.POST.get('id')
+        id = request.POST.get('pk')
         l = Label.objects.get(user = user , id = id)
         if action == 'delete':
             l.delete()

@@ -7,7 +7,7 @@ $(document).ready(function(){
            url : '/manage-label/',
            type : 'POST',
            data : {
-               id : $(this).parent().parent().attr('id'),
+               pk : $(this).parent().parent().attr('id'),
                name : 'delete'
            },
 
