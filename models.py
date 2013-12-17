@@ -440,12 +440,35 @@ class Label(Slugged):
     COMPLETED_LABEL_NAME = u'کارها/انجام شده'
     REQUEST_LABEL_NAME = u'درخواست ها'
 
+    # TODO: this may be different in different accounts
+    STD_LABELS = {
+        'inbox': INBOX_LABEL_NAME,
+        'chat': CHAT_LABEL_NAME,
+        'sent': SENT_LABEL_NAME,
+        'unread': UNREAD_LABEL_NAME,
+        'trash': TRASH_LABEL_NAME,
+        'spam': SPAM_LABEL_NAME,
+        'archive': ARCHIVE_LABEL_NAME,
+        'starred': STARRED_LABEL_NAME,
+        'todo': TODO_LABEL_NAME,
+        'completed': COMPLETED_LABEL_NAME,
+        'request': REQUEST_LABEL_NAME,
+    }
+    INITIAL_LABELS = (INBOX_LABEL_NAME, SENT_LABEL_NAME, UNREAD_LABEL_NAME,  STARRED_LABEL_NAME,
+                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
+
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
     title = models.CharField(max_length=50)
 
     def __unicode__(self):
         return self.title
+
+    def get_std_name(self):
+        for k, v in self.STD_LABELS.iteritems():
+            if v == self.title:
+                return k
+        return ''
 
     @staticmethod
     def create(user, title):
@@ -506,10 +529,21 @@ class Label(Slugged):
                 return Label.create(title=label_name, user=user)
             return None
 
-    @staticmethod
-    def get_initial_labels():
-        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME, Label.REQUEST_LABEL_NAME,
-                Label.STARRED_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+    @classmethod
+    def get_initial_labels(cls):
+        return cls.INITIAL_LABELS
+
+    @classmethod
+    def get_label_ordering_func(cls):
+        def order(label):
+            """
+                :type label: Label
+            """
+            try:
+                return cls.INITIAL_LABELS.index(label.title), ''
+            except ValueError:
+                return len(cls.INITIAL_LABELS), label.title
+        return order
 
     @staticmethod
     def setup_initial_labels(user):

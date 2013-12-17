@@ -9,6 +9,21 @@ $(function() {
     $('#refresh-button').click(function() {
         window.location.reload();
     });
+
+    var $sidebar = $('#sidebar');
+    function grSidebarFix() {
+        $sidebar.height($( document ).height() - $sidebar.position().top - 10);
+    }
+    grSidebarFix();
+    setTimeout(grSidebarFix, 50);
+    setTimeout(grSidebarFix, 500);
+    setInterval(grSidebarFix, 4000);
+    $(window).resize(grSidebarFix);
+
+    $('.box-menu-expand').click(function() {
+        var $menu = $(this).closest('.box-menu');
+        $menu.find('.box-menu-body').slideToggle(function() { $menu.toggleClass('active'); });
+    });
 });
 
 

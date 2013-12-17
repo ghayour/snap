@@ -47,12 +47,28 @@
         <a id="refresh-button" href="#" class="aui-btn btn-narrow-reload"></a>
     </div>
     {% label_list user label.title %}
+    <div class="box-menu active">
+        <div class="box-menu-head">
+            <span class="box-menu-icon icon-folder"></span>
+            <span class="box-menu-title">کارتابل</span>
+            {#<span class="box-menu-expand"></span>#}
+        </div>
+        <div class="box-menu-body"></div>
+    </div>
+    <div class="box-menu active">
+        <div class="box-menu-head">
+            <span class="box-menu-icon icon-folder"></span>
+            <span class="box-menu-title">درخواست‌ها</span>
+            {#<span class="box-menu-expand"></span>#}
+        </div>
+        <div class="box-menu-body"></div>
+    </div>
+
     <form method='POST' id="mail_search_form" action="{% url 'mail/search' %}">
         {% csrf_token %}
         <input id="mail-search-input" type="text" value="{{ search_exp }}" name="keywords" placeholder="جستجو" style="width: 130px; float: right"/>
     </form>
     <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
-    <hr/>
     <br>
     <div id="search_help">
     <label>راهنمای جستجو</label>

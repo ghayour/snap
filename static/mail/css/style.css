@@ -24,10 +24,6 @@ body {
 /***************
  * Page Layout *
  ***************/
-div#sidebar {
-    padding: 20px 10px;
-}
-
 #header {
     height: 67px;
     left: 0;
@@ -42,7 +38,7 @@ div#sidebar {
     /*box-shadow: -1px 0 8px #ccc;*/
     z-index: 100;
     bottom: 0;
-    padding: 0 30px;
+    padding: 0 30px 10px;
     position: absolute;
     right: 0;
     top: 67px;
@@ -69,6 +65,11 @@ div#content-box {
 #refresh-button {
     margin-right: 8px;
 }
+
+#sidebar .box-menu {
+    margin: 10px 0;
+}
+
 
 
 /**********
@@ -114,89 +115,6 @@ div#sidebar ul {
     padding: 0;
     margin: 0;
     list-style: none;
-}
-
-/* to be applied */
-#right-side .box {
-    margin-bottom: 10px
-}
-
-#right-side .box-head {
-    background-color: #ECECEC;
-    height: 28px
-}
-
-#right-side .box-head:hover {
-    background-color: #DEDEDE;
-    cursor: pointer
-}
-
-#right-side .box.active .box-head {
-    background-color: #3397DB
-}
-
-#right-side .box-ico {
-    background-image: url(../images/box-head-icons.png);
-    float: right;
-    margin: 7px 7px 0 0
-}
-
-#right-side .folder-ico {
-    height: 14px;
-    width: 18px
-}
-
-#right-side .box.active .folder-ico {
-    background-position: 0 -18px
-}
-
-#right-side .tag-ico {
-    background-position: -18px 0;
-    height: 18px;
-    margin: 5px 7px 0 0;
-    width: 18px
-}
-
-#right-side .box.active .tag-ico {
-    background-position: -18px -18px
-}
-
-#right-side .box-name {
-    color: #919191;
-    float: right;
-    font-family: BYekan, BNazanin, Tahoma, serif;
-    font-size: 14px;
-    margin-right: 7px;
-    margin-top: 6px
-}
-
-#right-side .box.active .box-name {
-    color: #fff
-}
-
-#right-side .box-expand {
-    background-image: url(../images/box-arrow.png);
-    float: left;
-    height: 9px;
-    margin: 10px 7px 0;
-    width: 13px
-}
-
-#right-side .box.active .box-expand {
-    background-position: 0 -9px
-}
-
-#right-side .box .box-body {
-    background-color: #ededed;
-    display: none
-}
-
-#right-side .box.active .box-body {
-    display: block
-}
-
-#right-side #tag-box.active .box-head {
-    background-color: #2ecc71
 }
 
 /***********
@@ -250,17 +168,49 @@ a.aui-btn.btn-narrow-reload:hover {
 /************************
  * UI Components: Menus *
  ************************/
-.box-menu li a {
+/* Box Menu */
+.box-menu li a, .box-menu-body li a {
     color: #919191;
-    padding-right: 26px
+    padding-right: 5px;
+    display: inline-block;
+    height: 100%;
+}
+
+.box-menu li a.iconed, .box-menu-body li a.iconed {
+    padding-right: 26px;
+}
+
+.box-menu li a.icon-inbox, .box-menu-body li a.icon-inbox {
+    background: url(../images/inbox-ico.png) no-repeat right 2px;
+}
+
+.box-menu li a.icon-sent, .box-menu-body li a.icon-sent {
+    background: url(../images/sent-ico.png) no-repeat right 2px;
+}
+
+.box-menu li a.icon-starred, .box-menu-body li a.icon-starred {
+    background: url(../images/important-ico.png) no-repeat right -1px;
+}
+
+.box-menu li a.icon-trash, .box-menu-body li a.icon-trash {
+    background: url(../images/trash-ico.png) no-repeat right 0;
+}
+
+.box-menu li a.icon-archive, .box-menu-body li a.icon-archive {
+    background: url(../images/archive-ico.png) no-repeat right 0;
+}
+
+.box-menu li a.icon-spam, .box-menu-body li a.icon-spam {
+    background: url(../images/spam-ico.png) no-repeat right 2px;
 }
 
 .box-menu li {
+    position: relative;
     background-color: #ededed;
     color: #919191;
     font-family: BYekan, BNazanin, Tahoma, serif;
     font-size: 14px;
-    height: 28px;
+    min-height: 28px;
     padding: 5px 10px
 }
 
@@ -269,5 +219,92 @@ a.aui-btn.btn-narrow-reload:hover {
 }
 
 .box-menu li a span.badge {
-    float: left;
+    position: absolute;
+    left: 2px;
+    top: 6px;
+}
+
+/* Box Menu: Body */
+.box-menu .box-menu-body {
+    background-color: #ededed;
+    display: none;
+}
+
+.box-menu.active .box-menu-body {
+    display: block
+}
+
+.box-menu li a, .box-menu-body li a {
+    text-decoration: none;
+}
+
+.box-menu li:hover a, .box-menu-body li:hover a {
+    background-color: #dfdfdf;
+}
+
+.box-menu li a.current, .box-menu-body li a.current {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Box Menu: Header */
+.box-menu-head {
+    background-color: #ECECEC;
+    min-height: 28px;
+    position: relative;
+}
+
+.box-menu-head:hover {
+    background-color: #DEDEDE;
+    cursor: pointer
+}
+
+.box-menu.active .box-menu-head {
+    background-color: #3397DB
+}
+
+.box-menu-head .box-menu-icon.icon-folder {
+    background-image: url(../images/box-head-icons.png);
+    height: 14px;
+    width: 18px;
+    float: right;
+    margin: 7px 7px 0 0;
+}
+
+.box-menu.active .box-menu-head .box-menu-icon.icon-folder {
+    background-position: 0 -18px;
+}
+
+.box-menu-head .box-menu-title {
+    color: #919191;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 14px;
+    display: inline-block;
+    margin: 6px 7px 0;
+}
+
+.box-menu-head:hover .box-menu-title {
+    color: #717171
+}
+
+.box-menu.active .box-menu-head .box-menu-title {
+    color: #fff;
+}
+
+.box-menu.active .box-menu-head:hover .box-menu-title {
+    color: #fff;
+}
+
+.box-menu .box-menu-head .box-menu-expand {
+    background-image: url(../images/box-arrow.png);
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    top: 9px;
+    height: 9px;
+    width: 13px
+}
+
+.box-menu.active .box-menu-head .box-menu-expand {
+    background-position: 0 -9px
 }

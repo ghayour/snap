@@ -4,10 +4,8 @@ from django.core.urlresolvers import reverse
 
 from arsh.common.html.builder import Builder
 from arsh.user_mail.UserManager import UserManager
-from arsh.user_mail.models import Label, Thread
+from arsh.user_mail.models import Label
 
-
-__docformat__ = 'reStructuredText'
 
 register = template.Library()
 
@@ -28,7 +26,6 @@ def label_list(user, current_label=''):
     :param user:
     :return:
     """
-    total_unread_mails = 0
     unread_label = UserManager.get(user).get_unread_label()
     labels = Label.objects.raw("""
         SELECT l.id,l.title,l.slug,ma.email AS account_name,
@@ -46,43 +43,44 @@ def label_list(user, current_label=''):
         WHERE l.user_id=%d AND l.title <> 'unread'
         ORDER BY title
     """ % (unread_label.id, user.id))
-    b = Builder()
-    ls = {}
-    initial = Label.get_initial_labels()
-    ordered_list = {}
-    for label in labels:
-        # unread = label.unread_threads_count
-        unread = 0
-        for t in label.threads.all():
-            unread += len(t.get_unread_mails(user))
-            if label.title != Label.SENT_LABEL_NAME:
-                total_unread_mails += unread
-        unread_str = ''
-        if label.title != Label.SENT_LABEL_NAME:
-            unread_str = ' <span class="badge">%d</span>' % unread if unread else ''
-        url = reverse('mail/see_label', args=[label.slug])
-        current_class = 'current' if label.title == current_label else ''
 
+    ls = {}  # dict of account_name -> list of its labels
+    total_unread_mails = 0
+    for label in sorted(labels, key=Label.get_label_ordering_func()):
+        unread = label.unread_threads_count
+        unread_str = ''
+        if unread and label.title != Label.SENT_LABEL_NAME:
+            total_unread_mails += unread
+            unread_str = ' <span class="badge">%d</span>' % unread
+        url = reverse('mail/see_label', args=[label.slug])
+        classes = []
+        if label.title == current_label:
+            classes.append('current')
+        std_name = label.get_std_name()
+        if std_name:
+            if not std_name in ['request', 'todo']:
+                classes.append('iconed')
+                classes.append('icon-' + std_name)
+
+        row = """<a class='%s' href='%s'>%s%s</a>""" % (' '.join(classes), url, unicode(label), unread_str)
         if not label.account_name in ls:
             ls[label.account_name] = []
-
-        row = """<a class='%s' href='%s'>%s%s</a>""" % (current_class, url, unicode(label), unread_str)
-        if label.title in initial:
-            ordered_list[label.title] = (label.account_name, row)
-
         ls[label.account_name].append(row)
-    for l in initial[::-1]:
-        l = ordered_list.get(l, None)
-        if l:
-            ls[l[0]].remove(l[1])
-            ls[l[0]].insert(0, l[1])
 
+    __b = b = Builder()
     for account_name, cur_list in ls.iteritems():
-        b.tag('h6', str(account_name), class_name='center')
-        b.open_tag('div', class_name='box-menu')
-        b.list(cur_list)
+        b.open_tag('div', class_name='box-menu active')
+
+        b.open_tag('div', class_name='box-menu-head')
+        __b.tag('span', str(account_name), class_name='box-menu-title')
+        __b.tag('span', '', class_name='box-menu-expand')
         b.close_tag('div')
-        b.hr()
+
+        b.open_tag('div', class_name='box-menu-body')
+        __b.list(cur_list)
+        b.close_tag('div')
+
+        b.close_tag('div')
     return b.render()
 
 
@@ -91,5 +89,3 @@ def is_unread(thread, user):
     if thread.is_unread(user):
         return '*'
     return ''
-
-
