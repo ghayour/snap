@@ -1,14 +1,136 @@
-.toolbar-component {
-    padding: 5px;
+.toolbar {
+    height: 26px;
+    overflow: hidden; /* TODO: resize inside icons instead */
 }
 
-.toolbar-component span.glyphicon {
-    font-size: 32px;
-    text-decoration: none;
-    cursor: pointer;
-    color: #444;
+.toolbar .toolbar-item {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 10px;
+    position: relative;
+    z-index: 2;
+    background-color: #ededed;
+    color: #4E4E4E;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 13px;
+    height: 26px;
+    width: auto;
+    padding: 6px 10px;
 }
 
-.toolbar-component a.toolbar-item {
-    margin: 0 10px;
+.toolbar .toolbar-item:hover {
+    background-color: #dfdfdf;
+    color: #4e4e4e;
+    cursor: pointer
+}
+
+
+.toolbar .toolbar-item.left-aligned {
+    float: left;
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+.toolbar .toolbar-item .item-icon {
+    display: inline-block;
+    background-image: url(../images/item-shapes.png);
+    height: 16px;
+    width: 16px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-none {
+    background-image: none;
+    width: 0;
+    margin-left: -5px;
+}
+
+.toolbar .toolbar-item .item-title {
+    vertical-align: top;
+    margin: 1px 5px 0 0;
+}
+
+.toolbar .toolbar-item .item-arrow {
+    background: url(../images/item-arrow.png);
+    /*float: left;*/
+    height: 8px;
+    margin: 3px 7px 0 0;
+    width: 13px;
+}
+
+.toolbar .toolbar-item:hover .item-arrow {
+    background: url(../images/item-arrow.png) 0 -8px
+}
+
+.toolbar .toolbar-item .item-body {
+    background-color: #dfdfdf;
+    border-bottom: 3px solid #000;
+    display: none;
+}
+
+/* Toolbar: Icons */
+.toolbar .toolbar-item .item-icon.icon-trash {
+    background-position: -89px 0;
+    width: 13px;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-trash {
+    background-position: -89px -18px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-archive {
+    background-position: -73px 0;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-archive {
+    background-position: -73px -18px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-spam {
+    background-position: -20px 0;
+    height: 17px;
+    margin-top: -2px;
+    width: 17px;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-spam {
+    background-position: -20px -18px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-tag {
+    background-position: -37px 0;
+    height: 18px;
+    margin-top: -2px;
+    width: 18px;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-tag {
+    background-position: -37px -18px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-folder {
+    background-position: -55px 0;
+    height: 14px;
+    width: 18px
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-folder {
+    background-position: -55px -18px;
+}
+
+.toolbar .toolbar-item .item-icon.icon-next {
+    background-image: url(../images/prev-next-arrow.png);
+    height: 15px;
+    width: 10px;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-next {
+}
+
+.toolbar .toolbar-item .item-icon.icon-prev {
+    background: url(../images/prev-next-arrow.png) -10px 0;
+    height: 15px;
+    width: 10px;
+}
+
+.toolbar .toolbar-item:hover .item-icon.icon-prev {
 }

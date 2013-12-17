@@ -15,7 +15,7 @@ arsh.ui.Toolbar = arsh.ui.BaseComponent.extend({
     },
 
     _setupDiv: function() {
-        this.div.addClass('toolbar-component');
+        this.div.addClass('toolbar');
     },
 
     redraw: function () {
@@ -30,17 +30,20 @@ arsh.ui.Toolbar = arsh.ui.BaseComponent.extend({
 
     addButton: function(opts) {
         var self = this;
-        var bootstrapIcon = arsh.js.get(opts, 'bootstrapIcon');
-        // var icon = arsh.js.get(opts, 'icon'); todo
+        var icon = arsh.js.get(opts, 'icon') || 'none';
+        var align = arsh.js.get(opts, 'align', 'right');
+        var css = arsh.js.get(opts, 'css');
         var title = arsh.js.get(opts, 'title', '');
         var action = arsh.js.get(opts, 'action');
         var popover = arsh.js.get(opts, 'popover');
         var showCond = arsh.js.get(opts, 'show', 'true');
 
-        var el = $(_.template('<a class="toolbar-item" href="#"><span class="glyphicon glyphicon-{{glyph}}"></span></a>')({glyph: bootstrapIcon}));
+        var el = $(_.template('<div class="toolbar-item"><span class="item-icon icon-{{glyph}}"></span><span class="item-title">{{title}}</span></div>')({glyph: icon, title: title}));
         var type = 'button';
         if (action) el.click(action);
-        if (title) el.attr('title', title);
+        if (align == 'left') el.addClass('left-aligned');
+        if (css) el.css(css);
+        //if (title) el.attr('title', title);
 
         if (popover) {
             if (!this._popoverDismissSet) {

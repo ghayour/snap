@@ -369,13 +369,3 @@ input.label-input {
     margin-top: 5px;
     text-align: right;
 }
-
-tr.unread{
-    font-weight: bold;
-}
-tr.read{
-    font-weight: normal;
-}
-table.dataTable th{
-    text-align: right;
-}
