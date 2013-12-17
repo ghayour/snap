@@ -66,6 +66,7 @@ class FwReForm(forms.ModelForm):
     class Meta:
         model = Mail
         exclude = ('thread', 'recipients', 'sender')
+        # exclude = ('thread', 'sender')
 
     def __init__(self, *args, **kwargs):
         from tinymce.widgets import TinyMCE
@@ -104,15 +105,4 @@ class FwReForm(forms.ModelForm):
         v.validationalize_form()
 
 
-class ContactForm(forms.ModelForm):
 
-    class Meta:
-        model = Contact
-        exclude = ('addressbook',)
-
-    def __init__(self , *args , **kwargs):
-        super(ContactForm , self).__init__(*args , **kwargs)
-
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_class = 'form-margin-30'
