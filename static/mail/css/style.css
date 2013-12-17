@@ -339,6 +339,7 @@ a.aui-btn.btn-narrow-reload:hover {
 
 .threads-table .thread-info, .threads-table .thread-info a {
     color: #878787;
+    text-decoration: none;
 }
 
 .threads-table .thread-info .subject {

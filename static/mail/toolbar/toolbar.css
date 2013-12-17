@@ -39,9 +39,11 @@
 }
 
 .toolbar .toolbar-item .item-icon.icon-none {
-    background-image: none;
-    width: 0;
-    margin-left: -5px;
+    display: none;
+}
+
+.toolbar .toolbar-item .item-icon.icon-none + .item-title {
+    margin-right: 0;
 }
 
 .toolbar .toolbar-item .item-title {
