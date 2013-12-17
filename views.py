@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-#import smtplib
 import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -11,7 +10,6 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
-#from django.views.generic import FormView
 
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
@@ -223,13 +221,27 @@ def show_label(request, label, archive_mode):
                               context_instance=RequestContext(request))
 
 
+@login_required
 def manage_label(request):
     user = request.user
-    label = Label.objects.filter(user = user)
+
+    if request.is_ajax() and request.POST:
+        action = request.POST.get('name')
+        id = request.POST.get('pk')
+        l = Label.objects.get(user = user , id = id)
+        if action == 'delete':
+            l.delete()
+        else:
+            title = request.POST.get('value')
+            l.title = title
+            l.save()
+
+
+    label = Label.get_user_labels(user)
     initial = Label.get_initial_labels()
     init_label = []
     for l in initial:
-        init_label.append(Label.objects.filter(title = l))
+        init_label.append(Label.get_label_for_user(l , user))
         label = label.exclude(title = l)
     return render_to_response('mail/manage_label.html' ,
                               {'labels':label ,
