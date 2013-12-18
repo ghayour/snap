@@ -119,7 +119,6 @@ def compose(request):
         'send_error': result_error
     }, context_instance=RequestContext(request))
 
-
 def showThread(request, thread, label=None):
     """
     :type thread: Thread
@@ -163,6 +162,21 @@ def showThread(request, thread, label=None):
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
+        # to = [mail.sender.username] if mail.sender.username != up.username else []
+        # if not exclude_others:
+    #         for mr in MailReceiver.objects.filter(mail=mail):
+    #             username = mr.user.username
+    #             if not (
+    #                                     username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+    #                 if mr.type == 'to':
+    #                     to.append(username)
+    #                 elif mr.type == 'cc':
+    #                     cc.append(username)
+    #                 elif mr.type == 'bcc':
+    #                     bcc.append(username)
+    #     for username in include:
+    #         if not username in to:
+    #             to.append(username)
         fw_re_form = FwReForm(user_id=up.id)
 
     labels = thread.get_user_labels(up)
@@ -203,7 +217,6 @@ def showThread(request, thread, label=None):
         'last_index': len(tobeShown),
     }, context_instance=RequestContext(request))
 
-
 def showLabel(request, label, archive_mode):
     up = request.user
 
@@ -221,6 +234,7 @@ def showLabel(request, label, archive_mode):
                                'archive': archive_mode,
                               },
                               context_instance=RequestContext(request))
+
 @login_required
 def manage_label(request):
     user = request.user
@@ -251,6 +265,7 @@ def manage_label(request):
 
 
     pass
+
 @ajax_view
 def mail_validate(request):
     rl = []
@@ -264,7 +279,6 @@ def mail_validate(request):
                     return {"error": "گیرنده نامعتبر است."}
     return 'Ok'
 
-
 @login_required
 def createLabel(request):
     title = request.POST.get('title')
@@ -273,7 +287,6 @@ def createLabel(request):
     label.title = title
     label.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-
 
 @ajax_view
 def add_label(request):
@@ -321,7 +334,6 @@ def add_label(request):
     c.update({"response_text": response_text, "label_url": label_url, "label_id": label.id})
     return c
 
-
 @ajax_view
 def label_list(request):
     start = request.GET.get('name_startsWith')
@@ -347,7 +359,6 @@ def label_list(request):
     jsonText = jsonText[:-1] + ']'
 
     return HttpResponse(jsonText)
-
 
 def delete_label(request):
     c = {"response_text": "error", }
@@ -383,7 +394,6 @@ def delete_label(request):
         pass
 
     return HttpResponse(simplejson.dumps(c))
-
 
 @ajax_view
 def move_thread(request):
@@ -452,7 +462,6 @@ def get_search_query(token, user):
         return rs(token[1], user)
     return rs
 
-
 def search_labels(keyword, user):
     label_list = keyword.split(u'،')
     search_query = Q()
@@ -461,7 +470,6 @@ def search_labels(keyword, user):
         if label:
             search_query = search_query | (Q(labels__title__contains=label) & Q(labels__in=user_labels))
     return search_query
-
 
 @login_required
 def search(request):
@@ -492,7 +500,6 @@ def search(request):
             'search_exp': keywords
         }, context_instance=RequestContext(request))
 
-
 def parse_address(input):
     input = input.replace(',', ';')
     tokens = input.split(';')
@@ -502,13 +509,11 @@ def parse_address(input):
         if s: result.append(s)
     return result
 
-
 def mails_gc():
     """
         تابعی که باید به صورت دوره‌ای اجرا شود و میل‌های حذف شده را از پایگاه داده نیز حذف کند.
     """
     Thread.objects.filter(labels__isnull=True).delete()
-
 
 @login_required
 def mark_thread(request, thread_slug, action):
@@ -522,7 +527,6 @@ def mark_thread(request, thread_slug, action):
         return HttpResponse('OK')
     return HttpResponseRedirect(
         reverse('mail/see_label', args=[thread.labels.all()[0].slug])) #FIXME: what if no labels?
-
 
 @login_required
 def ajax_mark_thread(request):
@@ -575,7 +579,6 @@ def get_total_unread_mails(request):
             total_unread_mails += unread
     return total_unread_mails
 
-
 @ajax_view
 def mail_reply(request):
     replies = []
@@ -586,7 +589,6 @@ def mail_reply(request):
     except Mail.DoesNotExist:
         replies = []
     return replies
-
 
 @ajax_view
 def add_contact(request):
@@ -607,7 +609,6 @@ def add_contact(request):
     except ValueError as e:
         return {'errors': unicode(e.message)}
 
-
 @ajax_view
 def contact_list(request):
     try:
@@ -624,7 +625,6 @@ def contact_list(request):
         return data
     except ValueError as e:
         pass
-
 
 @login_required
 def addressbook_edit(request):

@@ -20,7 +20,7 @@ $(document).ready(function(){
             url : '/view/addressbook',
             type : 'POST',
             data : { pk : $(this).val()},
-            success:function(response){
+            success:function(){
                 ajaxLoader.show();
                 window.location.reload();
             }
