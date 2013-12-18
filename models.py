@@ -327,32 +327,38 @@ class Mail(models.Model):
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
-        if receivers:
-            to = receivers
-        else:
-            to = [mail.sender.username] if mail.sender.username != sender.username else []
-        if not exclude_others:
-            for mr in MailReceiver.objects.filter(mail=mail):
-                username = mr.user.username
-                if not (
-                                        username in to or username in cc or username in bcc or username in exclude or username == sender.username):
-                    if mr.type == 'to':
-                        to.append(username)
-                    elif mr.type == 'cc':
-                        cc.append(username)
-                    elif mr.type == 'bcc':
-                        bcc.append(username)
-        for username in include:
-            if not username in to:
-                to.append(username)
-        if len(to)==0:
-            if len(cc)==0:
-                if  len(bcc) == 0:
-        #if (to==None) and (bcc==None) and (cc==None) :
-                    logger.debug('no recipients can be selected to reply to, replying to sender')
-                    to = [sender.username]
-        reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
+
+        #TODO: I changed this to fix bug!
+        #if receivers:
+        #    to = receivers
+        #else:
+        #    to = [mail.sender.username] if mail.sender.username != sender.username else []
+        #if not exclude_others:
+        #    for mr in MailReceiver.objects.filter(mail=mail):
+        #        username = mr.user.username
+        #        if not (
+        #                                username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+        #            if mr.type == 'to':
+        #                to.append(username)
+        #            elif mr.type == 'cc':
+        #                cc.append(username)
+        #            elif mr.type == 'bcc':
+        #                bcc.append(username)
+        #for username in include:
+        #    if not username in to:
+        #        to.append(username)
+        #if len(to)==0:
+        #    if len(cc)==0:
+        #        if  len(bcc) == 0:
+        ##if (to==None) and (bcc==None) and (cc==None) :
+        #            logger.debug('no recipients can be selected to reply to, replying to sender')
+        #            to = [sender.username]
+        #reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
+        #                    titles=titles, attachments=attachments)
+
+        reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
+
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
