@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import smtplib
+#import smtplib
 import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -11,7 +11,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
-from django.views.generic import FormView
+#from django.views.generic import FormView
 
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
@@ -19,7 +19,7 @@ from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailAccount, MailProvider
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider
 
 
 def get_default_inbox():
@@ -59,11 +59,11 @@ def see(request, label_slug, thread_slug, archive=None):
     if thread:
         if label_slug and not thread.has_label(label):
             raise Http404("Thread not in label")
-        return showThread(request, thread, label)
+        return show_thread(request, thread, label)
 
     if archive is None:
         archive = config_manager.get('default-view') == 'archive'
-    return showLabel(request, label, archive)
+    return show_label(request, label, archive)
 
 
 @login_required
@@ -73,17 +73,17 @@ def compose(request):
     initial_bcc = request.GET.get('bcc', '')
     up = request.user
     cf = ConfigManager.prepare()
-    composeForm = ComposeForm()
+    compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
         initial_bcc = request.POST.get('bcc')
         initial_to = receivers
-        composeForm = ComposeForm(request.POST, request.FILES)
-        if composeForm.is_valid():
-            subject = composeForm.cleaned_data['title']
-            content = composeForm.cleaned_data['content']
+        compose_form = ComposeForm(request.POST, request.FILES)
+        if compose_form.is_valid():
+            subject = compose_form.cleaned_data['title']
+            content = compose_form.cleaned_data['content']
             label_ids = request.POST.get('labels').split(',')
             initial_labels = []
             if label_ids and label_ids[0]:
@@ -114,13 +114,13 @@ def compose(request):
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
-        'mailForm': composeForm,
+        'mailForm': compose_form,
         'all_labels': Label.get_user_labels(up),
         'send_error': result_error
     }, context_instance=RequestContext(request))
 
 
-def showThread(request, thread, label=None):
+def show_thread(request, thread, label=None):
     """
     :type thread: Thread
     """
@@ -167,21 +167,21 @@ def showThread(request, thread, label=None):
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
-    allMails = thread.get_user_mails(up)
+    all_mails = thread.get_user_mails(up)
 
-    tobeShown = {}
+    tobe_shown = {}
 
-    for mail in allMails:
-        tobeShown[mail] = mail.get_user_labels(up)
-    if not tobeShown:
+    for mail in all_mails:
+        tobe_shown[mail] = mail.get_user_labels(up)
+    if not tobe_shown:
         return HttpResponseRedirect(reverse('mail/home'))
 
-    env = {'reply': True, 'request': request, 'header': '', 'mails': allMails}
-    ReadMail.mark_mails(request.user, tobeShown)
-    unread = ReadMail.mark_as_read(request.user, tobeShown)
+    env = {'reply': True, 'request': request, 'header': '', 'mails': all_mails}
+    ReadMail.mark_mails(request.user, tobe_shown)
+    unread = ReadMail.mark_as_read(request.user, tobe_shown)
 
     #END OF MOVE
-    DecoratorManager.get().activate_hook('show_thread', allMails[0], env)
+    DecoratorManager.get().activate_hook('show_thread', all_mails[0], env)
 
     if not unread:
         try:
@@ -195,16 +195,16 @@ def showThread(request, thread, label=None):
         'thread': thread,
         'label': label,
         'labels': labels,
-        'ordered_mails': allMails,
-        'mails': tobeShown,
+        'ordered_mails': all_mails,
+        'mails': tobe_shown,
         'fw_re_form': fw_re_form,
         'referrer': referrer,
         'env': env,
-        'last_index': len(tobeShown),
+        'last_index': len(tobe_shown),
     }, context_instance=RequestContext(request))
 
 
-def showLabel(request, label, archive_mode):
+def show_label(request, label, archive_mode):
     up = request.user
 
     tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
@@ -219,7 +219,7 @@ def showLabel(request, label, archive_mode):
                               {'threads': threads, 'label': label, 'label_title': label.title, 'user': request.user,
                                'env': env,
                                'archive': archive_mode,
-                              },
+                               },
                               context_instance=RequestContext(request))
 
 
@@ -238,7 +238,7 @@ def mail_validate(request):
 
 
 @login_required
-def createLabel(request):
+def create_label(request):
     title = request.POST.get('title')
     label = Label()
     label.user = request.user
@@ -309,16 +309,16 @@ def label_list(request):
     if request.GET.get('current_label', ''):
         labels.exclude(id=int(request.GET.get('current_label')))
 
-    jsonText = '['
+    json_text = '['
     new_label_text = u'(برچسب جدید)'
     for label in labels:
         if not label.limited_labels():
-            jsonText += '{"value":"' + str(label.id) + '" , "label":"' + label.title + '"},'
+            json_text += '{"value":"' + str(label.id) + '" , "label":"' + label.title + '"},'
     if not UserManager.get(request.user).get_label(start.strip()):
-        jsonText += '{"value":"' + '-1' + '" , "label":"' + start + ' ' + new_label_text + ' "},'
-    jsonText = jsonText[:-1] + ']'
+        json_text += '{"value":"' + '-1' + '" , "label":"' + start + ' ' + new_label_text + ' "},'
+    json_text = json_text[:-1] + ']'
 
-    return HttpResponse(jsonText)
+    return HttpResponse(json_text)
 
 
 def delete_label(request):
@@ -382,6 +382,7 @@ def move_thread(request):
     if label is None:
         raise Http404('Invalid label: {0}'.format(label))
 
+    current_label = None
     if request.POST.get('current_label', ''):
         current_label = Label.objects.get(id=int(request.POST.get('current_label')))
 
@@ -409,11 +410,12 @@ def move_thread(request):
 
 def get_search_query(token, user):
     dict_query = {
-        u'از': Q(mails__sender__username__contains=token[1]) | Q(mails__sender__first_name__contains=token[1]) | Q(
-            mails__sender__last_name__contains=token[1]),
-        u'به': Q(mails__recipients__username__contains=token[1]) | Q(
-            mails__recipients__first_name__contains=token[1]) | Q(
-            mails__recipients__last_name__contains=token[1]),
+        u'از':  Q(mails__sender__username__contains=token[1]) |
+                Q(mails__sender__first_name__contains=token[1]) |
+                Q(mails__sender__last_name__contains=token[1]),
+        u'به':  Q(mails__recipients__username__contains=token[1]) |
+                Q(mails__recipients__first_name__contains=token[1]) |
+                Q(mails__recipients__last_name__contains=token[1]),
         u'عنوان': Q(mails__title__contains=token[1]),
         u'محتوا': Q(mails__content__contains=token[1]),
         u'برچسب': search_labels
@@ -425,10 +427,10 @@ def get_search_query(token, user):
 
 
 def search_labels(keyword, user):
-    label_list = keyword.split(u'،')
+    labels_list = keyword.split(u'،')
     search_query = Q()
     user_labels = Label.get_user_labels(user)
-    for label in label_list:
+    for label in labels_list:
         if label:
             search_query = search_query | (Q(labels__title__contains=label) & Q(labels__in=user_labels))
     return search_query
@@ -470,7 +472,8 @@ def parse_address(input):
     result = []
     for s in tokens:
         s = s.strip(' \t\n\r')
-        if s: result.append(s)
+        if s:
+            result.append(s)
     return result
 
 
@@ -492,7 +495,7 @@ def mark_thread(request, thread_slug, action):
     if request.is_ajax():
         return HttpResponse('OK')
     return HttpResponseRedirect(
-        reverse('mail/see_label', args=[thread.labels.all()[0].slug])) #FIXME: what if no labels?
+        reverse('mail/see_label', args=[thread.labels.all()[0].slug]))   #FIXME: what if no labels?
 
 
 @login_required
@@ -517,6 +520,7 @@ def ajax_mark_thread(request):
             response_text = u"عملیات درخواستی امکان پذیر نیست."
 
     return HttpResponse(simplejson.dumps({'response_text': response_text, }))
+
 
 #TODO: correct that based on changes/where is used?
 @ajax_view
@@ -569,7 +573,7 @@ def add_contact(request):
         if request.POST.get('action', 'add') == 'validate':
             ab = AddressBook.get_addressbook_for_user(user, create_new=True)
             if ab.has_contact_address(
-                                    contact_user.username + '@' + MailProvider.get_default_domain()) or contact_user == user:
+                        contact_user.username + '@' + MailProvider.get_default_domain()) or contact_user == user:
                 return {'result': False}
             else:
                 return {'result': True}
@@ -618,6 +622,7 @@ def addressbook_edit(request):
             newcontact.additional_email = value
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
+
 
 @login_required
 def addressbook_view(request):
