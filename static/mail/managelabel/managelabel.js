@@ -12,10 +12,12 @@ $(document).ready(function(){
                pk : $(this).parent().parent().attr('id'),
                name : 'delete'
            },
-           success:function(response){
-                ajaxLoader.show();
-                window.location.reload();
+           success:function(){
+//                ajaxLoader.show();
+//                window.location.reload();
                 cur_tr.remove();
+                parent.document.getElementById("sidebar").reload();
+
            }
        });
 

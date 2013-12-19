@@ -162,21 +162,27 @@ def showThread(request, thread, label=None):
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
-        # to = [mail.sender.username] if mail.sender.username != up.username else []
-        # if not exclude_others:
-    #         for mr in MailReceiver.objects.filter(mail=mail):
-    #             username = mr.user.username
-    #             if not (
-    #                                     username in to or username in cc or username in bcc or username in exclude or username == sender.username):
-    #                 if mr.type == 'to':
-    #                     to.append(username)
-    #                 elif mr.type == 'cc':
-    #                     cc.append(username)
-    #                 elif mr.type == 'bcc':
-    #                     bcc.append(username)
-    #     for username in include:
-    #         if not username in to:
-    #             to.append(username)
+        action = request.GET.get('action')
+        if request.is_ajax() and action=='reply' :
+
+            # pass
+
+            # to = [mail.sender.username] if mail.sender.username != up.username else []
+            # if not exclude_others:
+            #     for mr in MailReceiver.objects.filter(mail=mail):
+            # username = mr.user.username
+            # if not (username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+            #         if mr.type == 'to':
+            #             to.append(username)
+            #         elif mr.type == 'cc':
+            #             cc.append(username)
+            #         elif mr.type == 'bcc':
+            #             bcc.append(username)
+            # for username in include:
+            #     if not username in to:
+            #         to.append(username)
+            fw_re_form = FwReForm(user_id=up.id)
+
         fw_re_form = FwReForm(user_id=up.id)
 
     labels = thread.get_user_labels(up)

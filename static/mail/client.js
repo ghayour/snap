@@ -177,14 +177,7 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(true, false);
         $("#id_title").val(get_fw_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_fw_content(cur_mail));
-        $.ajax({
-            url : '',
-            type : 'GET',
-            data : {
-                mail  : cur_mail,
-                action : action_type
-            }
-        });
+
     }
     else{
         var link_row='<tr><td class="formlinks">'+
@@ -213,6 +206,16 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(false, true);
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
+        var url = $(location).attr('pathname');
+        var mail = cur_mail.data("db");
+         $.ajax({
+            url : url,
+            type : 'POST',
+            data : {
+                mail  : mail ,
+                action : action_type
+            }
+        });
     }
     //TODO: move fw-re form according to selected mail
 //    var FW_RE = $("#bottom-div");
