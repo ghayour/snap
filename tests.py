@@ -82,7 +82,7 @@ class TestModelFunc(TestCase):
     #fixtures = ['auth']
 
     def test_send_mail(self):
-        #TODO: 1: ask how should I set reciever adress? its getting no such user error
+        #TODO: 1: again logic about email=username@default_provider is critical in sending emails
         user1 = UserFactory.create(username='sender',email="sender@arshmail.ir")
         user2 = UserFactory.create(username='reciever',email="reciever@arshmail.ir")
         mail_provider = MailProviderFactory.create()
@@ -106,14 +106,14 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
         #TODO: 2: ask how to check the target has recieved the mail?
-        #TODO: 3: ask where is SENT_LABEL?
+        #TODO: 3: ask where is SENT_LABEL? done!
         print label1
         print label2
         #Check INBOX and SENT labels
-        self.assertNotEqual(list(label1),list([]))
-        self.assertNotEqual(list(label2),list([]))
-
-
+        self.assertNotEqual(list(label1), list([]))
+        self.assertNotEqual(list(label2), list([]))
+        self.assertTrue(mail.has_label(LabelFactory.create(user=user1, title=Label.SENT_LABEL_NAME)))
+        self.assertTrue(mail.has_label(LabelFactory.create(user=user2, title=Label.INBOX_LABEL_NAME)))
         self.assertIsNotNone(thread.labels)
 
     def test_reply_mail(self):
@@ -142,33 +142,30 @@ class TestModelFunc(TestCase):
         mail.reply(content="hi", sender=user2, thread=mail.thread)
 
         thread = mail.thread
-        label1 = Label.get_user_labels(user1)
-        #label2 = Label.get_user_labels(user2)
         # Assertions:
         self.assertIsNone(mail.recipients)
         self.assertIsNotNone(mail.content)
         self.assertIsNotNone(mail.thread)
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
-        self.assertIsNotNone(label1[0].INBOX_LABEL_NAME)
-        self.assertIsNotNone(label1[0].title)
-        self.assertIsNotNone(label1[0].user)
         self.assertIsNotNone(thread.labels)
 
         #TODO: ask: here user1 recieves the email
         mail.reply(content="hi", sender=user2, thread=mail.thread,receivers=user1)
         thread = mail.thread
         label1 = Label.get_user_labels(user1)
-        #label2 = Label.get_user_labels(user2)
+        label2 = Label.get_user_labels(user2)
         # Assertions:
         self.assertIsNotNone(mail.recipients)
         self.assertIsNotNone(mail.content)
         self.assertIsNotNone(mail.thread)
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
-        self.assertIsNotNone(label1[0].INBOX_LABEL_NAME)
-        self.assertIsNotNone(label1[0].title)
-        self.assertIsNotNone(label1[0].user)
+        self.assertIsNotNone(thread.labels)
+        self.assertNotEqual(list(label1), list([]))
+        self.assertNotEqual(list(label2), list([]))
+        self.assertTrue(mail.has_label(LabelFactory.create(user=user1, title=Label.SENT_LABEL_NAME)))
+        self.assertTrue(mail.has_label(LabelFactory.create(user=user2, title=Label.INBOX_LABEL_NAME)))
         self.assertIsNotNone(thread.labels)
 
     def test_add_label(self):
@@ -200,13 +197,11 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
         self.assertIsNotNone(thread.labels)
+        self.assertNotEqual(list(label1), list([]))
+        self.assertNotEqual(list(label2), list([]))
         #TODO: 5: ask how to check labels are added correct
         self.assertTrue(mail.has_label(user2_label))
         self.assertTrue(mail.has_label(user1_label))
-        self.assertContains(user1_label,label1)
-        self.assertContains(user2_label,label2)
-        self.assertNotContains(user1_label,label2)
-        self.assertNotContains(user2_label,label1)
 
     def test_mark_as_read_unread(self):
         user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
@@ -244,11 +239,10 @@ class TestModelFunc(TestCase):
         #user1_account=DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
         #user2_account=DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
-
         mail = MailFactory.create(content=u'This is send mail test', sender=user1)
         #, subject=u'Test subject', receivers=None)
         # Testing functions:
-        attach = AttachmentFactory.create(mail=mail)
+        AttachmentFactory.create(mail=mail)
 
         mail.add_receiver(mail, mail.thread, user2.email)
         mail.get_recipients()
@@ -260,13 +254,13 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.attachment_set)
         self.assertIsNotNone(label1)
         self.assertIsNotNone(label2)
-        self.assertNotEqual(list(label1),list([]))
-        self.assertNotEqual(list(label2),list([]))
+        self.assertNotEqual(list(label1), list([]))
+        self.assertNotEqual(list(label2), list([]))
         print "test attach"
-        i=1
+        i = 1
         for a in label1:
             print i
-            i+=1
+            i += 1
             print a.title
             if a.title == Label.SENT_LABEL_NAME:
                 print "True\n"
