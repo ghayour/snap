@@ -844,8 +844,8 @@ class AddressBook(models.Model):
         '''
 
         try:
-            if contact_user == self.user:
-                raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
+            #if contact_user == self.user:
+            #    raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
             if self.has_contact_address(contact_user.username + '@' + MailProvider.get_default_domain()):
                 raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
             else:
@@ -876,6 +876,24 @@ class AddressBook(models.Model):
             if create_new:
                 return AddressBook.objects.create(user=user)
             return None
+
+    def remove_contact_address(self, address):
+        contact = Contact.objects.get(address_book=self, email=address)
+        if contact:
+            contact.delete()
+            return True
+        return False
+
+    def remove_contact(self, contact):
+        contact_d = Contact.objects.get(address_book=self, email=contact.email)
+        if contact:
+            contact.delete()
+            return True
+        return False
+
+
+
+
 
 
 class Contact(models.Model):

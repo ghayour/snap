@@ -6,10 +6,10 @@ import string
 
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.test.client import Client
+#from django.test.client import Client
 
-from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailAccount, MailProvider, DatabaseMailAccount
-from arsh.user_mail.models import ReadMail
+from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
+from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment
 
 
 def random_string(length=10):
@@ -50,6 +50,7 @@ class UserFactory(factory.DjangoModelFactory):
     last_name = factory.LazyAttribute(lambda t: random_string())
     password = factory.LazyAttribute(lambda t: random_string())
 
+
 class LabelFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Label
 
@@ -58,20 +59,36 @@ class LabelFactory(factory.DjangoModelFactory):
     #title = factory.LazyAttribute(lambda t: random_string())
     #
 
+
+class ContactFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = Contact
+
+
+class AddressBookFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = AddressBook
+
+
+class AttachmentFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = Attachment
+
+    attachment = factory.django.FileField(filename='flower.jpg')
+
+
 class DatabaseMailAccountFactory(factory.DjangoModelFactory):
     FACTORY_FOR = DatabaseMailAccount
 
+
 class TestModelFunc(TestCase):
-    fixtures = ['auth']
+    #fixtures = ['auth']
 
     def test_send_mail(self):
         #TODO: 1: ask how should I set reciever adress? its getting no such user error
         user1 = UserFactory.create(username='sender',email="sender@arshmail.ir")
-        user2 = UserFactory.create(username='reciver',email="reciever@arshmail.ir")
+        user2 = UserFactory.create(username='reciever',email="reciever@arshmail.ir")
         mail_provider = MailProviderFactory.create()
         mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
-        user1_account=DatabaseMailAccountFactory.create(user=user1,provider=mail_provider ,email=user1.email)
-        user2_account=DatabaseMailAccountFactory.create(user=user2,provider=mail_provider ,email=user2.email)
+        #user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        #user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
         mail = MailFactory.create(content=u'This is send mail test', sender=user1)
         #, subject=u'Test subject', receivers=None)
@@ -93,30 +110,23 @@ class TestModelFunc(TestCase):
         print label1
         print label2
         #Check INBOX and SENT labels
-        self.assertIsNotNone(label1[0])
-        self.assertIsNotNone(label2[0])
-        self.assertIsNotNone(label1[0].SENT_LABEL_NAME)
-        self.assertIsNotNone(label2[0].INBOX_LABEL_NAME)
-        self.assertIsNotNone(label1[0].title)
-        self.assertIsNotNone(label2[0].title)
+        self.assertNotEqual(list(label1),list([]))
+        self.assertNotEqual(list(label2),list([]))
+
 
         self.assertIsNotNone(thread.labels)
-
-
-
-
 
     def test_reply_mail(self):
         """
         دو کاربر و یک میل ایجاد می شود و سپس تست می شود و سپس یک میل از کاربر اول به کاربر دوم ارسال می شود.
         نهایتا چک می شود که آیا محتوای mail و label و thread خالی نباشد.
         """
-        user1 = UserFactory.create(username='sender',email="sender@arshmail.ir")
-        user2 = UserFactory.create(username='reciver',email="reciever@arshmail.ir")
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
         mail_provider = MailProviderFactory.create()
         mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
-        user1_account=DatabaseMailAccountFactory.create(user=user1,provider=mail_provider ,email=user1.email)
-        user2_account=DatabaseMailAccountFactory.create(user=user2,provider=mail_provider ,email=user2.email)
+        #user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        #user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
         mail = MailFactory.create(content=u'This is reply test', sender=user1)
         #, subject=u'Test subject', receivers=None)
@@ -133,7 +143,7 @@ class TestModelFunc(TestCase):
 
         thread = mail.thread
         label1 = Label.get_user_labels(user1)
-        label2 = Label.get_user_labels(user2)
+        #label2 = Label.get_user_labels(user2)
         # Assertions:
         self.assertIsNone(mail.recipients)
         self.assertIsNotNone(mail.content)
@@ -149,7 +159,7 @@ class TestModelFunc(TestCase):
         mail.reply(content="hi", sender=user2, thread=mail.thread,receivers=user1)
         thread = mail.thread
         label1 = Label.get_user_labels(user1)
-        label2 = Label.get_user_labels(user2)
+        #label2 = Label.get_user_labels(user2)
         # Assertions:
         self.assertIsNotNone(mail.recipients)
         self.assertIsNotNone(mail.content)
@@ -161,16 +171,13 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(label1[0].user)
         self.assertIsNotNone(thread.labels)
 
-
-
-
     def test_add_label(self):
-        user1 = UserFactory.create(username='sender',email="sender@arshmail.ir")
-        user2 = UserFactory.create(username='reciver',email="reciever@arshmail.ir")
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
         mail_provider = MailProviderFactory.create()
         mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
-        user1_account=DatabaseMailAccountFactory.create(user=user1,provider=mail_provider ,email=user1.email)
-        user2_account=DatabaseMailAccountFactory.create(user=user2,provider=mail_provider ,email=user2.email)
+        user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
         mail = MailFactory.create(content=u'This is test add label', sender=user1)
         #, subject=u'Test subject', receivers=None)
@@ -179,8 +186,8 @@ class TestModelFunc(TestCase):
         mail.add_receiver(mail, mail.thread, user2.email)
         mail.get_recipients()
         mail.get_summary()
-        user2_label=LabelFactory.create(user=user2, title="test lable user2",account=user2_account)
-        user1_label=LabelFactory.create(user=user2, title="test lable user1",account=user1_account)
+        user2_label = LabelFactory.create(user=user2, title="test lable user2", account=user2_account)
+        user1_label = LabelFactory.create(user=user2, title="test lable user1", account=user1_account)
         mail.add_label(user1_label)
         mail.add_label(user2_label)
         thread = mail.thread
@@ -192,23 +199,22 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.thread)
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
-        self.assertIsNotNone(label1[0].INBOX_LABEL_NAME)
-        self.assertIsNotNone(label1[0].title)
-        self.assertIsNotNone(label1[0].user)
         self.assertIsNotNone(thread.labels)
         #TODO: 5: ask how to check labels are added correct
+        self.assertTrue(mail.has_label(user2_label))
+        self.assertTrue(mail.has_label(user1_label))
         self.assertContains(user1_label,label1)
         self.assertContains(user2_label,label2)
         self.assertNotContains(user1_label,label2)
         self.assertNotContains(user2_label,label1)
 
     def test_mark_as_read_unread(self):
-        user1 = UserFactory.create(username='sender',email="sender@arshmail.ir")
-        user2 = UserFactory.create(username='reciver',email="reciever@arshmail.ir")
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
         mail_provider = MailProviderFactory.create()
         mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
-        user1_account=DatabaseMailAccountFactory.create(user=user1,provider=mail_provider ,email=user1.email)
-        user2_account=DatabaseMailAccountFactory.create(user=user2,provider=mail_provider ,email=user2.email)
+        #user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        #user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
         mail = MailFactory.create(content=u'This is test add label', sender=user1)
         #, subject=u'Test subject', receivers=None)
@@ -218,31 +224,98 @@ class TestModelFunc(TestCase):
         mail.get_recipients()
         mail.get_summary()
         # 6:  mark as read should be true for user1 and false for user2
-        self.assertTrue(ReadMail.has_read(user1,mail))
-        self.assertFalse(ReadMail.has_read(user2,mail))
+        self.assertTrue(ReadMail.has_read(user1, mail))
+        self.assertFalse(ReadMail.has_read(user2, mail))
 
-        ReadMail.mark_as_read(user2,[mail])
-        ReadMail.mark_as_unread(user1,[mail])
+        ReadMail.mark_as_read(user2, [mail])
+        ReadMail.mark_as_unread(user1, [mail])
 
-        self.assertTrue(ReadMail.has_read(user2,mail))
-        self.assertFalse(ReadMail.has_read(user1,mail))
+        self.assertTrue(ReadMail.has_read(user2, mail))
+        self.assertFalse(ReadMail.has_read(user1, mail))
 
-
-
-    def test_remove_label(self):
-        pass
-
+    #def test_remove_label(self):
+    #    pass
+    #
     def test_send_attachment(self):
-        pass
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
+        mail_provider = MailProviderFactory.create()
+        mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
+        #user1_account=DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        #user2_account=DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
+
+
+        mail = MailFactory.create(content=u'This is send mail test', sender=user1)
+        #, subject=u'Test subject', receivers=None)
+        # Testing functions:
+        attach = AttachmentFactory.create(mail=mail)
+
+        mail.add_receiver(mail, mail.thread, user2.email)
+        mail.get_recipients()
+        mail.get_summary()
+        #thread = mail.thread
+
+        label1 = Label.get_user_labels(user1)
+        label2 = Label.get_user_labels(user2)
+        self.assertIsNotNone(mail.attachment_set)
+        self.assertIsNotNone(label1)
+        self.assertIsNotNone(label2)
+        self.assertNotEqual(list(label1),list([]))
+        self.assertNotEqual(list(label2),list([]))
+        print "test attach"
+        i=1
+        for a in label1:
+            print i
+            i+=1
+            print a.title
+            if a.title == Label.SENT_LABEL_NAME:
+                print "True\n"
+            else:
+                print "Fals\n"
 
     def test_add_conract(self):
-        pass
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
+        mail_provider = MailProviderFactory.create()
+        mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
+        #user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider ,email=user1.email)
+        #user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider ,email=user2.email)
+
+        address_book1 = AddressBookFactory.create(user=user1)
+        contact2 = ContactFactory.create(address_book=address_book1, email=user2.email)
+
+        self.assertTrue(address_book1.has_contact(contact2))
+        self.assertIsNotNone(address_book1.get_all_contacts())
+        self.assertTrue(address_book1.has_contact_address(user2.email))
+        self.assertIsNotNone(AddressBook.get_addressbook_for_user(user1))
+        self.assertIsNone(AddressBook.get_addressbook_for_user(user2))
+        self.assertFalse(address_book1.has_contact_address(user1.email))
 
     def test_remove_contact(self):
-        pass
+        user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
+        user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
+        mail_provider = MailProviderFactory.create()
+        mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
+        #user1_account = DatabaseMailAccountFactory.create(user=user1, provider=mail_provider, email=user1.email)
+        #user2_account = DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
+        self.assertIsNone(AddressBook.get_addressbook_for_user(user1))
+        address_book1 = AddressBook.get_addressbook_for_user(user1, create_new=True)
+        self.assertIsNotNone(AddressBook.get_addressbook_for_user(user1))
+        self.assertEqual(list(address_book1.get_all_contacts()), list([]))
+        #TODO: comment: the logic is how that the email should be exactly username@default_domain or we would get error
+        #TODO: comment: so it seems we should not allow setting email address separately or fix the logic
 
+        address_book1.add_contact_by_user(user2)
+        #print "salam"
+        #all=address_book1.get_all_contacts()
+        #for a in all:
+        #    print a.email
+        #    print "\n"
+        self.assertTrue(address_book1.has_contact_address(user2.email))
 
+        address_book1.remove_contact_address(user2.email)
+        self.assertFalse(address_book1.has_contact_address(user2.email))
 
 
 #class TestUrl(TestCase):
