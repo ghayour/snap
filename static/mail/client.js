@@ -4,41 +4,63 @@ var ajaxLoader;
 var mailSystem = new arsh.mail.Client();
 
 
+/* General JS code */
+$(function() {
+    $('#refresh-button').click(function() {
+        window.location.reload();
+    });
+
+    var $sidebar = $('#sidebar');
+    function grSidebarFix() {
+        $sidebar.height($( document ).height() - $sidebar.position().top - 10);
+    }
+    grSidebarFix();
+    setTimeout(grSidebarFix, 50);
+    setTimeout(grSidebarFix, 500);
+    setInterval(grSidebarFix, 4000);
+    $(window).resize(grSidebarFix);
+
+    $('.box-menu-expand').click(function() {
+        var $menu = $(this).closest('.box-menu');
+        $menu.find('.box-menu-body').slideToggle(function() { $menu.toggleClass('active'); });
+    });
+});
+
+
 /* Toolbar Creation */
 $(function(){
     mailToolbar = new arsh.ui.Toolbar({'div': '#action-bar'});
     mailToolbar.addButton({
-        bootstrapIcon: 'chevron-up',
+        icon: '',
         title: 'بازگشت',
         show: 'mailSystem.state.viewing != "threads"',
         action: function() {
-            window.location = arsh.dj.resolver.url('mail/see_label',label_slug=$("#current_label").data('slug'));
+            var url;
+            var curLabel = $("#current_label").data('slug');
+            if (curLabel) {
+                url = arsh.dj.resolver.url('mail/see_label', {label_slug:curLabel});
+            } else {
+                url = arsh.dj.resolver.url('mail/home');
+            }
+            window.location = url;
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'refresh',
-        title: 'بازآوری',
-        show: 'mailSystem.state.viewing == "threads"',
-        action: function() {
-            window.location.reload();
-        }
-    });
-    mailToolbar.addButton({
-        bootstrapIcon: 'inbox',
+        icon: 'archive',
         title: 'بایگانی',
         action: function() {
             mailSystem.setArchiveMode();
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'flag',
+        icon: 'spam',
         title: 'هرزنامه',
         action: function() {
             mailSystem.markAsSpam();
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'trash',
+        icon: 'trash',
         title: 'حذف',
         action: function() {
             var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
@@ -48,7 +70,7 @@ $(function(){
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'eye-open',
+        icon: '',
         title: 'علامت گذاری به عنوان خوانده شده',
         show: 'mailSystem.state.viewing == "threads"',
         action: function() {
@@ -79,15 +101,15 @@ $(function(){
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'folder-open',
-        title: 'انتقال',
+        icon: 'folder',
+        title: 'پوشه بندی',
         popover: {
-            title: 'انتقال به',
+            title: 'انتقال به پوشه',
             content: '<input id="move_thread" data-type="thread" type="text" class="label-input">'
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'tag',
+        icon: 'tag',
         title: 'برچسب گذاری',
         popover: {
             title: 'برچسب گذاری',
@@ -95,7 +117,7 @@ $(function(){
         }
    });
     mailToolbar.addButton({
-        bootstrapIcon: 'fullscreen',
+        icon: '',
         title: 'باز کردن همه',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
@@ -105,7 +127,7 @@ $(function(){
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'share-alt',
+        icon: '',
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
@@ -114,7 +136,7 @@ $(function(){
         }
     });
     mailToolbar.addButton({
-        bootstrapIcon: 'arrow-left',
+        icon: '',
         title: 'باز ارسال',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
@@ -122,20 +144,41 @@ $(function(){
             forward_reply_handler("forward");
         }
     });
-     mailToolbar.addButton({
-        bootstrapIcon: 'user',
+    mailToolbar.addButton({
+        icon: '',
+        title: 'خروج',
+        align: 'left',
+        action : function(){
+            window.location = arsh.dj.resolver.url('accounts/logout');
+        }
+    });
+    mailToolbar.addButton({
+        icon: '',
         title: 'اطلاعات تماس',
+        align: 'left',
         action : function(){
             window.location = arsh.dj.resolver.url('view/address_book');
         }
     });
-
     mailToolbar.addButton({
-        bootstrapIcon: 'off',
-        title: 'خروج',
-        action : function(){
-            window.location = arsh.dj.resolver.url('accounts/logout');
-        }
+        icon: 'next',
+        title: '',
+        align: 'left',
+        css: {width: '30px'},
+        show: 'mailSystem.state.viewing == "threads"'
+    });
+    mailToolbar.addButton({
+        icon: 'prev',
+        title: '',
+        align: 'left',
+        css: {marginLeft: '-9px', width: '30px'},
+        show: 'mailSystem.state.viewing == "threads"'
+    });
+    mailToolbar.addButton({
+        icon: '',
+        title: 'نمایش تمام نامه‌ها',
+        align: 'left',
+        show: 'mailSystem.state.viewing == "threads"'
     });
 });
 

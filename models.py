@@ -2,11 +2,11 @@
 import datetime
 import logging
 
+from model_utils import Choices
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
-from model_utils.choices import Choices
 
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
@@ -20,7 +20,12 @@ FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
 
 
 class MailDomain(Named):
+    class Meta:
+        verbose_name = u"دامنه میل"
+        verbose_name_plural = u"دامنه‌های میل"
+
     def get_provider(self):
+        #TODO: ask about this part logic
         try:
             return MailProvider.objects.get(domains=self)
         except MailProvider.DoesNotExist:
@@ -28,6 +33,10 @@ class MailDomain(Named):
 
 
 class MailProvider(Named):
+    class Meta:
+        verbose_name = u"ارائه دهنده میل"
+        verbose_name_plural = u"ارائه دهندگان میل"
+
     domains = models.ManyToManyField(MailDomain, related_name='+')  # with implicit unique constraint
 
     @classmethod
@@ -40,6 +49,10 @@ class MailProvider(Named):
 
 
 class MailAccount(models.Model):
+    class Meta:
+        verbose_name = u"حساب کاربری میل"
+        verbose_name_plural = u"حساب‌های کاربری میل"
+
     user = models.ForeignKey(User, related_name='mail_accounts')
     provider = models.ForeignKey(MailProvider, related_name='mail_accounts')
     email = models.CharField(max_length=100)
@@ -49,6 +62,10 @@ class MailAccount(models.Model):
 
 
 class ProviderImapSettings(Named):
+    class Meta:
+        verbose_name = u"تنظیمات ارايه دهنده آی.مپ"
+        verbose_name_plural = u"تنظیمات ارائه‌دهندگان آی.مپ"
+
     IMAP_SECURITY_TYPES = Choices(('N', 'none'), ('T', 'starttls'), ('S', 'ssl'))
     IMAP_AUTHENTICATION_METHOD = Choices(('p', 'password'), ('e', 'encrypted_password'), ('n', 'ntlm'),
                                          ('c', 'tls_certificate'), ('k', 'kerberos'))
@@ -61,6 +78,10 @@ class ProviderImapSettings(Named):
 
 
 class ImapMailAccount(MailAccount):
+    class Meta:
+        verbose_name = u"حساب کاربری آی.مپ"
+        verbose_name_plural = u"حساب‌های کاربری آی.مپ"
+
     password = models.CharField(max_length=100)
     selected_imap_settings = models.ForeignKey(ProviderImapSettings)
 
@@ -69,12 +90,17 @@ class ImapMailAccount(MailAccount):
 
 
 class DatabaseMailAccount(MailAccount):
+    class Meta:
+        verbose_name = u"حساب کاربری محلی - پایگاه داده"
+        verbose_name_plural = u"حساب‌های کاربری محلی - پایگاه داده"
+
     def can_compose(self):
         return True
 
 
 class Mail(models.Model):
     sender = models.ForeignKey(User, related_name='sender', verbose_name=u'فرستنده')
+    #TODO: ask: what if  reciever is out of this system!
     recipients = models.ManyToManyField(User, through='MailReceiver')
     title = models.CharField(max_length=300, verbose_name=u'عنوان')
     content = models.TextField(verbose_name=u'متن نامه')
@@ -161,9 +187,11 @@ class Mail(models.Model):
         else:
             labels = Label.objects.filter(user=receiver, title__in=label_names)
         rc_labels = thread.get_user_labels(receiver)
-        rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver)
+        #TODO: I add create_new=True to next line
+        rc_inbox = Label.get_label_for_user(Label.INBOX_LABEL_NAME, receiver,create_new=True)
         if len(labels) + rc_labels.count() == 0:
             labels = [rc_inbox]
+        # Bug was! here: label is none and cause error in rest of the code
         for label in labels:
             thread.add_label(label)
 
@@ -285,6 +313,7 @@ class Mail(models.Model):
         """
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
 
+        to=""
         if not thread and not in_reply_to:
             raise ValueError('No mail specified to reply to it!')
         if not thread:
@@ -317,12 +346,14 @@ class Mail(models.Model):
         for username in include:
             if not username in to:
                 to.append(username)
-        if len(to) + len(cc) + len(bcc) == 0:
-            logger.debug('no recipients can be selected to reply to, replying to sender')
-            to = [sender.username]
+        if len(to)==0:
+            if len(cc)==0:
+                if  len(bcc) == 0:
+        #if (to==None) and (bcc==None) and (cc==None) :
+                    logger.debug('no recipients can be selected to reply to, replying to sender')
+                    to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
-
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
@@ -345,15 +376,8 @@ class Mail(models.Model):
 
 
 def get_file_path(instance, filename):
-    import base64
-
-    name = filename.split('.')
-    base_name = name[0]
-    ext = ''
-    if len(name) > 1:
-        ext = '.' + name[-1]
-    safe_name = base64.urlsafe_b64encode(base_name.encode("utf-8"))
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.thread.id, instance.mail.id, safe_name + ext)
+    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
 
 
 class Attachment(models.Model):
@@ -361,8 +385,12 @@ class Attachment(models.Model):
     attachment = models.FileField(upload_to=get_file_path, verbose_name=u'فایل ضمیمه', null=True, blank=True)
 
 
-#TODO: implement this in showThread, etc.
+#TODO: implement this in show_thread, etc.
 class MailReply(models.Model):
+    class Meta:
+        verbose_name=u"پاسخ میل"
+        verbose_name_plural=u"پاسخ‌های میل"
+
     first = models.ForeignKey(Mail, related_name='+')
     reply = models.ForeignKey(Mail, related_name='+')
 
@@ -397,6 +425,10 @@ class Label(Slugged):
         کاربران مختلف، حتی اگر نام این برچسب‌ها یکی باشند، متفاوت هستند.
     """
 
+    class Meta:
+        verbose_name = u"برچسب"
+        verbose_name_plural = u"برچسب‌ها"
+
     INBOX_LABEL_NAME = u'صندوق ورودی'
     CHAT_LABEL_NAME = u'چت'
     SENT_LABEL_NAME = u'فرستاده شده'
@@ -409,12 +441,35 @@ class Label(Slugged):
     COMPLETED_LABEL_NAME = u'کارها/انجام شده'
     REQUEST_LABEL_NAME = u'درخواست ها'
 
+    # TODO: this may be different in different accounts
+    STD_LABELS = {
+        'inbox': INBOX_LABEL_NAME,
+        'chat': CHAT_LABEL_NAME,
+        'sent': SENT_LABEL_NAME,
+        'unread': UNREAD_LABEL_NAME,
+        'trash': TRASH_LABEL_NAME,
+        'spam': SPAM_LABEL_NAME,
+        'archive': ARCHIVE_LABEL_NAME,
+        'starred': STARRED_LABEL_NAME,
+        'todo': TODO_LABEL_NAME,
+        'completed': COMPLETED_LABEL_NAME,
+        'request': REQUEST_LABEL_NAME,
+    }
+    INITIAL_LABELS = (INBOX_LABEL_NAME, SENT_LABEL_NAME, UNREAD_LABEL_NAME,  STARRED_LABEL_NAME,
+                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
+
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')
     title = models.CharField(max_length=50)
 
     def __unicode__(self):
         return self.title
+
+    def get_std_name(self):
+        for k, v in self.STD_LABELS.iteritems():
+            if v == self.title:
+                return k
+        return ''
 
     @staticmethod
     def create(user, title):
@@ -475,10 +530,21 @@ class Label(Slugged):
                 return Label.create(title=label_name, user=user)
             return None
 
-    @staticmethod
-    def get_initial_labels():
-        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME, Label.REQUEST_LABEL_NAME,
-                Label.STARRED_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+    @classmethod
+    def get_initial_labels(cls):
+        return cls.INITIAL_LABELS
+
+    @classmethod
+    def get_label_ordering_func(cls):
+        def order(label):
+            """
+                :type label: Label
+            """
+            try:
+                return cls.INITIAL_LABELS.index(label.title), ''
+            except ValueError:
+                return len(cls.INITIAL_LABELS), label.title
+        return order
 
     @staticmethod
     def setup_initial_labels(user):
@@ -520,6 +586,10 @@ class Label(Slugged):
 
 
 class Thread(Slugged):
+    class Meta:
+        verbose_name = u"نخ"
+        verbose_name_plural = u"نخ‌ها"
+
     title = models.CharField(max_length=255)
     firstMail = models.ForeignKey(Mail, null=True, related_name='headThread')
     labels = models.ManyToManyField(Label, through='ThreadLabel', related_name='threads')
@@ -665,7 +735,7 @@ class Thread(Slugged):
     def get_deadline(self):
         import re
         #TODO:check this search
-        mail = self.firstMail
+        mail=self.firstMail
         sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
                         mail.content)
         if sub:
@@ -687,6 +757,10 @@ class Thread(Slugged):
 
 
 class ThreadLabel(models.Model):
+    class Meta:
+        verbose_name = u"برچسب نخ"
+        verbose_name_plural = u"برچسب‌های نخ"
+
     thread = models.ForeignKey(Thread)
     label = models.ForeignKey(Label)
     mails = models.ManyToManyField(Mail, null=True, blank=True)
@@ -700,7 +774,8 @@ class ThreadLabel(models.Model):
                 tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
                 return True
 
-            else: #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
+            else:
+            #کل نخ برچسب خورده و امکان برچسب زدن به یکی از ایمیلهای آن نیست
                 return False
 
         except cls.DoesNotExist:
@@ -744,6 +819,10 @@ class ThreadLabel(models.Model):
 
 
 class AddressBook(models.Model):
+    class Meta:
+        verbose_name = u"دفتر آدرس"
+        verbose_name_plural = u"دفترهای آدرس"
+
     user = models.OneToOneField(User)
 
     def get_all_contacts(self):
@@ -773,7 +852,7 @@ class AddressBook(models.Model):
         """
         بررسی میکند آیا تماسی با آدرس داده شده
         در لیست نشانی ها وجود دارد یا نه.
-        :type address: str
+        :type address: unicode
         :return: bool
         """
         c = Contact.get_contact_by_address(address, book=self)
@@ -829,6 +908,10 @@ class AddressBook(models.Model):
 
 
 class Contact(models.Model):
+    class Meta:
+        verbose_name = u"اطلاعات تماس‌ها"
+        verbose_name_plural = u"اطلاعات تماس"
+
     address_book = models.ForeignKey(AddressBook)
     display_name = models.CharField(_('display_name'), max_length=30, blank=True, null=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True, null=True)
@@ -869,6 +952,7 @@ class Contact(models.Model):
 
 
 class ReadMail(models.Model):
+
     mail = models.ForeignKey(Mail, blank=False)
     reader = models.ForeignKey(User, blank=False)
     date = models.DateTimeField(auto_now_add=True)
@@ -890,7 +974,8 @@ class ReadMail(models.Model):
                 mail.status = ' unread'
 
     @staticmethod
-    def mark_as_read(user, mails, respond=False):
+    def mark_as_read(user, mails):
+     #, respond=False):
         unread = len(mails)
         for mail in mails:
             if not ReadMail.has_read(user, mail):
