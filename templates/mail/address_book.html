@@ -26,7 +26,6 @@
           <div class="panel-body">
               <button id="{{ contact.id }}" class="btn btn-primary" onclick="edit(id)" >  ویرایش </button>
 
-
               <table class="table table-bordered table-striped">
                   <tbody>
                    <tr>
@@ -62,11 +61,7 @@
                   </tbody>
               </table>
 
-
-               <form id='delete' method="post" action="">{% csrf_token %}
-                 <input value="{{ contact.id }}" type="hidden" name="pk">
-                 <button type="submit" class="btn btn-danger" data-toggle="modal" data-target="#deletewarning" > حذف </button>
-             </form>
+              <button type="submit" class="btn btn-danger" value="{{ contact.id }}"  > حذف </button>
           </div>
         </div>
       </div>
@@ -79,25 +74,7 @@
     {% endif %}
 
 
-  <!-- Modal
-  ================================================== -->
-    <div class="modal fade" id="deletewarning" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel"> هشدار</h4>
-      </div>
-      <div class="modal-body">
-          آیا مطمئنید که میخواهید این کاربر را از لیست تماس حذف کنید؟
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal"> خیر </button>
-        <button type="button" class="btn btn-primary" onclick="$('#delete').submit()"> بله </button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+
 {% endblock content %}
 
 {% block CSS %}

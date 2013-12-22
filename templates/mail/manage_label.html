@@ -12,13 +12,13 @@
                 {% for il in init_label %}
                     <tr>
                     <td > {{ il.title }}</td>
-                    <td > show /hide </td>
+{#                    <td > show /hide </td>#}
                     </tr>
                 {% endfor %}
                  {% for l in labels %}
                     <tr id={{ l.id }} >
                     <td > <span class="name" data-type="text" data-url="/manage-label/" data-pk="{{ l.id }}" data-toggle-name="ویرایش"> {{ l.title }} </span> </td>
-                    <td > show /hide </td>
+{#                    <td > show /hide </td>#}
                     <td ><span class="glyphicon glyphicon-trash"></span></td>
                     <td ><span class="glyphicon glyphicon-edit"></span></td>
 

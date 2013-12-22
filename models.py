@@ -327,10 +327,11 @@ class Mail(models.Model):
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
+        to = [mail.sender.username] if mail.sender.username != sender.username else []
         if receivers:
-            to = receivers
-        else:
-            to = [mail.sender.username] if mail.sender.username != sender.username else []
+            to = to + receivers
+        # else:
+        #     to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
