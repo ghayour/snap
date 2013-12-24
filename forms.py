@@ -23,15 +23,14 @@ class ComposeForm(forms.ModelForm):
         exclude = ('sender', 'recipients', 'thread')
 
     def __init__(self, *args, **kwargs):
-        from tinymce.widgets import TinyMCE
-
         super(ComposeForm, self).__init__(*args, **kwargs)
 
-        self.fields['title'].widget.attrs['style'] = 'min-width:60%'
+        self.fields['title'].widget.attrs['style'] = 'width:60%'
         self.fields['labels'].widget.attrs['class'] = 'initial-labels'
         self.fields['labels'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
+        #from tinymce.widgets import TinyMCE
+        #self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
 
         self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'

@@ -66,11 +66,12 @@ def see(request, label_slug, thread_slug, archive=None):
 
 @login_required
 def compose(request):
+    cf = ConfigManager.prepare()
+
     initial_to = request.GET.get('to', '')
     initial_cc = request.GET.get('cc', '')
     initial_bcc = request.GET.get('bcc', '')
-    up = request.user
-    cf = ConfigManager.prepare()
+
     compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
@@ -108,12 +109,12 @@ def compose(request):
                 result_error = e.messages[0]
 
     return render_to_response('mail/composeEmail.html', {
-        'user': up,
+        'user': request.user,
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
         'mailForm': compose_form,
-        'all_labels': Label.get_user_labels(up),
+        'all_labels': Label.get_user_labels(request.user),
         'send_error': result_error
     }, context_instance=RequestContext(request))
 
