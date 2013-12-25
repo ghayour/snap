@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
@@ -655,6 +655,7 @@ def addressbook_edit(request):
             newcontact.additional_email = value
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
+    return HttpResponseNotAllowed(['post'])
 
 
 @login_required

@@ -24,4 +24,3 @@ function notify(text, opts){
         stack: pnotify_stack
     });
 }
-
