@@ -738,6 +738,11 @@ window.bootbox = window.bootbox || (function init($, undefined) {
       CANCEL  : "Annuler",
       CONFIRM : "D'accord"
     },
+    fa : {
+      OK      : "تایید",
+      CANCEL  : "رد",
+      CONFIRM : "توجه"
+    },
     it : {
       OK      : "OK",
       CANCEL  : "Annulla",

@@ -11,7 +11,8 @@ $(document).ready(function(){
     $('.confirmModal').click(function(){
         var cur_tr = $(this).parents('tr');
         var pk = $(this).parent().parent().attr('id');
-        bootbox.confirm('are you sure',
+        bootbox.confirm('آیا مطمئنید که می خواهید برچسب را حذف کنید؟',
+            'no','yes',
             function(result){
 
             if (result){
