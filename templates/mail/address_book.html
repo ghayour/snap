@@ -61,11 +61,12 @@
                   </tbody>
               </table>
 
-              <button type="submit" class="btn btn-danger" value="{{ contact.id }}"  > حذف </button>
+              <a href="#"  class="btn btn-danger confirmModal" data-pk="{{ contact.id }}" value="{{ contact.id }}"  > حذف </a>
           </div>
         </div>
       </div>
    {% endfor %}
+
         </div>
     {% else %}
         <div class="alert alert-danger">
