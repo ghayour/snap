@@ -739,9 +739,9 @@ window.bootbox = window.bootbox || (function init($, undefined) {
       CONFIRM : "D'accord"
     },
     fa : {
-      OK      : "تایید",
-      CANCEL  : "رد",
-      CONFIRM : "توجه"
+      OK      : "تاییدیه",
+      CANCEL  : "خیر",
+      CONFIRM : "بله"
     },
     it : {
       OK      : "OK",
