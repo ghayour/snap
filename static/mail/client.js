@@ -67,7 +67,7 @@ $(function(){
             bootbox.confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟',function(result){
                if(result){
                 mailSystem.moveToTrash();
-            }
+                }
             })
 
         }

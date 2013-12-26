@@ -9,6 +9,7 @@ $(document).ready(function(){
         bootbox.confirm('آیا شما مطمئنید که می خواهید این حساب را حذف کنید  ؟',
         function(result){
             if (result){
+            startLoading();
             $.ajax({
             url : '/view/addressbook',
             type : 'POST',

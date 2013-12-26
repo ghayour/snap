@@ -31,3 +31,9 @@ $(document).ready(function(){
         locale:"fa"
       });
 });
+
+function startLoading(){
+        $('#progress-bar').html(
+            "<img src='{{STATIC_URL}}mail/images/loading/startloading.gif' >"
+        )
+    }
