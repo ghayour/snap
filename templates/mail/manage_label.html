@@ -7,15 +7,37 @@
 {% load i18n %}
 
 {% block content %}
-    <table id="user" class="table table-bordered table-striped" style="clear: both">
+    <table id="user" class="table table-bordered table-striped" style="clear: both" >
                 <tbody>
-                {% for l in labels %}
+                {% for il in init_label %}
                     <tr>
-                    <td width="20%"> {{ l }}</td>
-                    <td width="20%"> show /hide </td>
-                    <td width="20%"><a href="address_book.html"> <span class="glyphicon glyphicon-trash"></span> </a></td>
+                    <td > {{ il.title }}</td>
+{#                    <td > show /hide </td>#}
+                    </tr>
+                {% endfor %}
+                 {% for l in labels %}
+                    <tr id={{ l.id }} >
+                    <td > <span class="name" data-type="text" data-url="/manage-label/" data-pk="{{ l.id }}" data-toggle-name="ویرایش"> {{ l.title }} </span> </td>
+{#                    <td > show /hide </td>#}
+                    <td ><span class="glyphicon glyphicon-trash confirmModal" style="cursor: pointer" data-pk="{{ l.id }}"></span></td>
+                    <td ><span class="glyphicon glyphicon-edit" style="cursor: pointer"></span></td>
+
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
 {% endblock content %}
+
+{% block CSS %}
+    {{ block.super }}
+    {% css     'bower_components/bootstrap-editable/css/bootstrap-editable.css' %}
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+     {% js 'bower_components/bootstrap-editable/js/bootstrap-editable.min.js' %}
+     {% js 'mail/managelabel/managelabel.js' %}
+     {% js 'mail/base.js' %}
+      <script type="text/javascript">
+      </script>
+{% endblock js %}

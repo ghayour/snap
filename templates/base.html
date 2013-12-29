@@ -14,7 +14,6 @@
     {% css 'lib/arsh/css/std.css' %}
     {% css 'common' %}
     {% css 'forms' %}
-    {% css 'layout' %}
     {% css 'fonts' %}
     {% css 'rtl' %}
     {# Third Party CSS files #}
@@ -23,7 +22,6 @@
     {# Page CSS files #}
     {% block CSS %}{% endblock %}
     {% block css %}{% endblock %}
-    {% css 'style' %}
 
     {# Base JS libraries #}
     {% js 'lib/underscore.js' %}
@@ -47,7 +45,12 @@
 </head>
 
 <body>{% block BODY %}
-<div id="page">
+    <div id="page">
+        <img src="/static/mail/images/back-bg2.jpg" id="background-image" />
+        <div id="header">
+            <div class="site-name">عرش میل</div>
+            <div class="site-desc">ما میل شما را به عرش می‌بریم</div>
+        </div>
         <div id="sidebar">{% block SIDEBAR %}
 
         {% endblock SIDEBAR %}</div>

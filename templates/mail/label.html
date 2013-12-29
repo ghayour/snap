@@ -9,73 +9,58 @@
 
 {% block js %}
     {{ block.super }}
-    <script>
-
+    <script type="text/javascript">
         mailSystem.setView('threads');
-        $(function () {
-            arsh.connectors.data_table.create('#threads', {
-                bLengthChange: false,
-                bSort: true});
-
-            // انتقال فیلتر باکس به سایدبار صفحه!
-            var $fastFilter = $('#threads_filter input');
-            $fastFilter.closest('div').hide();
-            $('#mail-search-input').keyup(function() {
-                $fastFilter.val($(this).val());
-                $fastFilter.trigger('keyup');
-            });
-        });
     </script>
-
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="current_label" value="{{ label.id }}">
-    <table id="threads" class="fa threads-table bold table">
-        <thead class="">
-        <tr>
-            <th></th>
-            <th>فرستنده</th>
-            <th>عنوان</th>
-            <th>خلاصه</th>
-            {% for header in env.headers %}
-                <th>{{ header }}</th>
-            {% endfor %}
-            <th>{{ ''|get_title }}</th>
-        </tr>
+    <table id="threads" class="threads-table">
+        {% if CONFIG.SHOW_THREAD_TABLE_HEADER %}
+        <thead>
+            <tr>
+                <th></th>
+                <th>فرستنده</th>
+                <th>عنوان</th>
+                <th>خلاصه</th>
+                {% for header in env.headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+                <th>{{ 'thread-date'|get_configured_title }}</th>
+            </tr>
         </thead>
+        {% endif %}
         <tbody>
         {% for thread in threads %}
-            {% if thread.is_unread %}
-            <tr class="unread">
-            {% else %}
-            <tr class="read">
-            {% endif %}
-                <td class="Center" style="width: 20px;"><input type="checkbox" class="thread-checkbox"
-                                                               value="{{ thread.id }}"/></td>
-                <td style="width: 20%;">
-                <span data-contact-user-id="{{ thread.firstMail.sender_id }}">{{ thread|get_thread_senders:user }}</span>
+            <tr class="{% if thread.is_unread %}unread{% else %}read{% endif %}">
+                <td style="width: 3%;">
+                    <input type="checkbox" class="thread-checkbox" value="{{ thread.id }}"/><label></label>
                 </td>
-                <td style="width: 20%;">
-                    {% if label %}
-                        <a href='{% url 'mail/see_thread' label_slug=label.slug thread_slug=thread.slug %}'>{{ thread }}</a>
-                    {% else %}
-                        <a href='{% url 'mail/see_thread_direct' thread_slug=thread.slug %}'>{{ thread }}</a>
-                    {% endif %}
+                <td class="sender-name" style="width: 20%;">
+                    <span data-contact-user-id="{{ thread.firstMail.sender_id }}">{{ thread|get_thread_senders:user }}</span>
+                    <a href="" class="archive-ico"></a>
                 </td>
-                <td style="width: 40%;">
-                    {% for l in thread.user_labels %}
-                        <span class="mail-tag">{{ l }}</span>
-                    {% endfor %}
-                    {{ thread.firstMail.get_summary|striptags }}
+                <td class="thread-info" style="width: 60%;">
+                    <a href="{% if label %}{% url 'mail/see_thread' label_slug=label.slug thread_slug=thread.slug %}{% else %}{% url 'mail/see_thread_direct' thread_slug=thread.slug %}{% endif %}">
+                        <span class="subject">{{ thread }}</span> <span>-</span>
+                        {% for l in thread.user_labels %}
+                            <span class="mail-tag">{{ l }}</span>
+                        {% endfor %}
+                        <span>{{ thread.firstMail.get_summary|striptags }}</span>
+                    </a>
                 </td>
                 {% for row in thread.rows %}
                     <td>{{ row }}</td>
                 {% endfor %}
-                <td class="Center">{{ thread.get_last_mail.created_at|relative}}
+                <td class="center thread-date" style="width: 15%;">
+                    {{ thread.get_last_mail.created_at|relative}}
                 </td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+
+    <div style="display: none">
+        <input type="hidden" id="current_label" value="{{ label.id }}">
+    </div>
 {% endblock %}

@@ -25,3 +25,15 @@ function notify(text, opts){
     });
 }
 
+//set farsi language for confirm dialog
+$(document).ready(function(){
+      bootbox.setDefaults({
+        locale:"fa"
+      });
+});
+
+function startLoading(){
+        $('#progress-bar').html(
+            "<img src='{{STATIC_URL}}mail/images/loading/startloading.gif' >"
+        )
+    }

@@ -1,0 +1,352 @@
+/***********
+ * General *
+ ***********/
+@font-face {
+    font-family: BYekan;
+    src: url('../../fonts/BYekan/BYekan.eot?#') format('eot'), url('../../fonts/BYekan/BYekan.woff') format('woff'), url('../../fonts/BYekan/BYekan.ttf') format('truetype');
+}
+
+body {
+    direction: rtl;
+    text-align: right;
+    font-family: "B Nazanin", 'BNazanin', Tahoma, serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+}
+
+#background-image {
+    height: auto;
+    position: fixed;
+    width: 100%
+}
+
+/***************
+ * Page Layout *
+ ***************/
+#header {
+    height: 67px;
+    left: 0;
+    position: relative;
+    right: 0;
+    top: 0;
+    width: 100%
+}
+
+div#sidebar {
+    /*min-height: 100%;*/
+    /*box-shadow: -1px 0 8px #ccc;*/
+    z-index: 100;
+    bottom: 0;
+    padding: 0 30px 10px;
+    position: absolute;
+    right: 0;
+    top: 67px;
+    width: 225px;
+}
+
+div#content-box {
+    bottom: 0;
+    left: 30px;
+    position: absolute;
+    right: 255px;
+    top: 67px;
+}
+
+#action-bar {
+    margin: 12px 0;
+}
+
+#content {
+}
+
+#refresh-button {
+    margin-right: 8px;
+}
+
+#sidebar .box-menu {
+    margin: 10px 0;
+}
+
+
+
+/**********
+ * Header *
+ **********/
+#header {
+    background: url('../images/general-items-bg.png');
+}
+
+.site-name {
+    color: red;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 24px;
+    position: absolute;
+    right: 30px;
+    top: 13px
+}
+
+.site-desc {
+    color: #ff7979;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 12px;
+    position: absolute;
+    right: 30px;
+    top: 40px
+}
+
+/***********
+ * Sidebar *
+ ***********/
+div#sidebar {
+    vertical-align: top;
+    background: url(../images/general-items-bg.png);
+}
+
+div#sidebar hr {
+    margin-right: -10px;
+    margin-left: -10px;
+}
+
+div#sidebar ul {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+/***********
+ * Content *
+ ***********/
+#content {
+    background: url(../images/general-items-bg.png);
+}
+
+/**************************
+ * UI Components: Buttons *
+ **************************/
+button.aui-btn {
+}
+
+a.aui-btn {
+    display: inline-block;
+}
+
+a.aui-btn:hover {
+    text-decoration: none;
+}
+
+button.btn-narrow-red, a.btn-narrow-red {
+    background-color: red;
+    color: #fff;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 16px;
+    height: 26px;
+    padding: 3px 0 5px;
+    text-align: center;
+    width: 127px;
+}
+
+button.btn-narrow-red:hover, a.btn-narrow-red:hover {
+    background-color: #ff4445;
+}
+
+a.aui-btn.btn-narrow-reload {
+    background: url(../images/reload-ico.png) #ff4545 no-repeat center;
+    height: 26px;
+    width: 26px;
+    padding: 3px 0 5px;
+    margin-bottom: -9px;
+}
+
+a.aui-btn.btn-narrow-reload:hover {
+    background-color: red;
+}
+
+/************************
+ * UI Components: Menus *
+ ************************/
+/* Box Menu */
+.box-menu li a, .box-menu-body li a {
+    color: #919191;
+    padding-right: 5px;
+    display: inline-block;
+    height: 100%;
+}
+
+.box-menu li {
+    position: relative;
+    background-color: #ededed;
+    color: #919191;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 14px;
+    min-height: 28px;
+    padding: 5px 10px
+}
+
+.box-menu li:hover {
+    background-color: #dfdfdf
+}
+
+.box-menu li a span.badge {
+    position: absolute;
+    left: 2px;
+    top: 6px;
+}
+
+/* Box Menu: Body */
+.box-menu .box-menu-body {
+    background-color: #ededed;
+    display: none;
+}
+
+.box-menu.active .box-menu-body {
+    display: block
+}
+
+.box-menu li a, .box-menu-body li a {
+    text-decoration: none;
+}
+
+.box-menu li:hover a, .box-menu-body li:hover a {
+    background-color: #dfdfdf;
+}
+
+.box-menu li a.current, .box-menu-body li a.current {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Box Menu: Header */
+.box-menu-head {
+    background-color: #ECECEC;
+    min-height: 28px;
+    position: relative;
+}
+
+.box-menu-head:hover {
+    background-color: #DEDEDE;
+    cursor: pointer
+}
+
+.box-menu.active .box-menu-head {
+    background-color: #3397DB
+}
+
+.box-menu-head .box-menu-title {
+    color: #919191;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 14px;
+    display: inline-block;
+    margin: 6px 7px 0;
+}
+
+.box-menu-head:hover .box-menu-title {
+    color: #717171
+}
+
+.box-menu.active .box-menu-head .box-menu-title {
+    color: #fff;
+}
+
+.box-menu.active .box-menu-head:hover .box-menu-title {
+    color: #fff;
+}
+
+/* Box Menu: Header: Expand Icon */
+.box-menu .box-menu-head .box-menu-expand {
+    background-image: url(../images/box-arrow.png);
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    top: 9px;
+    height: 9px;
+    width: 13px
+}
+
+.box-menu.active .box-menu-head .box-menu-expand {
+    background-position: 0 -9px
+}
+
+/* Box Menu: Header: Icon */
+.box-menu-head .box-menu-icon.icon-folder {
+    background-image: url(../images/box-head-icons.png);
+    height: 14px;
+    width: 18px;
+    float: right;
+    margin: 7px 7px 0 0;
+}
+
+.box-menu.active .box-menu-head .box-menu-icon.icon-folder {
+    background-position: 0 -18px;
+}
+
+/* Box Menu: Item Icons */
+.box-menu li a.iconed, .box-menu-body li a.iconed {
+    padding-right: 26px;
+}
+
+.box-menu li a.icon-inbox, .box-menu-body li a.icon-inbox {
+    background: url(../images/inbox-ico.png) no-repeat right 2px;
+}
+
+.box-menu li a.icon-sent, .box-menu-body li a.icon-sent {
+    background: url(../images/sent-ico.png) no-repeat right 2px;
+}
+
+.box-menu li a.icon-starred, .box-menu-body li a.icon-starred {
+    background: url(../images/important-ico.png) no-repeat right -1px;
+}
+
+.box-menu li a.icon-trash, .box-menu-body li a.icon-trash {
+    background: url(../images/trash-ico.png) no-repeat right 0;
+}
+
+.box-menu li a.icon-archive, .box-menu-body li a.icon-archive {
+    background: url(../images/archive-ico.png) no-repeat right 0;
+}
+
+.box-menu li a.icon-spam, .box-menu-body li a.icon-spam {
+    background: url(../images/spam-ico.png) no-repeat right 2px;
+}
+
+
+/************************
+ * UI Components: Table *
+ ************************/
+.threads-table {
+    text-align: right;
+    width: 100%;
+}
+
+.threads-table tr:hover {
+    background: url(../images/tr-over-bg.png);
+}
+
+.threads-table tr.unread {
+    background: #f0f0f0;
+}
+
+.threads-table td {
+    border-bottom: 1px solid #DBDBDB;
+    color: #4f4f4f;
+    font-family: BYekan, BNazanin, Tahoma, serif;
+    font-size: 13px;
+    height: 15px;
+    line-height: 140%;
+    padding: 10px;
+}
+
+.threads-table .thread-info, .threads-table .thread-info a {
+    color: #878787;
+    text-decoration: none;
+}
+
+.threads-table .thread-info .subject {
+    color: #6D6D6D;
+    font-weight: bold;
+}
+
+.threads-table .thread-checkbox {
+    /* TODO: style using javascript */
+}

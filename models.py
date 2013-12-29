@@ -2,11 +2,11 @@
 import datetime
 import logging
 
+from model_utils import Choices
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
-from model_utils.choices import Choices
 
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
@@ -225,7 +225,7 @@ class Mail(models.Model):
         recipients_users = []
         for t, rl in recipients.items():
             if rl and isinstance(rl[0], basestring) and ',' in rl[0]:
-                print 'RL must be a array!!!', rl
+                #print 'RL must be a array!!!', rl
                 rl = ','.join(rl).split(',')
             for r in rl:
                 rc = Mail.get_valid_receiver(r)
@@ -280,6 +280,7 @@ class Mail(models.Model):
         logger.debug('mail sent to %d/%d of recipients' % (sent_count, recipients_count))
         return mail
 
+
     @staticmethod
     def reply(content, sender, receivers=None, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
               include=[], exclude=[],
@@ -328,10 +329,11 @@ class Mail(models.Model):
         re_title = subject if subject else u'RE: ' + mail.title
 
 
+        to = [mail.sender.username] if mail.sender.username != sender.username else []
         if receivers:
-            to = receivers
-        else:
-            to = [mail.sender.username] if mail.sender.username != sender.username else []
+            to = to + receivers
+        # else:
+        #     to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
@@ -444,12 +446,47 @@ class Label(Slugged):
     COMPLETED_LABEL_NAME = u'کارها/انجام شده'
     REQUEST_LABEL_NAME = u'درخواست ها'
 
+    # TODO: this may be different in different accounts
+    STD_LABELS = {
+        'inbox': INBOX_LABEL_NAME,
+        'chat': CHAT_LABEL_NAME,
+        'sent': SENT_LABEL_NAME,
+        'unread': UNREAD_LABEL_NAME,
+        'trash': TRASH_LABEL_NAME,
+        'spam': SPAM_LABEL_NAME,
+        'archive': ARCHIVE_LABEL_NAME,
+        'starred': STARRED_LABEL_NAME,
+        'todo': TODO_LABEL_NAME,
+        'completed': COMPLETED_LABEL_NAME,
+        'request': REQUEST_LABEL_NAME,
+    }
+    INITIAL_LABELS = (INBOX_LABEL_NAME, SENT_LABEL_NAME, UNREAD_LABEL_NAME,  STARRED_LABEL_NAME,
+                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
+
     account = models.ForeignKey(MailAccount, related_name='labels')
-    user = models.ForeignKey(User, related_name='labels')
+    user = models.ForeignKey(User, related_name='labels')  # delete with data migration
     title = models.CharField(max_length=50)
 
     def __unicode__(self):
         return self.title
+
+    def get_std_name(self):
+        for k, v in self.STD_LABELS.iteritems():
+            if v == self.title:
+                return k
+        return ''
+
+    def is_initial_label(self):
+        return self.get_std_name() != ''
+
+    # @property
+    # def user(self):
+    #     return self.account.user
+
+    def delete_this(self):
+        if self.is_initial_label():
+            raise ValueError
+        self.delete()
 
     @staticmethod
     def create(user, title):
@@ -510,10 +547,21 @@ class Label(Slugged):
                 return Label.create(title=label_name, user=user)
             return None
 
-    @staticmethod
-    def get_initial_labels():
-        return [Label.INBOX_LABEL_NAME, Label.SENT_LABEL_NAME, Label.UNREAD_LABEL_NAME, Label.REQUEST_LABEL_NAME,
-                Label.STARRED_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.SPAM_LABEL_NAME, Label.ARCHIVE_LABEL_NAME]
+    @classmethod
+    def get_initial_labels(cls):
+        return cls.INITIAL_LABELS
+
+    @classmethod
+    def get_label_ordering_func(cls):
+        def order(label):
+            """
+                :type label: Label
+            """
+            try:
+                return cls.INITIAL_LABELS.index(label.title), ''
+            except ValueError:
+                return len(cls.INITIAL_LABELS), label.title
+        return order
 
     @staticmethod
     def setup_initial_labels(user):
@@ -796,11 +844,11 @@ class AddressBook(models.Model):
     user = models.OneToOneField(User)
 
     def get_all_contacts(self):
-        u'''
+        u"""
 
         :rtype: List
         :return: لیستی از نام های قابل نمایش مخاطبین بر می گرداند.
-        '''
+        """
 
         return Contact.objects.filter(address_book=self)
 

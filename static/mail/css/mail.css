@@ -327,28 +327,6 @@ a, a:active, a:visited {
 }
 
 
-/**********************
- * Custom Mail Layout *
- **********************/
-body {
-    font-family: "B Nazanin", 'BNazanin', Tahoma, serif;
-}
-
-div#sidebar {
-    padding: 20px 10px;
-}
-
-div#sidebar hr {
-    margin-right: -10px;
-    margin-left: -10px;
-}
-
-div#content-box {
-    right: 291px;
-    padding: 5px 10px;
-}
-
-
 /**************
  * UI Classes *
  **************/
@@ -364,37 +342,6 @@ input.label-input {
 /***************
  * UI Elements *
  ***************/
-#compose-button {
-    width: 125px;
-    font-family: "B Nazanin", "BNazanin", Tahoma, serif;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-div#sidebar li {
-    font-family: 'Droid Arabic Naskh', 'B Mitra bold', 'B Yekan', 'B Nazanin', 'BNazanin', Tahoma, serif;
-    padding: 0;
-    width: auto;
-    background-color: inherit;
-    margin: 7px 10px;
-    text-align: right;
-    font-weight: bold;
-}
-
-div#sidebar li a {
-    position: static;
-    top: 0;
-}
-
-div#sidebar li .sidebar-item a.current {
-    color: black;
-    cursor: default;
-}
-
-div#sidebar li .sidebar-item a.current:before {
-    content: '> ';
-}
-
 #compose-mail label{
     width: 80px;
 }
@@ -420,15 +367,5 @@ div#sidebar li .sidebar-item a.current:before {
     font-size: 12px;
     direction: rtl;
     margin-top: 5px;
-    text-align: right;
-}
-
-tr.unread{
-    font-weight: bold;
-}
-tr.read{
-    font-weight: normal;
-}
-table.dataTable th{
     text-align: right;
 }

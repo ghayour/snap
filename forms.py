@@ -12,7 +12,10 @@ from arsh.rich_form.validation import ValidationService
 
 
 class ComposeForm(forms.ModelForm):
+    # attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiuploaderField, required=False)
     attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+    # attachments = MultiuploaderField(label= u"فایل ضمیمه" ,required=False)
+
     labels = forms.CharField(label=u'برچسب های اولیه', required=False)
 
     class Meta:
@@ -20,15 +23,14 @@ class ComposeForm(forms.ModelForm):
         exclude = ('sender', 'recipients', 'thread')
 
     def __init__(self, *args, **kwargs):
-        from tinymce.widgets import TinyMCE
-
         super(ComposeForm, self).__init__(*args, **kwargs)
 
-        self.fields['title'].widget.attrs['style'] = 'min-width:60%'
+        self.fields['title'].widget.attrs['style'] = 'width:60%'
         self.fields['labels'].widget.attrs['class'] = 'initial-labels'
         self.fields['labels'].widget.attrs['style'] = 'min-width:60%'
 
-        self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
+        #from tinymce.widgets import TinyMCE
+        #self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
 
         self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'
@@ -63,6 +65,7 @@ class FwReForm(forms.ModelForm):
     class Meta:
         model = Mail
         exclude = ('thread', 'recipients', 'sender')
+        # exclude = ('thread', 'sender')
 
     def __init__(self, *args, **kwargs):
         from tinymce.widgets import TinyMCE
@@ -101,15 +104,4 @@ class FwReForm(forms.ModelForm):
         v.validationalize_form()
 
 
-class ContactForm(forms.ModelForm):
 
-    class Meta:
-        model = Contact
-        exclude = ('addressbook',)
-
-    def __init__(self , *args , **kwargs):
-        super(ContactForm , self).__init__(*args , **kwargs)
-
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_class = 'form-margin-30'
