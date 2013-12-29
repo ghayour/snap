@@ -124,7 +124,6 @@ class Mail(models.Model):
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
-
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
 
@@ -308,7 +307,7 @@ class Mail(models.Model):
         :type include: str[]
         :param exclude: کسانی که از گیرندگان حذف می شوند
         :type exclude: str[]
-         :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
         :type titles: str[]
         """
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
@@ -328,37 +327,36 @@ class Mail(models.Model):
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
 
-        #TODO: I changed this to fix bug!
-        #if receivers:
-        #    to = receivers
-        #else:
-        #    to = [mail.sender.username] if mail.sender.username != sender.username else []
-        #if not exclude_others:
-        #    for mr in MailReceiver.objects.filter(mail=mail):
-        #        username = mr.user.username
-        #        if not (
-        #                                username in to or username in cc or username in bcc or username in exclude or username == sender.username):
-        #            if mr.type == 'to':
-        #                to.append(username)
-        #            elif mr.type == 'cc':
-        #                cc.append(username)
-        #            elif mr.type == 'bcc':
-        #                bcc.append(username)
-        #for username in include:
-        #    if not username in to:
-        #        to.append(username)
-        #if len(to)==0:
-        #    if len(cc)==0:
-        #        if  len(bcc) == 0:
-        ##if (to==None) and (bcc==None) and (cc==None) :
-        #            logger.debug('no recipients can be selected to reply to, replying to sender')
-        #            to = [sender.username]
-        #reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
-        #                    titles=titles, attachments=attachments)
+
+        if receivers:
+            to = receivers
+        else:
+            to = [mail.sender.username] if mail.sender.username != sender.username else []
+        if not exclude_others:
+            for mr in MailReceiver.objects.filter(mail=mail):
+                username = mr.user.username
+                if not (
+                                        username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+                    if mr.type == 'to':
+                        to.append(username)
+                    elif mr.type == 'cc':
+                        cc.append(username)
+                    elif mr.type == 'bcc':
+                        bcc.append(username)
+        for username in include:
+            if not username in to:
+                to.append(username)
+        if len(to)==0:
+            if len(cc)==0:
+                if  len(bcc) == 0:
+        #if (to==None) and (bcc==None) and (cc==None) :
+                    logger.debug('no recipients can be selected to reply to, replying to sender')
+                    to = [sender.username]
+        reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
+                            titles=titles, attachments=attachments)
 
         reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
-
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
@@ -654,13 +652,13 @@ class Thread(Slugged):
         return user.id in related_users
 
     def get_user_mails(self, user):
-        '''
+        """
         از ترد جاری تمام ایمیلهای مربوط به کاربر ورودی را برمیگرداند
         :param user: کابر
         :type user: User
         :rtype list of Mail ojects
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
-        '''
+        """
 
         mail_list = []
         for mail in self.mails.all():
@@ -721,20 +719,20 @@ class Thread(Slugged):
             except Exception:
                 return None
 
-
     @staticmethod
     def get_user_threads(user):
         return Thread.objects.filter(labels__user=user)
 
 
 class ThreadLabel(models.Model):
-    class Meta:
-        verbose_name = u"برچسب نخ"
-        verbose_name_plural = u"برچسب‌های نخ"
 
     thread = models.ForeignKey(Thread)
     label = models.ForeignKey(Label)
     mails = models.ManyToManyField(Mail, null=True, blank=True)
+
+    class Meta:
+        verbose_name = u"برچسب نخ"
+        verbose_name_plural = u"برچسب‌های نخ"
 
     @classmethod
     def add(cls, label, thread, mail=None):
@@ -742,7 +740,8 @@ class ThreadLabel(models.Model):
             tl = cls.objects.get(label=label, thread=thread)
             if mail and tl.mails.all():
                 #برچسب متعلق به کل نخ نباشد
-                tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
+                ##  #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
+                tl.mails.add(mail)
                 return True
 
             else:
@@ -892,14 +891,7 @@ class AddressBook(models.Model):
         return False
 
 
-
-
-
-
 class Contact(models.Model):
-    class Meta:
-        verbose_name = u"اطلاعات تماس‌ها"
-        verbose_name_plural = u"اطلاعات تماس"
 
     address_book = models.ForeignKey(AddressBook)
     display_name = models.CharField(_('display_name'), max_length=30, blank=True, null=True)
@@ -907,6 +899,10 @@ class Contact(models.Model):
     last_name = models.CharField(_('last name'), max_length=30, blank=True, null=True)
     email = models.CharField(_('e-mail address'), max_length=30)
     additional_email = models.EmailField(_('e-mail address'), blank=True, null=True)
+
+    class Meta:
+        verbose_name = u"اطلاعات تماس‌ها"
+        verbose_name_plural = u"اطلاعات تماس"
 
     def __unicode__(self):
         return self.display_name

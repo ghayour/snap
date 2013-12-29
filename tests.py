@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 #from django.test.client import Client
 
 from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
-from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment
+from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment, MailReply
 
 
 def random_string(length=10):
@@ -62,6 +62,9 @@ class LabelFactory(factory.DjangoModelFactory):
 
 class ContactFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Contact
+
+class ContactFactory(factory.DjangoModelFactory):
+    FACTORY_FOR = MailReply
 
 
 class AddressBookFactory(factory.DjangoModelFactory):
@@ -310,6 +313,12 @@ class TestModelFunc(TestCase):
 
         address_book1.remove_contact_address(user2.email)
         self.assertFalse(address_book1.has_contact_address(user2.email))
+
+    def test_mail_reply_thread(self):
+        pass
+
+    def test_mail_forward_thread(self):
+        pass
 
 
 #class TestUrl(TestCase):
