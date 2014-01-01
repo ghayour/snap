@@ -9,8 +9,8 @@ $(document).ready(function(){
         bootbox.confirm('آیا شما مطمئنید که می خواهید این حساب را حذف کنید  ؟',
         function(result){
             if (result){
-            startLoading();
-            $.ajax({
+                Pace.ignore(function(){
+                    $.ajax({
             url : '/view/addressbook',
             type : 'POST',
             data : { pk : pk },
@@ -20,6 +20,7 @@ $(document).ready(function(){
             }
 
             })
+                });
         }
             else{};
 

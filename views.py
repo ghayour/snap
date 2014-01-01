@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm
+from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider
@@ -636,6 +636,7 @@ def contact_list(request):
 
 @login_required
 def addressbook_edit(request):
+
     if request.is_ajax() and request.POST:
         user = request.user
         value = request.POST.get('value')
@@ -662,6 +663,7 @@ def addressbook_edit(request):
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    contact_form = ContactForm();
     if request.is_ajax() and request.method == 'POST' :
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
