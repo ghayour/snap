@@ -22,6 +22,8 @@
     {% js 'mail/client.js' %}
     {% js 'mail/contact.js' %}
     {% js 'mail/label.js' %}
+    {% js 'mail/bootbox.js' %}
+    {% js 'mail/pace_loading/pace.js' %}
 
     <script type="text/javascript">
         mailSystem.state.onlyShowNewMail = {% if archive %}false{% else %}true{% endif %};
@@ -38,6 +40,7 @@
     {% css 'mail/loader/loader.css' %}
 
     {% css 'rich_form_css_custom' %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}mail/pace_loading/pace-theme-flash.css" type="text/css">
 
 {% endblock %}
 
@@ -88,6 +91,7 @@
 {% endblock %}
 
 {% block CONTENT %}
+
     <div id="action-bar">
         {{ env.header }}
         {# toolbar will be added here by mailToolbar object #}

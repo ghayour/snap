@@ -13,7 +13,7 @@ from arsh.rich_form.validation import ValidationService
 
 class ComposeForm(forms.ModelForm):
     # attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiuploaderField, required=False)
-    attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+    attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False )
     # attachments = MultiuploaderField(label= u"فایل ضمیمه" ,required=False)
 
     labels = forms.CharField(label=u'برچسب های اولیه', required=False)
@@ -103,5 +103,28 @@ class FwReForm(forms.ModelForm):
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
 
+
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        exclude = ('address_book')
+
+        def __init__(self, *args, **kwargs):
+            super(ContactForm, self).__init__(*args, **kwargs)
+            self.field['display_name'].widget.attrs['class']= 'myeditable'
+            self.field['display_name'].widget.attrs['data-url']= '/edit/addressbook'
+
+            self.field['first_name'].widget.attrs['class']= 'myeditable'
+            self.field['first_name'].widget.attrs['data-url']= '/edit/addressbook'
+
+            self.field['last_name'].widget.attrs['class']= 'myeditable'
+            self.field['last_name'].widget.attrs['data-url']= '/edit/addressbook'
+
+            self.field['email'].widget.attrs['class']= 'myeditable'
+            self.field['email'].widget.attrs['data-url']= '/edit/addressbook'
+
+            self.field['email_additional'].widget.attrs['class']= 'myeditable'
+            self.field['email_additional'].widget.attrs['data-url']= '/edit/addressbook'
 
 

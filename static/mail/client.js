@@ -63,10 +63,13 @@ $(function(){
         icon: 'trash',
         title: 'حذف',
         action: function() {
-            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
-            if(doIt){
+//            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
+            bootbox.confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟',function(result){
+               if(result){
                 mailSystem.moveToTrash();
-            }
+                }
+            })
+
         }
     });
     mailToolbar.addButton({

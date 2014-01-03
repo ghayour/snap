@@ -24,3 +24,10 @@ function notify(text, opts){
         stack: pnotify_stack
     });
 }
+
+//set farsi language for confirm dialog
+$(document).ready(function(){
+      bootbox.setDefaults({
+        locale:"fa"
+      });
+});
