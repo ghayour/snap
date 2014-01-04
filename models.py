@@ -485,13 +485,13 @@ class Label(Slugged):
         self.delete()
 
     @staticmethod
-    def create(user, title):
-        try:
-            account = user.mail_accounts.all()[0]
-            #TODO: which account should be selected?
-        except IndexError:
-            account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
-                                                 email=user.username + '@' + MailProvider.get_default_domain())
+    def create(user, title, account=None):
+        if account is None:
+            try:
+                account = user.mail_accounts.all()[0]
+            except IndexError:
+                account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
+                                                     email=user.username + '@' + MailProvider.get_default_domain())
         return Label.objects.create(title=title, user=user, account=account)
 
     def get_unread_count(self):

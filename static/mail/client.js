@@ -74,7 +74,7 @@ $(function(){
     });
     mailToolbar.addButton({
         icon: '',
-        title: 'علامت گذاری به عنوان خوانده شده',
+        title: 'خوانده شده',
         show: 'mailSystem.state.viewing == "threads"',
         action: function() {
             var item_list = [];
@@ -157,7 +157,15 @@ $(function(){
     });
     mailToolbar.addButton({
         icon: '',
-        title: 'اطلاعات تماس',
+        title: 'تنظیمات',
+        align: 'left',
+        action : function(){
+            window.location = arsh.dj.resolver.url('mail/manage_label');
+        }
+    });
+    mailToolbar.addButton({
+        icon: '',
+        title: 'مخاطبین',
         align: 'left',
         action : function(){
             window.location = arsh.dj.resolver.url('view/address_book');
