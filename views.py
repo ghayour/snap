@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm
+from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider
@@ -46,11 +46,27 @@ def see(request, label_slug, thread_slug, archive=None):
         mail_admin.create_arsh_mail_account(request.user)
 
     # label
-    label = get_object_or_404(Label, user=request.user, slug=label_slug) if label_slug else user_manager.get_label(
-        Label.INBOX_LABEL_NAME)
-    if not label:
-        user_manager.setup_mailbox()
-        label = user_manager.get_inbox()
+    label_title = request.GET.get('label_title')
+    if label_title:
+        if label_slug:
+            raise Http404('Either provide label_slug or label_name')
+        # TODO: consider mail account in resolving label title
+        try:
+            label = get_object_or_404(Label, user=request.user, title=label_title)
+        except Http404 as e:
+            # Some std labels may be created on demand, not for all users by default
+            if label_title in Label.STD_LABELS.values():
+                label = Label.create(request.user, label_title)
+            else:
+                raise e
+    else:
+        if label_slug:
+            label = get_object_or_404(Label, user=request.user, slug=label_slug)
+        else:
+            label = user_manager.get_label(Label.INBOX_LABEL_NAME)
+            if not label:
+                user_manager.setup_mailbox()
+                label = user_manager.get_inbox()
 
     # thread
     thread = get_object_or_404(Thread, slug=thread_slug) if thread_slug else None
@@ -71,10 +87,14 @@ def compose(request):
     initial_to = request.GET.get('to', '')
     initial_cc = request.GET.get('cc', '')
     initial_bcc = request.GET.get('bcc', '')
+    label_ids = request.POST.get('labels')
+    if label_ids:
+        label_ids = label_ids.split(',')
 
     compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
+        # TODO: move these to the ComposeForm
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
         initial_bcc = request.POST.get('bcc')
@@ -83,9 +103,8 @@ def compose(request):
         if compose_form.is_valid():
             subject = compose_form.cleaned_data['title']
             content = compose_form.cleaned_data['content']
-            label_ids = request.POST.get('labels').split(',')
             initial_labels = []
-            if label_ids and label_ids[0]:
+            if label_ids:
                 initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
             initial_labels.append(Label.SENT_LABEL_NAME)
             recipient_labels = [get_default_inbox()]
@@ -636,6 +655,7 @@ def contact_list(request):
 
 @login_required
 def addressbook_edit(request):
+
     if request.is_ajax() and request.POST:
         user = request.user
         value = request.POST.get('value')
@@ -662,6 +682,7 @@ def addressbook_edit(request):
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    contact_form = ContactForm();
     if request.is_ajax() and request.method == 'POST' :
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()

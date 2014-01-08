@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import factory
 import random
 import string
@@ -49,10 +48,12 @@ class UserFactory(factory.DjangoModelFactory):
     first_name = factory.LazyAttribute(lambda t: random_string())
     last_name = factory.LazyAttribute(lambda t: random_string())
     password = factory.LazyAttribute(lambda t: random_string())
-
-
+    
+fixtures = ['test_admin_users']
+    
 class LabelFactory(factory.DjangoModelFactory):
     FACTORY_FOR = Label
+
 
     #account = factory.LazyAttribute(lambda t: random_string())
     #user = factory.LazyAttribute(lambda t: random_string())
@@ -206,6 +207,20 @@ class TestModelFunc(TestCase):
         self.assertTrue(mail.has_label(user2_label))
         self.assertTrue(mail.has_label(user1_label))
 
+    #def test_forward(self):
+    #    user1 = UserFactory.create()
+    #    user2 = UserFactory.create()
+    #    user3 = UserFactory.create()
+    #    mail_provider = MailProviderFactory.create()
+    #    mail_provider.domains.add(MailDomainFactory.create(name='arshmail.ir'))
+    #    mail = MailFactory.create(content=u'This is Forward test', sender=user1)
+    #    #, subject=u'Test subject', receivers=None)
+    #    # Testing functions:
+    #    mail.add_receiver(mail, mail.thread, user2.email)
+    #    mail.get_recipients()
+    #    mail.get_summary()
+    #    mail.(content="hi", sender=user2, thread=mail.thread)  # Lines related to simple request is deleted
+    
     def test_mark_as_read_unread(self):
         user1 = UserFactory.create(username='sender', email="sender@arshmail.ir")
         user2 = UserFactory.create(username='reciever', email="reciever@arshmail.ir")
@@ -251,6 +266,20 @@ class TestModelFunc(TestCase):
         mail.get_recipients()
         mail.get_summary()
         #thread = mail.thread
+        #    label = Label.get_user_labels(user2)
+        #    label2 = Label.get_user_labels(user1)
+        #    # Assertions:
+        #    self.assertIsNotNone(mail.recipients)
+        #    self.assertIsNotNone(mail.content)
+        #    self.assertIsNotNone(mail.thread)
+        #    self.assertIsNotNone(mail.title)
+        #    self.assertIsNotNone(mail.created_at)
+        #    self.assertIsNotNone(label[0].INBOX_LABEL_NAME)
+        #    self.assertIsNotNone(label[0].title)
+        #    self.assertIsNotNone(label[0].user)
+        #    self.assertIsNotNone(thread.labels)
+        #    thread.remove_label(label[0])
+        #    thread.remove_label(label2[0])
 
         label1 = Label.get_user_labels(user1)
         label2 = Label.get_user_labels(user2)
@@ -363,3 +392,48 @@ class TestModelFunc(TestCase):
 
 class MailTestViews(TestCase):
     pass
+
+
+class AppTest(TestCase):
+    fixtures = ['test_admin_user', 'arshmail']
+
+    def setUp(self):
+        self.client = Client()
+        self.assertTrue(self.client.login(username='test_admin_user', password='admin'), 'login failed')
+
+    def test_admin(self):
+        response = self.client.get('/admin/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_view(self):
+        response = self.client.get('/view/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'mail/label.html')
+        self.assertTemplateUsed(response, 'mail/mail_template.html')
+        self.assertTemplateUsed(response, 'base.html')
+
+    def test_compose(self):
+        response = self.client.get('/compose')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'mail/composeEmail.html')
+        self.assertEqual(Mail.objects.all().exists(), False)
+        self.client.post('/compose', data={
+            'receivers': 'test_admin_user@arshmail.ir',
+            'cc': '',
+            'bcc': '',
+            'title': 'test_title',
+            'content': '<p>test_contents</p>'
+        })
+        self.assertEqual(Mail.objects.all().exists(), True)
+        self.assertEqual(Thread.objects.all().exists(), True)
+
+    def test_archive(self):
+        response = self.client.get('/view/archive/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'mail/label.html')
+
+    def test_set_up(self):
+        response = self.client.get('/setup')
+        self.assertEqual(response.status_code, 200)
+
+    
