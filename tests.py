@@ -14,7 +14,7 @@ from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment, Ma
 
 def random_string(length=10):
     return u''.join(random.choice(string.ascii_letters) for x in range(length))
-
+#similar in common
 
 class MailDomainFactory(factory.DjangoModelFactory):
     FACTORY_FOR = MailDomain
@@ -323,6 +323,7 @@ class TestModelFunc(TestCase):
 
 #class TestUrl(TestCase):
 #    fixtures = ['auth']
+
 #
 #    def setUp(self):
 #        self.client = Client()
