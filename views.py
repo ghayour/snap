@@ -150,8 +150,8 @@ def show_thread(request, thread, label=None):
         UserManager.get()._cache_user(up)
     referrer = request.META.get('HTTP_REFERER', '')
 
-    if not referrer or not referrer.startswith(settings.SITE_URL + 'mail/') or referrer.startswith(
-                    settings.SITE_URL + 'mail/view'):
+    if not referrer or not referrer.startswith(settings.SITE_URL + 'mail/') \
+            or referrer.startswith(settings.SITE_URL + 'mail/view'):
         referrer = reverse('mail/home')
 
     if request.method == "POST":
@@ -182,7 +182,7 @@ def show_thread(request, thread, label=None):
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
         action = request.GET.get('action')
-        if request.is_ajax() and action=='reply' :
+        if request.is_ajax() and action == 'reply':
 
             # pass
 
@@ -190,7 +190,8 @@ def show_thread(request, thread, label=None):
             # if not exclude_others:
             #     for mr in MailReceiver.objects.filter(mail=mail):
             # username = mr.user.username
-            # if not (username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+            # if not (username in to or username in cc or username in bcc or username in exclude
+            #              or username == sender.username):
             #         if mr.type == 'to':
             #             to.append(username)
             #         elif mr.type == 'cc':
@@ -268,8 +269,8 @@ def manage_label(request):
 
     if request.is_ajax() and request.POST:
         action = request.POST.get('name')
-        id = request.POST.get('pk')
-        l = Label.objects.get(user = user , id = id)
+        id1 = request.POST.get('pk')
+        l = Label.objects.get(user = user , id = id1)
         if action == 'delete':
             l.delete()
         else:
@@ -292,16 +293,19 @@ def manage_label(request):
 
 @ajax_view
 def mail_validate(request):
-    rl = []
-    rl.append(request.POST.get('receivers', ''))
-    rl.append(request.POST.get('cc', ''))
-    rl.append(request.POST.get('bcc', ''))
+    #rl = []
+    x = request.POST.get('receivers', '')
+    y = request.POST.get('cc', '')
+    z = request.POST.get('bcc', '')
+    rl =[x, y, z]
+
     for r in rl:
         if r:
             for c in r.split(','):
                 if not Mail.validate_receiver(c):
                     return {"error": "گیرنده نامعتبر است."}
     return 'Ok'
+
 
 @login_required
 def create_label(request):
@@ -311,6 +315,7 @@ def create_label(request):
     label.title = title
     label.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
 
 @ajax_view
 def add_label(request):
@@ -358,6 +363,7 @@ def add_label(request):
     c.update({"response_text": response_text, "label_url": label_url, "label_id": label.id})
     return c
 
+
 @ajax_view
 def label_list(request):
     start = request.GET.get('name_startsWith')
@@ -383,6 +389,7 @@ def label_list(request):
     json_text = json_text[:-1] + ']'
 
     return HttpResponse(json_text)
+
 
 def delete_label(request):
     c = {"response_text": "error", }
@@ -417,6 +424,7 @@ def delete_label(request):
         pass
 
     return HttpResponse(simplejson.dumps(c))
+
 
 @ajax_view
 def move_thread(request):
@@ -487,6 +495,7 @@ def get_search_query(token, user):
         return rs(token[1], user)
     return rs
 
+
 def search_labels(keyword, user):
     labels_list = keyword.split(u'،')
     search_query = Q()
@@ -495,6 +504,7 @@ def search_labels(keyword, user):
         if label:
             search_query = search_query | (Q(labels__title__contains=label) & Q(labels__in=user_labels))
     return search_query
+
 
 @login_required
 def search(request):
@@ -525,9 +535,10 @@ def search(request):
             'search_exp': keywords
         }, context_instance=RequestContext(request))
 
-def parse_address(input):
-    input = input.replace(',', ';')
-    tokens = input.split(';')
+
+def parse_address(input_s):
+    input_s = input_s.replace(',', ';')
+    tokens = input_s.split(';')
     result = []
     for s in tokens:
         s = s.strip(' \t\n\r')
@@ -535,11 +546,13 @@ def parse_address(input):
             result.append(s)
     return result
 
+
 def mails_gc():
     """
         تابعی که باید به صورت دوره‌ای اجرا شود و میل‌های حذف شده را از پایگاه داده نیز حذف کند.
     """
     Thread.objects.filter(labels__isnull=True).delete()
+
 
 @login_required
 def mark_thread(request, thread_slug, action):
@@ -552,7 +565,9 @@ def mark_thread(request, thread_slug, action):
     if request.is_ajax():
         return HttpResponse('OK')
     return HttpResponseRedirect(
-        reverse('mail/see_label', args=[thread.labels.all()[0].slug]))   #FIXME: what if no labels?
+        reverse('mail/see_label', args=[thread.labels.all()[0].slug]))
+        #FIXME: what if no labels?
+
 
 @login_required
 def ajax_mark_thread(request):
@@ -606,9 +621,9 @@ def get_total_unread_mails(request):
             total_unread_mails += unread
     return total_unread_mails
 
+
 @ajax_view
 def mail_reply(request):
-    replies = []
     try:
         mail_id = request.POST.get("mail_id", -1)
         mail = Mail.objects.get(pk=mail_id)
@@ -616,6 +631,7 @@ def mail_reply(request):
     except Mail.DoesNotExist:
         replies = []
     return replies
+
 
 @ajax_view
 def add_contact(request):
@@ -626,8 +642,8 @@ def add_contact(request):
         contact_user = get_object_or_404(User, pk=contact_user_id)
         if request.POST.get('action', 'add') == 'validate':
             ab = AddressBook.get_addressbook_for_user(user, create_new=True)
-            if ab.has_contact_address(
-                        contact_user.username + '@' + MailProvider.get_default_domain()) or contact_user == user:
+            if ab.has_contact_address(contact_user.username + '@' + MailProvider.get_default_domain()) \
+                    or contact_user == user:
                 return {'result': False}
             else:
                 return {'result': True}
@@ -635,6 +651,7 @@ def add_contact(request):
         return {'id': contact.id, 'display_name': contact.get_display_name()}
     except ValueError as e:
         return {'errors': unicode(e.message)}
+
 
 @ajax_view
 def contact_list(request):
@@ -652,6 +669,7 @@ def contact_list(request):
         return data
     except ValueError as e:
         pass
+
 
 @login_required
 def addressbook_edit(request):
