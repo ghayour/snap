@@ -690,6 +690,7 @@ class Thread(Slugged):
         :rtype: int or None
         :return:اگر کاربر در لیست افراد مرتبط با ترد وجود داشت آی دی آن را بر میگرداند.
         """
+        #Query No: 0
         related_users = []
         for mail in self.mails.all():
             for r in mail.recipients.all():
