@@ -134,6 +134,7 @@ $(function(){
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            set_reply_form ();
             update_message_type("reply");
             forward_reply_handler("reply");
         }
@@ -260,18 +261,33 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(false, true);
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
-        var url = $(location).attr('pathname');
-        var mail = cur_mail.data("db");
-         $.ajax({
-            url : url,
-            type : 'POST',
-            data : {
-                mail  : mail ,
-                action : action_type
-            }
-        });
+//        var url = $(location).attr('pathname');
+//        var mail = cur_mail.data("db");
+//         $.ajax({
+//            url : url,
+//            type : 'POST',
+//            data : {
+//                mail  : mail ,
+//                action : action_type
+//            }
+//        });
     }
     //TODO: move fw-re form according to selected mail
 //    var FW_RE = $("#bottom-div");
 //    content_place.append(FW_RE);
+}
+
+function set_reply_form(){
+    var selected_mail = $('.mail-checkbox:checked').val();
+    var url = $(location).attr('pathname');
+
+      $.ajax({
+            url : url,
+            type : 'GET',
+            data : {
+                mail  : selected_mail ,
+                action : 'reply'
+            }
+        });
+
 }
