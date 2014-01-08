@@ -1,89 +1,25 @@
 # -*- coding: utf-8 -*-
+
 import factory
 import random
 import string
 
 from django.test import TestCase
 from django.contrib.auth.models import User
-#from django.test.client import Client
+from django.test.client import Client
 
 from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
 from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment, MailReply
 
-
-def random_string(length=10):
-    return u''.join(random.choice(string.ascii_letters) for x in range(length))
-#similar in common
-
-class MailDomainFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = MailDomain
-    name = factory.LazyAttribute(lambda t: random_string())
+from factories import UserFactory, MailProviderFactory, MailDomainFactory, MailFactory, ThreadFactory
+from factories import LabelFactory, MailFactory, ContactFactory, AddressBookFactory, DatabaseMailAccountFactory
+from factories import DatabaseMailAccountFactory, AttachmentFactory
 
 
-class MailProviderFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = MailProvider
-
-    #domains =MailDomainFactory.create(name='arshmail.ir')
-
-
-class ThreadFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Thread
-
-    title = factory.LazyAttribute(lambda t: random_string())
-
-
-class MailFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Mail
-
-    title = factory.LazyAttribute(lambda t: random_string())
-    content = factory.LazyAttribute(lambda t: random_string())
-    thread = ThreadFactory.create()
-    #recipients = None
-
-
-class UserFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = User
-
-    username = factory.LazyAttribute(lambda t: random_string())
-    first_name = factory.LazyAttribute(lambda t: random_string())
-    last_name = factory.LazyAttribute(lambda t: random_string())
-    password = factory.LazyAttribute(lambda t: random_string())
-    
 fixtures = ['test_admin_users']
-    
-class LabelFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Label
-
-
-    #account = factory.LazyAttribute(lambda t: random_string())
-    #user = factory.LazyAttribute(lambda t: random_string())
-    #title = factory.LazyAttribute(lambda t: random_string())
-    #
-
-
-class ContactFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Contact
-
-class ContactFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = MailReply
-
-
-class AddressBookFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = AddressBook
-
-
-class AttachmentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Attachment
-
-    attachment = factory.django.FileField(filename='flower.jpg')
-
-
-class DatabaseMailAccountFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = DatabaseMailAccount
 
 
 class TestModelFunc(TestCase):
-    #fixtures = ['auth']
 
     def test_send_mail(self):
         #TODO: 1: again logic about email=username@default_provider is critical in sending emails
@@ -435,5 +371,3 @@ class AppTest(TestCase):
     def test_set_up(self):
         response = self.client.get('/setup')
         self.assertEqual(response.status_code, 200)
-
-    
