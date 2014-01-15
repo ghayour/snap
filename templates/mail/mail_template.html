@@ -28,6 +28,15 @@
     <script type="text/javascript">
         mailSystem.state.onlyShowNewMail = {% if archive %}false{% else %}true{% endif %};
     </script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+            var checkboxlist = $('input:checkbox');
+            $(checkboxlist).change(function () {
+                $(checkboxlist).filter(':checked').parent().parent().addClass('subselected');
+                $('input:checkbox:not(:checked)').parent().parent().filter(".subselected").removeClass('subselected')
+            })
+    })
+    </script>
 {% endblock %}
 
 {% block css %}
@@ -71,7 +80,7 @@
         {% csrf_token %}
         <input id="mail-search-input" type="text" value="{{ search_exp }}" name="keywords" placeholder="جستجو" style="width: 130px; float: right"/>
     </form>
-    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
+    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').toggle();"></div>
     <br>
     <div id="search_help">
     <label>راهنمای جستجو</label>

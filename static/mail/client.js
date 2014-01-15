@@ -103,6 +103,42 @@ $(function(){
                 });
         }
     });
+
+
+        mailToolbar.addButton({
+        icon: '',
+        title: 'خوانده نشده',
+        show: 'mailSystem.state.viewing == "threads"',
+        action: function() {
+            var item_list = [];
+            $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
+                item_list.push($(this).attr('value'));
+            });
+            $.post(arsh.dj.resolver.url('mail/mark_thread'),
+                {item_id: item_list, action: 'unread'},
+                function (data) {
+                    var data1 = JSON.parse(data);
+                    if (data1["response_text"] == 'success') {
+                        alert('عملیات با موفقیت انجام شد.');
+                        if (mailSystem.state.onlyShowNewMail){
+                            $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
+                                $(this).closest("tr").remove();
+                            });
+                        }
+                        ajaxLoader.show();
+                        window.location.reload();
+                        //تغییر با توجه به اینکه در حالت آرشیو هست یا خیر
+                        // تغییر نحوه نمایش بر اساس تفاوت خوانده شده ها با نخوانده ها
+                    }
+                    else {
+                        alert(data1["response_text"]);
+                    }
+                });
+        }
+    });
+
+
+
     mailToolbar.addButton({
         icon: 'folder',
         title: 'پوشه بندی',
