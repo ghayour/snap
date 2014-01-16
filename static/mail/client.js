@@ -29,7 +29,24 @@ $(function() {
 
 /* Toolbar Creation */
 $(function(){
+    $('.mailAction').hide();
+    var checklist = $('input[type=checkbox]');
+    checklist.change(function(){
+       if (checklist.filter(':checked').length != 0 ){
+           $('.mailAction').show();
+           $('.mailAction.mark-read').hide();
+           $('.mailAction.mark-unread').hide();
+           var row = $('input[type=checkbox]:checked').parent().parent();
+           if(row.hasClass('read'))
+                {$('.mailAction.mark-unread').show();}
+            if(row.hasClass('unread'))
+                {$('.mailAction.mark-read').show();}
+            }
+       else{$('.mailAction').hide();}
+    });
+
     mailToolbar = new arsh.ui.Toolbar({'div': '#action-bar'});
+
     mailToolbar.addButton({
         icon: '',
         title: 'بازگشت',
@@ -45,23 +62,29 @@ $(function(){
             window.location = url;
         }
     });
+
     mailToolbar.addButton({
         icon: 'archive',
         title: 'بایگانی',
+        class : 'mailAction',
         action: function() {
             mailSystem.setArchiveMode();
         }
     });
+
     mailToolbar.addButton({
         icon: 'spam',
         title: 'هرزنامه',
+        class : 'mailAction',
         action: function() {
             mailSystem.markAsSpam();
         }
     });
+
     mailToolbar.addButton({
         icon: 'trash',
         title: 'حذف',
+        class : 'mailAction',
         action: function() {
 //            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
             bootbox.confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟',function(result){
@@ -72,9 +95,11 @@ $(function(){
 
         }
     });
-    mailToolbar.addButton({
+
+        mailToolbar.addButton({
         icon: '',
         title: 'خوانده شده',
+        class : 'mailAction mark-read',
         show: 'mailSystem.state.viewing == "threads"',
         action: function() {
             var item_list = [];
@@ -105,9 +130,10 @@ $(function(){
     });
 
 
-        mailToolbar.addButton({
+    mailToolbar.addButton({
         icon: '',
         title: 'خوانده نشده',
+        class : 'mailAction mark-unread',
         show: 'mailSystem.state.viewing == "threads"',
         action: function() {
             var item_list = [];
@@ -137,24 +163,26 @@ $(function(){
         }
     });
 
-
-
     mailToolbar.addButton({
         icon: 'folder',
         title: 'پوشه بندی',
+        class : 'mailAction',
         popover: {
             title: 'انتقال به پوشه',
             content: '<input id="move_thread" data-type="thread" type="text" class="label-input">'
         }
     });
+
     mailToolbar.addButton({
         icon: 'tag',
         title: 'برچسب گذاری',
+        class : 'mailAction',
         popover: {
             title: 'برچسب گذاری',
             content: '<input id="apply-label" item_id=-1 type="text" class="label-input">'
         }
    });
+
     mailToolbar.addButton({
         icon: '',
         title: 'باز کردن همه',
