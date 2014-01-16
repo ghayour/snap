@@ -32,18 +32,17 @@ class ComposeForm(forms.ModelForm):
         #from tinymce.widgets import TinyMCE
         #self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
 
-        self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
+        self.fields['receivers'] = forms.CharField(required=True, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'
-        self.fields['receivers'].widget.attrs['type'] = 'hidden'
         self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
-        self.fields['cc'].widget.attrs['class'] = 'info'
+        self.fields['cc'].widget.attrs['class'] = 'info '
         self.fields['cc'].widget.attrs['type'] = 'hidden'
         self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
-        self.fields['bcc'].widget.attrs['class'] = 'info'
+        self.fields['bcc'].widget.attrs['class'] = 'info '
         self.fields['bcc'].widget.attrs['type'] = 'hidden'
         self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
 
