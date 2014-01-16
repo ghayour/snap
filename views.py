@@ -17,7 +17,7 @@ from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver
 
 
 def get_default_inbox():
@@ -181,29 +181,25 @@ def show_thread(request, thread, label=None):
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
-        action = request.GET.get('action')
-        if request.is_ajax() and action == 'reply':
-
-            # pass
-
-            # to = [mail.sender.username] if mail.sender.username != up.username else []
-            # if not exclude_others:
-            #     for mr in MailReceiver.objects.filter(mail=mail):
-            # username = mr.user.username
-            # if not (username in to or username in cc or username in bcc or username in exclude
-            #              or username == sender.username):
-            #         if mr.type == 'to':
-            #             to.append(username)
-            #         elif mr.type == 'cc':
-            #             cc.append(username)
-            #         elif mr.type == 'bcc':
-            #             bcc.append(username)
-            # for username in include:
-            #     if not username in to:
-            #         to.append(username)
-            fw_re_form = FwReForm(user_id=up.id)
-
         fw_re_form = FwReForm(user_id=up.id)
+        action = request.GET.get('action' , '')
+        if request.is_ajax() and action=='reply' :
+            re_to = re_cc = re_bcc = []
+            re_mail_id = request.GET.get('mail' , '')
+            re_mail = Mail.objects.get(id = re_mail_id)
+            recivers =  MailReceiver.objects.filter(mail=re_mail)
+
+            for mr in MailReceiver.objects.filter(mail=re_mail):
+                username = mr.user.username
+                re_sender = username
+                if mr.type == 'to':
+                    re_to.append(username)
+                elif mr.type == 'cc':
+                    re_cc.append(username)
+                elif mr.type == 'bcc':
+                    re_bcc.append(username)
+            fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
