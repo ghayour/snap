@@ -250,10 +250,10 @@ def show_label(request, label, archive_mode):
     tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
     threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
     #threads = threads[:50]  # TODO: how to view all mails?
-    threads = [t for t in threads if t.is_thread_related(up)]# Q#=0
+    threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
 
     env = {'headers': []}
-    DecoratorManager.get().activate_hook('show_label', label, threads, up, env)
+    DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
 
     return render_to_response('mail/label.html',
                               {'threads': threads, 'label': label, 'label_title': label.title, 'user': request.user,
