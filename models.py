@@ -124,7 +124,6 @@ class Mail(models.Model):
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
-
     def get_reply_mails(self):
         return MailReply.objects.filter(first=self).values_list('reply', flat=True)
 
@@ -309,7 +308,7 @@ class Mail(models.Model):
         :type include: str[]
         :param exclude: کسانی که از گیرندگان حذف می شوند
         :type exclude: str[]
-         :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
         :type titles: str[]
         """
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
@@ -328,6 +327,8 @@ class Mail(models.Model):
         logger.debug('generating reply to mail#%d' % in_reply_to.id)
         mail = in_reply_to
         re_title = subject if subject else u'RE: ' + mail.title
+
+
         to = [mail.sender.username] if mail.sender.username != sender.username else []
         if receivers:
             to = to + receivers
@@ -354,6 +355,9 @@ class Mail(models.Model):
                     logger.debug('no recipients can be selected to reply to, replying to sender')
                     to = [sender.username]
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
+                            titles=titles, attachments=attachments)
+
+        reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
 
         # if is_specific_reply:
@@ -686,6 +690,7 @@ class Thread(Slugged):
         :rtype: int or None
         :return:اگر کاربر در لیست افراد مرتبط با ترد وجود داشت آی دی آن را بر میگرداند.
         """
+        #Query No: 0
         related_users = []
         for mail in self.mails.all():
             for r in mail.recipients.all():
@@ -696,13 +701,13 @@ class Thread(Slugged):
         return user.id in related_users
 
     def get_user_mails(self, user):
-        '''
+        """
         از ترد جاری تمام ایمیلهای مربوط به کاربر ورودی را برمیگرداند
         :param user: کابر
         :type user: User
         :rtype list of Mail ojects
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
-        '''
+        """
 
         mail_list = []
         for mail in self.mails.all():
@@ -763,20 +768,20 @@ class Thread(Slugged):
             except Exception:
                 return None
 
-
     @staticmethod
     def get_user_threads(user):
         return Thread.objects.filter(labels__user=user)
 
 
 class ThreadLabel(models.Model):
-    class Meta:
-        verbose_name = u"برچسب نخ"
-        verbose_name_plural = u"برچسب‌های نخ"
 
     thread = models.ForeignKey(Thread)
     label = models.ForeignKey(Label)
     mails = models.ManyToManyField(Mail, null=True, blank=True)
+
+    class Meta:
+        verbose_name = u"برچسب نخ"
+        verbose_name_plural = u"برچسب‌های نخ"
 
     @classmethod
     def add(cls, label, thread, mail=None):
@@ -784,7 +789,8 @@ class ThreadLabel(models.Model):
             tl = cls.objects.get(label=label, thread=thread)
             if mail and tl.mails.all():
                 #برچسب متعلق به کل نخ نباشد
-                tl.mails.add(mail)    #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
+                ##  #خود تابع بررسی میکند اگر قبلا موجود نباشد، آن را اضافه میکند
+                tl.mails.add(mail)
                 return True
 
             else:
@@ -886,8 +892,8 @@ class AddressBook(models.Model):
         '''
 
         try:
-            if contact_user == self.user:
-                raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
+            #if contact_user == self.user:
+            #    raise ValueError(u"آدرس شما نمیتواند به لیست اضافه شود.")
             if self.has_contact_address(contact_user.username + '@' + MailProvider.get_default_domain()):
                 raise ValueError(u"این آدرس  قبلا به لیست اضافه شده است.")
             else:
@@ -919,11 +925,22 @@ class AddressBook(models.Model):
                 return AddressBook.objects.create(user=user)
             return None
 
+    def remove_contact_address(self, address):
+        contact = Contact.objects.get(address_book=self, email=address)
+        if contact:
+            contact.delete()
+            return True
+        return False
+
+    def remove_contact(self, contact):
+        contact_d = Contact.objects.get(address_book=self, email=contact.email)
+        if contact:
+            contact.delete()
+            return True
+        return False
+
 
 class Contact(models.Model):
-    class Meta:
-        verbose_name = u"اطلاعات تماس‌ها"
-        verbose_name_plural = u"اطلاعات تماس"
 
     address_book = models.ForeignKey(AddressBook)
     display_name = models.CharField(_('display_name'), max_length=30, blank=True, null=True)
@@ -931,6 +948,10 @@ class Contact(models.Model):
     last_name = models.CharField(_('last name'), max_length=30, blank=True, null=True)
     email = models.CharField(_('e-mail address'), max_length=30)
     additional_email = models.EmailField(_('e-mail address'), blank=True, null=True)
+
+    class Meta:
+        verbose_name = u"اطلاعات تماس‌ها"
+        verbose_name_plural = u"اطلاعات تماس"
 
     def __unicode__(self):
         return self.display_name
