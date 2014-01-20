@@ -56,6 +56,8 @@
                     {{ thread.get_last_mail.created_at|relative}}
                 </td>
             </tr>
+        {% empty %}
+            <tr><td colspan="5" class="center">نامه‌ای ندارید...</td></tr>
         {% endfor %}
         </tbody>
     </table>

@@ -225,16 +225,16 @@ function cancelAddLabel() {
     var targetElement = document.getElementById('addLabelForm');
     targetElement.style.display = 'none';
 }
+
 function disable_enter(){
     $("form.mail-form").bind("keyup keypress", function(e) {
         if (e.which  == 13) {
-        var $targ = $(e.target);
-
-        if (!$targ.is("textarea") && !$targ.is(":button,:submit")) {
-    return false;
-  }}
-        });
-
+            var $targ = $(e.target);
+            if (!$targ.is("textarea") && !$targ.attr('contenteditable') && !$targ.is(":button,:submit")) {
+                return false;
+            }
+        }
+    });
 }
 
 function setup_mail_form(){

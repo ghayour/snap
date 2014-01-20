@@ -2,38 +2,48 @@
 
 {% load layout i18n%}
 {% load url from future %}
-{% load rich_form_template_tags %}
 {% load crispy_forms_tags %}
-{% load i18n %}
+{% load rich_form_template_tags %}
 
 
-{% block JS %}
+{% block css %}
     {{ block.super }}
-    {{ mailForm.media }}
-    {% load_rich_form_required_statics %}
-    <script type='text/javascript' >
-    $(document).ready(function(){
-        setup_mail_form();
-
-
-    });
-    </script>
+    {% css 'lib/pen/src/pen.css' %}
 {% endblock %}
 
 {% block js %}
     {{ block.super }}
-    <script>
-        // mailSystem.setView('compose');  // not yet!
-    </script>
+    {{ mailForm.media }}
+    {% load_rich_form_required_statics %}
+    {% js 'lib/pen/src/pen.js' %}
+    {% js 'lib/pen/src/markdown.js' %}
+    {% js 'mail/compose.js' %}
+    {% js 'js/dropzone.js' %}
+
 {% endblock %}
 
 {% block content %}
-    <div id="compose-mail">
-        <h2>ارسال پیام به سایر کاربران</h2>
-        {% if send_error %}
+    <style>
+        .pen {
+            background-color: #FFF;
+            margin-right: 80px;
+            padding: 10px;
+            min-height: 175px;
+            width: 60%;
+        }
 
-        <div class="error-bar">{{ send_error }}</div>
+        .pen, .pen * {
+            font-family: BYekan, "B Nazanin", BNazanin, Tahoma, serif;
+            font-size: 16px;
+        }
+    </style>
+
+    <div id="compose-mail">
+       <h2>  ارسال رایانامه  </h2>
+        {% if send_error %}
+            <div class="error-bar">{{ send_error }}</div>
         {% endif %}
+
         <input type="hidden" id="user-id" value="{{ user.id }}">
         <form id="compose-form" class="mail-form" method='POST' enctype="multipart/form-data">
             {% csrf_token %}

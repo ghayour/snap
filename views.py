@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.utils import simplejson
@@ -14,10 +14,10 @@ from django.contrib.auth.models import User
 from arsh.common.http.ajax import ajax_view
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
-from arsh.user_mail.forms import ComposeForm, FwReForm
+from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver
 
 
 def get_default_inbox():
@@ -46,11 +46,27 @@ def see(request, label_slug, thread_slug, archive=None):
         mail_admin.create_arsh_mail_account(request.user)
 
     # label
-    label = get_object_or_404(Label, user=request.user, slug=label_slug) if label_slug else user_manager.get_label(
-        Label.INBOX_LABEL_NAME)
-    if not label:
-        user_manager.setup_mailbox()
-        label = user_manager.get_inbox()
+    label_title = request.GET.get('label_title')
+    if label_title:
+        if label_slug:
+            raise Http404('Either provide label_slug or label_name')
+        # TODO: consider mail account in resolving label title
+        try:
+            label = get_object_or_404(Label, user=request.user, title=label_title)
+        except Http404 as e:
+            # Some std labels may be created on demand, not for all users by default
+            if label_title in Label.STD_LABELS.values():
+                label = Label.create(request.user, label_title)
+            else:
+                raise e
+    else:
+        if label_slug:
+            label = get_object_or_404(Label, user=request.user, slug=label_slug)
+        else:
+            label = user_manager.get_label(Label.INBOX_LABEL_NAME)
+            if not label:
+                user_manager.setup_mailbox()
+                label = user_manager.get_inbox()
 
     # thread
     thread = get_object_or_404(Thread, slug=thread_slug) if thread_slug else None
@@ -66,14 +82,19 @@ def see(request, label_slug, thread_slug, archive=None):
 
 @login_required
 def compose(request):
+    cf = ConfigManager.prepare()
+
     initial_to = request.GET.get('to', '')
     initial_cc = request.GET.get('cc', '')
     initial_bcc = request.GET.get('bcc', '')
-    up = request.user
-    cf = ConfigManager.prepare()
+    label_ids = request.POST.get('labels')
+    if label_ids:
+        label_ids = label_ids.split(',')
+
     compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
+        # TODO: move these to the ComposeForm
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
         initial_bcc = request.POST.get('bcc')
@@ -82,9 +103,8 @@ def compose(request):
         if compose_form.is_valid():
             subject = compose_form.cleaned_data['title']
             content = compose_form.cleaned_data['content']
-            label_ids = request.POST.get('labels').split(',')
             initial_labels = []
-            if label_ids and label_ids[0]:
+            if label_ids:
                 initial_labels = list(Label.objects.filter(id__in=label_ids).values_list('title', flat=True))
             initial_labels.append(Label.SENT_LABEL_NAME)
             recipient_labels = [get_default_inbox()]
@@ -108,12 +128,12 @@ def compose(request):
                 result_error = e.messages[0]
 
     return render_to_response('mail/composeEmail.html', {
-        'user': up,
+        'user': request.user,
         'initial_to': initial_to,
         'initial_cc': initial_cc,
         'initial_bcc': initial_bcc,
         'mailForm': compose_form,
-        'all_labels': Label.get_user_labels(up),
+        'all_labels': Label.get_user_labels(request.user),
         'send_error': result_error
     }, context_instance=RequestContext(request))
 
@@ -161,28 +181,25 @@ def show_thread(request, thread, label=None):
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
-        action = request.GET.get('action')
-        if request.is_ajax() and action=='reply' :
-
-            # pass
-
-            # to = [mail.sender.username] if mail.sender.username != up.username else []
-            # if not exclude_others:
-            #     for mr in MailReceiver.objects.filter(mail=mail):
-            # username = mr.user.username
-            # if not (username in to or username in cc or username in bcc or username in exclude or username == sender.username):
-            #         if mr.type == 'to':
-            #             to.append(username)
-            #         elif mr.type == 'cc':
-            #             cc.append(username)
-            #         elif mr.type == 'bcc':
-            #             bcc.append(username)
-            # for username in include:
-            #     if not username in to:
-            #         to.append(username)
-            fw_re_form = FwReForm(user_id=up.id)
-
         fw_re_form = FwReForm(user_id=up.id)
+        action = request.GET.get('action' , '')
+        if request.is_ajax() and action=='reply' :
+            re_to = re_cc = re_bcc = []
+            re_mail_id = request.GET.get('mail' , '')
+            re_mail = Mail.objects.get(id = re_mail_id)
+            recivers =  MailReceiver.objects.filter(mail=re_mail)
+
+            for mr in MailReceiver.objects.filter(mail=re_mail):
+                username = mr.user.username
+                re_sender = username
+                if mr.type == 'to':
+                    re_to.append(username)
+                elif mr.type == 'cc':
+                    re_cc.append(username)
+                elif mr.type == 'bcc':
+                    re_bcc.append(username)
+            fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
@@ -635,6 +652,7 @@ def contact_list(request):
 
 @login_required
 def addressbook_edit(request):
+
     if request.is_ajax() and request.POST:
         user = request.user
         value = request.POST.get('value')
@@ -654,12 +672,14 @@ def addressbook_edit(request):
             newcontact.additional_email = value
         newcontact.save()
         return HttpResponse(json.dumps(value), content_type='application/json')
+    return HttpResponseNotAllowed(['post'])
 
 
 @login_required
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
+    contact_form = ContactForm();
     if request.is_ajax() and request.method == 'POST' :
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()

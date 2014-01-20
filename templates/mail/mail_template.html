@@ -22,9 +22,20 @@
     {% js 'mail/client.js' %}
     {% js 'mail/contact.js' %}
     {% js 'mail/label.js' %}
+    {% js 'mail/bootbox.js' %}
+    {% js 'mail/pace_loading/pace.js' %}
 
     <script type="text/javascript">
         mailSystem.state.onlyShowNewMail = {% if archive %}false{% else %}true{% endif %};
+    </script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+            var checkboxlist = $('input:checkbox');
+            $(checkboxlist).change(function () {
+                $(checkboxlist).filter(':checked').parent().parent().addClass('subselected');
+                $('input:checkbox:not(:checked)').parent().parent().filter(".subselected").removeClass('subselected')
+            })
+    })
     </script>
 {% endblock %}
 
@@ -38,6 +49,7 @@
     {% css 'mail/loader/loader.css' %}
 
     {% css 'rich_form_css_custom' %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}mail/pace_loading/pace-theme-flash.css" type="text/css">
 
 {% endblock %}
 
@@ -50,7 +62,7 @@
     <div class="box-menu active">
         <div class="box-menu-head">
             <span class="box-menu-icon icon-folder"></span>
-            <span class="box-menu-title">کارتابل</span>
+            <a href="{% url 'mail/home' %}?label_title=%D8%AF%D8%B1%D8%AE%D9%88%D8%A7%D8%B3%D8%AA%20%D9%87%D8%A7"><span class="box-menu-title">کارتابل</span></a>
             {#<span class="box-menu-expand"></span>#}
         </div>
         <div class="box-menu-body"></div>
@@ -58,7 +70,7 @@
     <div class="box-menu active">
         <div class="box-menu-head">
             <span class="box-menu-icon icon-folder"></span>
-            <span class="box-menu-title">درخواست‌ها</span>
+            <a href="{% url 'mail/home' %}?label_title=%DA%A9%D8%A7%D8%B1%D9%87%D8%A7"><span class="box-menu-title">کارها</span></a>
             {#<span class="box-menu-expand"></span>#}
         </div>
         <div class="box-menu-body"></div>
@@ -68,7 +80,7 @@
         {% csrf_token %}
         <input id="mail-search-input" type="text" value="{{ search_exp }}" name="keywords" placeholder="جستجو" style="width: 130px; float: right"/>
     </form>
-    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').show();"></div>
+    <div id="search_help_icon" title="راهنما" onclick="$('#search_help').toggle();"></div>
     <br>
     <div id="search_help">
     <label>راهنمای جستجو</label>
@@ -88,6 +100,7 @@
 {% endblock %}
 
 {% block CONTENT %}
+
     <div id="action-bar">
         {{ env.header }}
         {# toolbar will be added here by mailToolbar object #}

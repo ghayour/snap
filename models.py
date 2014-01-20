@@ -226,7 +226,7 @@ class Mail(models.Model):
         recipients_users = []
         for t, rl in recipients.items():
             if rl and isinstance(rl[0], basestring) and ',' in rl[0]:
-                print 'RL must be a array!!!', rl
+                #print 'RL must be a array!!!', rl
                 rl = ','.join(rl).split(',')
             for r in rl:
                 rc = Mail.get_valid_receiver(r)
@@ -280,6 +280,7 @@ class Mail(models.Model):
 
         logger.debug('mail sent to %d/%d of recipients' % (sent_count, recipients_count))
         return mail
+
 
     @staticmethod
     def reply(content, sender, receivers=None, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
@@ -459,7 +460,7 @@ class Label(Slugged):
                       TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
 
     account = models.ForeignKey(MailAccount, related_name='labels')
-    user = models.ForeignKey(User, related_name='labels')
+    user = models.ForeignKey(User, related_name='labels')  # delete with data migration
     title = models.CharField(max_length=50)
 
     def __unicode__(self):
@@ -471,14 +472,26 @@ class Label(Slugged):
                 return k
         return ''
 
+    def is_initial_label(self):
+        return self.get_std_name() != ''
+
+    # @property
+    # def user(self):
+    #     return self.account.user
+
+    def delete_this(self):
+        if self.is_initial_label():
+            raise ValueError
+        self.delete()
+
     @staticmethod
-    def create(user, title):
-        try:
-            account = user.mail_accounts.all()[0]
-            #TODO: which account should be selected?
-        except IndexError:
-            account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
-                                                 email=user.username + '@' + MailProvider.get_default_domain())
+    def create(user, title, account=None):
+        if account is None:
+            try:
+                account = user.mail_accounts.all()[0]
+            except IndexError:
+                account = MailAccount.objects.create(user=user, provider=MailProvider.get_default_provider(),
+                                                     email=user.username + '@' + MailProvider.get_default_domain())
         return Label.objects.create(title=title, user=user, account=account)
 
     def get_unread_count(self):
@@ -826,11 +839,11 @@ class AddressBook(models.Model):
     user = models.OneToOneField(User)
 
     def get_all_contacts(self):
-        u'''
+        u"""
 
         :rtype: List
         :return: لیستی از نام های قابل نمایش مخاطبین بر می گرداند.
-        '''
+        """
 
         return Contact.objects.filter(address_book=self)
 

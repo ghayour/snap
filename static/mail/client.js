@@ -29,7 +29,24 @@ $(function() {
 
 /* Toolbar Creation */
 $(function(){
+    $('.mailAction').hide();
+    var checklist = $('input[type=checkbox]');
+    checklist.change(function(){
+       if (checklist.filter(':checked').length != 0 ){
+           $('.mailAction').show();
+           $('.mailAction.mark-read').hide();
+           $('.mailAction.mark-unread').hide();
+           var row = $('input[type=checkbox]:checked').parent().parent();
+           if(row.hasClass('read'))
+                {$('.mailAction.mark-unread').show();}
+            if(row.hasClass('unread'))
+                {$('.mailAction.mark-read').show();}
+            }
+       else{$('.mailAction').hide();}
+    });
+
     mailToolbar = new arsh.ui.Toolbar({'div': '#action-bar'});
+
     mailToolbar.addButton({
         icon: '',
         title: 'بازگشت',
@@ -45,33 +62,44 @@ $(function(){
             window.location = url;
         }
     });
+
     mailToolbar.addButton({
         icon: 'archive',
         title: 'بایگانی',
+        class : 'mailAction',
         action: function() {
             mailSystem.setArchiveMode();
         }
     });
+
     mailToolbar.addButton({
         icon: 'spam',
         title: 'هرزنامه',
+        class : 'mailAction',
         action: function() {
             mailSystem.markAsSpam();
         }
     });
+
     mailToolbar.addButton({
         icon: 'trash',
         title: 'حذف',
+        class : 'mailAction',
         action: function() {
-            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
-            if(doIt){
+//            var doIt=confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟');
+            bootbox.confirm('آیا مطمئنید که می‌خواهید این ایمیل را حذف کنید؟',function(result){
+               if(result){
                 mailSystem.moveToTrash();
-            }
+                }
+            })
+
         }
     });
-    mailToolbar.addButton({
+
+        mailToolbar.addButton({
         icon: '',
-        title: 'علامت گذاری به عنوان خوانده شده',
+        title: 'خوانده شده',
+        class : 'mailAction mark-read',
         show: 'mailSystem.state.viewing == "threads"',
         action: function() {
             var item_list = [];
@@ -100,22 +128,61 @@ $(function(){
                 });
         }
     });
+
+
+    mailToolbar.addButton({
+        icon: '',
+        title: 'خوانده نشده',
+        class : 'mailAction mark-unread',
+        show: 'mailSystem.state.viewing == "threads"',
+        action: function() {
+            var item_list = [];
+            $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
+                item_list.push($(this).attr('value'));
+            });
+            $.post(arsh.dj.resolver.url('mail/mark_thread'),
+                {item_id: item_list, action: 'unread'},
+                function (data) {
+                    var data1 = JSON.parse(data);
+                    if (data1["response_text"] == 'success') {
+                        alert('عملیات با موفقیت انجام شد.');
+                        if (mailSystem.state.onlyShowNewMail){
+                            $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
+                                $(this).closest("tr").remove();
+                            });
+                        }
+                        ajaxLoader.show();
+                        window.location.reload();
+                        //تغییر با توجه به اینکه در حالت آرشیو هست یا خیر
+                        // تغییر نحوه نمایش بر اساس تفاوت خوانده شده ها با نخوانده ها
+                    }
+                    else {
+                        alert(data1["response_text"]);
+                    }
+                });
+        }
+    });
+
     mailToolbar.addButton({
         icon: 'folder',
         title: 'پوشه بندی',
+        class : 'mailAction',
         popover: {
             title: 'انتقال به پوشه',
             content: '<input id="move_thread" data-type="thread" type="text" class="label-input">'
         }
     });
+
     mailToolbar.addButton({
         icon: 'tag',
         title: 'برچسب گذاری',
+        class : 'mailAction',
         popover: {
             title: 'برچسب گذاری',
             content: '<input id="apply-label" item_id=-1 type="text" class="label-input">'
         }
    });
+
     mailToolbar.addButton({
         icon: '',
         title: 'باز کردن همه',
@@ -131,6 +198,7 @@ $(function(){
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            set_reply_form ();
             update_message_type("reply");
             forward_reply_handler("reply");
         }
@@ -154,7 +222,15 @@ $(function(){
     });
     mailToolbar.addButton({
         icon: '',
-        title: 'اطلاعات تماس',
+        title: 'تنظیمات',
+        align: 'left',
+        action : function(){
+            window.location = arsh.dj.resolver.url('mail/manage_label');
+        }
+    });
+    mailToolbar.addButton({
+        icon: '',
+        title: 'مخاطبین',
         align: 'left',
         action : function(){
             window.location = arsh.dj.resolver.url('view/address_book');
@@ -249,18 +325,33 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(false, true);
         $("#id_title").val(get_re_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_re_content(cur_mail));
-        var url = $(location).attr('pathname');
-        var mail = cur_mail.data("db");
-         $.ajax({
-            url : url,
-            type : 'POST',
-            data : {
-                mail  : mail ,
-                action : action_type
-            }
-        });
+//        var url = $(location).attr('pathname');
+//        var mail = cur_mail.data("db");
+//         $.ajax({
+//            url : url,
+//            type : 'POST',
+//            data : {
+//                mail  : mail ,
+//                action : action_type
+//            }
+//        });
     }
     //TODO: move fw-re form according to selected mail
 //    var FW_RE = $("#bottom-div");
 //    content_place.append(FW_RE);
+}
+
+function set_reply_form(){
+    var selected_mail = $('.mail-checkbox:checked').val();
+    var url = $(location).attr('pathname');
+
+      $.ajax({
+            url : url,
+            type : 'GET',
+            data : {
+                mail  : selected_mail ,
+                action : 'reply'
+            }
+        });
+
 }
