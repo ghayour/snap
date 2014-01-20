@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import logging
+import re
 
 from model_utils import Choices
 from django.contrib.auth.models import User
@@ -11,8 +12,8 @@ from django.utils.translation import ugettext_lazy as _
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
+from arsh.storage.models import StoredFileModel
 
-__docformat__ = 'reStructuredText'
 
 logger = logging.getLogger()
 
@@ -106,6 +107,7 @@ class Mail(models.Model):
     content = models.TextField(verbose_name=u'متن نامه')
     created_at = models.DateTimeField(auto_now_add=True)
     thread = models.ForeignKey('Thread', related_name='mails')
+    attachments = models.ManyToManyField(StoredFileModel, blank=True)
 
     def __unicode__(self):
         return self.title
@@ -129,6 +131,9 @@ class Mail(models.Model):
 
     def set_thread(self, thread):
         self.thread = thread
+
+    def has_attachment(self):
+        return self.attachment_set.count() > 0
 
     @staticmethod
     def get_valid_receiver(val):
@@ -252,11 +257,11 @@ class Mail(models.Model):
                                    sender=sender)
         if attachments:
             for attached_file in attachments:
-                mail.attachment_set.create(attachment=attached_file)
+                mail.attachment_set.create(filename=attached_file)
 
-        if thread.firstMail is None:
+        if thread.firstMail is None:  # this must not be first_mail, for perforamce reasons
             logger.debug('setting first thread mail')
-            thread.firstMail = mail
+            thread.first_mail = mail
             thread.save()
 
         logger.debug('mail saved')
@@ -385,9 +390,9 @@ def get_file_path(instance, filename):
     return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
 
 
-class Attachment(models.Model):
-    mail = models.ForeignKey(Mail)
-    attachment = models.FileField(upload_to=get_file_path, verbose_name=u'فایل ضمیمه', null=True, blank=True)
+class TemporaryAttachments(models.Model):
+    filename = models.CharField(max_length=50)
+    mail_uid = models.CharField(max_length=50)
 
 
 #TODO: implement this in show_thread, etc.
@@ -615,8 +620,30 @@ class Thread(Slugged):
     def __unicode__(self):
         return self.title
 
+    @property
+    def first_mail(self):
+        """
+            :rtype: Mail
+        """
+        if self.firstMail is None:
+            self.fix_first_mail()
+        return self.firstMail
+
+    @first_mail.setter
+    def first_mail(self, mail):
+        self.firstMail = mail
+
     def save(self, *args, **kwargs):
         super(Thread, self).save(*args, **kwargs)
+
+    def fix_first_mail(self):
+        u""" فیلد اولین میل این ترد را ست می کند.
+            از آنجایی که این فیلد، یک فیلد محاسبه شده است، این تابع می تواند مقادیر آن را اصلاح کند
+            این تابع پس از تنظیم، شی را ذخیره نیز می کند
+        """
+        self.firstMail = self.mails.all().order_by('created_at')[0]
+        if self.firstMail:
+            self.save()
 
     def add_label(self, label):
         if not self.has_label(label):
@@ -696,8 +723,8 @@ class Thread(Slugged):
             for r in mail.recipients.all():
                 if r.id not in related_users:
                     related_users += [r.id]
-        if self.firstMail.sender_id not in related_users:
-            related_users += [self.firstMail.sender_id]
+        if self.first_mail.sender_id not in related_users:
+            related_users += [self.first_mail.sender_id]
         return user.id in related_users
 
     def get_user_mails(self, user):
@@ -751,9 +778,8 @@ class Thread(Slugged):
                                       create_new_labels=True)
 
     def get_deadline(self):
-        import re
         #TODO:check this search
-        mail=self.firstMail
+        mail = self.first_mail
         sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
                         mail.content)
         if sub:

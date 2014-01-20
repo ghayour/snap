@@ -5,6 +5,8 @@ from .services import mailbox_info
 
 urlpatterns = patterns('arsh.user_mail.views',
     url(r'^compose$', 'compose', name='mail/compose'),
+    url(r'^attach$', 'attach', name='mail/attach'),
+    url(r'^attachments/(?P<attachment_slug>[a-zA-Z0-9_=-]+)$', 'attachments', name='mail/attachments'),
     url(r'^search/$', 'search', name='mail/search'),
     url(r'^view/$', 'see', {'label_slug': None, 'thread_slug': None}, name='mail/home'),
     url(r'^view/archive/$', 'see', {'label_slug': None, 'thread_slug': None, 'archive': True},
