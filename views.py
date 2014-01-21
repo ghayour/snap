@@ -182,26 +182,28 @@ def show_thread(request, thread, label=None):
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
         fw_re_form = FwReForm(user_id=up.id)
-        action = request.GET.get('action' , '')
-        if request.is_ajax() and action=='reply' :
-            re_to = re_cc = re_bcc = []
-            re_mail_id = request.GET.get('mail' , '')
-            re_mail = Mail.objects.get(id = re_mail_id)
-            recivers =  MailReceiver.objects.filter(mail=re_mail)
-
-            for mr in MailReceiver.objects.filter(mail=re_mail):
-                username = mr.user.username
-                re_sender = username
-                if mr.type == 'to':
-                    re_to.append(username)
-                elif mr.type == 'cc':
-                    re_cc.append(username)
-                elif mr.type == 'bcc':
-                    re_bcc.append(username)
-            fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+    #     fw_re_form = FwReForm(user_id=up.id)
+    #     action = request.GET.get('action' , '')
+    #     if request.is_ajax() and action=='reply' :
+    #         re_to = re_cc = re_bcc = []
+    #         re_mail_id = request.GET.get('mail' , '')
+    #         re_mail = Mail.objects.get(id = re_mail_id)
+    #         recivers =  MailReceiver.objects.filter(mail=re_mail)
+    #
+    #         for mr in MailReceiver.objects.filter(mail=re_mail):
+    #             username = mr.user.username
+    #             re_sender = username
+    #             if mr.type == 'to':
+    #                 re_to.append(username)
+    #             elif mr.type == 'cc':
+    #                 re_cc.append(username)
+    #             elif mr.type == 'bcc':
+    #                 re_bcc.append(username)
+    #         fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
 
 
     labels = thread.get_user_labels(up)
+
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     all_mails = thread.get_user_mails(up)
 
@@ -250,7 +252,11 @@ def show_label(request, label, archive_mode):
 
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
-
+    for t in threads :
+        mails_list = t.get_user_mails(user)
+        for m in mails_list :
+            if m.has_label :
+                print m.title
     return render_to_response('mail/label.html',
                               {'threads': threads, 'label': label, 'label_title': label.title, 'user': request.user,
                                'env': env,
