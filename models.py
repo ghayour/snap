@@ -389,11 +389,6 @@ class Mail(models.Model):
         return qs
 
 
-def get_file_path(instance, filename):
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
-
-
 class TemporaryAttachments(models.Model):
     filename = models.CharField(max_length=50)
     mail_uid = models.CharField(max_length=50)

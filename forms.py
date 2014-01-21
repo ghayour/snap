@@ -101,17 +101,17 @@ class ContactForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
-        self.field['display_name'].widget.attrs['class'] = 'myeditable'
-        self.field['display_name'].widget.attrs['data-url'] = '/edit/addressbook'
+        self.fields['display_name'].widget.attrs['class'] = 'myeditable'
+        self.fields['display_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-        self.field['first_name'].widget.attrs['class'] = 'myeditable'
-        self.field['first_name'].widget.attrs['data-url'] = '/edit/addressbook'
+        self.fields['first_name'].widget.attrs['class'] = 'myeditable'
+        self.fields['first_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-        self.field['last_name'].widget.attrs['class'] = 'myeditable'
-        self.field['last_name'].widget.attrs['data-url'] = '/edit/addressbook'
+        self.fields['last_name'].widget.attrs['class'] = 'myeditable'
+        self.fields['last_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-        self.field['email'].widget.attrs['class'] = 'myeditable'
-        self.field['email'].widget.attrs['data-url'] = '/edit/addressbook'
+        self.fields['email'].widget.attrs['class'] = 'myeditable'
+        self.fields['email'].widget.attrs['data-url'] = '/edit/addressbook'
 
-        self.field['email_additional'].widget.attrs['class'] = 'myeditable'
-        self.field['email_additional'].widget.attrs['data-url'] = '/edit/addressbook'
+        self.fields['additional_email'].widget.attrs['class'] = 'myeditable'
+        self.fields['additional_email'].widget.attrs['data-url'] = '/edit/addressbook'

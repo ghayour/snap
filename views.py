@@ -720,7 +720,7 @@ def addressbook_edit(request):
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
-    contact_form = ContactForm();
+    contact_form = ContactForm()
     if request.is_ajax() and request.method == 'POST' :
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
