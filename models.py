@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+from itertools import chain
 import logging
 import re
 
@@ -100,6 +101,8 @@ class DatabaseMailAccount(MailAccount):
 
 
 class Mail(models.Model):
+    ATTACHMENTS_STORE_NAMESPACE = 'attachments'
+
     sender = models.ForeignKey(User, related_name='sender', verbose_name=u'فرستنده')
     #TODO: ask: what if  reciever is out of this system!
     recipients = models.ManyToManyField(User, through='MailReceiver')
@@ -132,8 +135,17 @@ class Mail(models.Model):
     def set_thread(self, thread):
         self.thread = thread
 
+    def attach_file(self, file):
+        u""" یک فایل را به این میل پیوست می کند
+
+            :type file: StoredFileModel or str
+        """
+        if not isinstance(file, StoredFileModel):
+            file = StoredFileModel.objects.get(disk_filename=file)
+        self.attachments.add(file)
+
     def has_attachment(self):
-        return self.attachment_set.count() > 0
+        return self.attachments.all().count() > 0
 
     @staticmethod
     def get_valid_receiver(val):
@@ -205,25 +217,18 @@ class Mail(models.Model):
     @staticmethod
     def create(content, subject, sender, receivers, cc=None, bcc=None, thread=None, titles=None,
                initial_sender_labels=None, attachments=None):
-        """ یک نامه‌ی جدید می‌سازد و می‌فرستد
+        u""" یک نامه‌ی جدید می‌سازد و می‌فرستد
 
-        :param content: متن نامه
-        :type content: unicode
-        :param subject: عنوان نامه
-        :type subject: unicode
-        :param sender: کاربر فرستنده
-        :type sender: User
-        :param receivers: آدرس دریافت کنندگان اصلی
-        :type receivers: str[]
-        :param cc: آدرس دریافت کنندگان رونوشت
-        :type cc: str[]
-        :param bcc: آدرس دریافت کنندگان مخفی
-        :type bcc: str[]
-        :param thread: نخ مربوطه که این نامه روی آن ارسال می‌شود، اگر از قبل وجود داشته باشد.
-        :type thread: arsh.mail.models.Thread
-        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
-        :type titles: str[]
-        :rtype: arsh.mail.models.mail
+            :param unicode content: متن نامه
+            :param unicode subject: عنوان نامه
+            :param User sender: کاربر فرستنده
+            :param list of str receivers: آدرس دریافت کنندگان اصلی
+            :param list of str cc: آدرس دریافت کنندگان رونوشت
+            :param list of str bcc: آدرس دریافت کنندگان مخفی
+            :param Thread thread: نخ مربوطه که این نامه روی آن ارسال می‌شود، اگر از قبل وجود داشته باشد.
+            :param list of str titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+            :type attachments: list of StoredFileModel or str
+            :rtype: arsh.mail.models.mail
         """
 
         recipients = {'to': receivers or [], 'cc': cc or [], 'bcc': bcc or []}
@@ -257,7 +262,7 @@ class Mail(models.Model):
                                    sender=sender)
         if attachments:
             for attached_file in attachments:
-                mail.attachment_set.create(filename=attached_file)
+                mail.attach_file(attached_file)
 
         if thread.firstMail is None:  # this must not be first_mail, for perforamce reasons
             logger.debug('setting first thread mail')
@@ -342,8 +347,7 @@ class Mail(models.Model):
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
-                if not (
-                                        username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+                if username not in chain(to or [], cc or [], bcc or [], exclude or [], [sender.username]):
                     if mr.type == 'to':
                         to.append(username)
                     elif mr.type == 'cc':
@@ -393,6 +397,16 @@ def get_file_path(instance, filename):
 class TemporaryAttachments(models.Model):
     filename = models.CharField(max_length=50)
     mail_uid = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def get_mail_attachments(cls, mail_uid):
+        u""" تمام پیوست های موقت ذخیره شده برای یک شناسه میل را می دهد
+
+            :param mail_uid: شناسه موقت میل، این با شناسه ثابت میل متقاوت است
+        """
+        attachments = cls.objects.filter(mail_uid=mail_uid)
+        return [StoredFileModel.objects.get(disk_filename=a.filename) for a in attachments]
 
 
 #TODO: implement this in show_thread, etc.

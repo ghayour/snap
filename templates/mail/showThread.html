@@ -195,7 +195,7 @@
 
                     {% if mail.has_attachment %}
                         <h4 style="margin-bottom: 0">فایل های پیوست:</h4>
-                        {% for attached_file in mail.attachment_set.all %}
+                        {% for attached_file in mail.attachments.all %}
                             <div class="mail-attachment">
                                 <a href="{% url 'mail/attachments' attached_file.disk_filename %}" target="_blank">
                                     {{ attached_file.real_filename }}

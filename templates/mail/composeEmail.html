@@ -50,7 +50,7 @@
             <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
             {% crispy mailForm mailForm.helper %}
         </form>
-        <form action="{% url 'mail/attach' %}" class="dropzone" id="my-awesome-dropzone">
+        <form action="{% url 'mail/attach' %}" class="dropzone" id="dropzone">
             {% csrf_token %}
             <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
         </form>

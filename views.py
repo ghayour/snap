@@ -20,7 +20,7 @@ from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, Attachment, TemporaryAttachments
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, TemporaryAttachments
 
 
 def get_default_inbox():
@@ -97,7 +97,7 @@ def compose(request):
     compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
-        mail_uid = request.POST['mail_uid']
+        mail_uid = request.POST.get('mail_uid')
         # TODO: move these to the ComposeForm
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
@@ -117,10 +117,8 @@ def compose(request):
             if Label.TODO_LABEL_NAME in initial_labels:
                 recipient_labels.append(Label.TODO_LABEL_NAME)
 
-            # handling attachments
             # TODO: handle unsupported browsers for file upload
-            attachments = TemporaryAttachments.objects.filter(mail_uid=mail_uid)
-            attachments = [a.filename for a in attachments]
+            attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
 
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
@@ -150,16 +148,18 @@ def compose(request):
 @ajax_view
 @post_only
 def attach(request):
-    mail_uid = request.GET['mail_uid']
-    uploaded_file = FileStore.handle_upload(request.FILES['file'], namespace=Attachment.STORE_NAMESPACE)
-    TemporaryAttachments.objects.create(disk_filename=uploaded_file.name, mail_uid=mail_uid)
+    try:
+        mail_uid = request.POST['mail_uid']
+    except KeyError:
+        raise Http404()
+    uploaded_file = FileStore.handle_upload(request.FILES['file'], namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
+    TemporaryAttachments.objects.create(filename=uploaded_file.name, mail_uid=mail_uid)
     return {}
 
 
 @login_required
 def attachments(request, attachment_slug):
-    attachment = Attachment.objects.get(disk_filename=attachment_slug)
-    return FileStore.serve_file(filename=attachment.disk_filename, namespace=Attachment.STORE_NAMESPACE)
+    return FileStore.serve_file(request=request, filename=attachment_slug, namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
 
 
 def show_thread(request, thread, label=None):
