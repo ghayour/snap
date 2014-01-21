@@ -12,41 +12,33 @@ from arsh.rich_form.validation import ValidationService
 
 
 class ComposeForm(forms.ModelForm):
-    # attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiuploaderField, required=False)
-    attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False )
-    # attachments = MultiuploaderField(label= u"فایل ضمیمه" ,required=False)
-
     labels = forms.CharField(label=u'برچسب های اولیه', required=False)
 
     class Meta:
         model = Mail
-        exclude = ('sender', 'recipients', 'thread')
+        exclude = ('sender', 'recipients', 'thread', 'attachments')
 
     def __init__(self, *args, **kwargs):
         super(ComposeForm, self).__init__(*args, **kwargs)
 
         self.fields['title'].widget.attrs['style'] = 'width:60%'
+
         self.fields['labels'].widget.attrs['class'] = 'initial-labels'
         self.fields['labels'].widget.attrs['style'] = 'min-width:60%'
 
-        #from tinymce.widgets import TinyMCE
-        #self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:60%'})
-
-        self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
+        self.fields['receivers'] = forms.CharField(required=True, label=u"گیرنده")
         self.fields['receivers'].widget.attrs['class'] = 'info'
-        self.fields['receivers'].widget.attrs['type'] = 'hidden'
         self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
-        self.fields['cc'].widget.attrs['class'] = 'info'
+        self.fields['cc'].widget.attrs['class'] = 'info '
         self.fields['cc'].widget.attrs['type'] = 'hidden'
         self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
 
         self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
-        self.fields['bcc'].widget.attrs['class'] = 'info'
+        self.fields['bcc'].widget.attrs['class'] = 'info '
         self.fields['bcc'].widget.attrs['type'] = 'hidden'
         self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
-
 
         self.helper = FormHelper()
         self.helper.form_method = 'post'
@@ -65,7 +57,6 @@ class FwReForm(forms.ModelForm):
     class Meta:
         model = Mail
         exclude = ('thread', 'recipients', 'sender')
-        # exclude = ('thread', 'sender')
 
     def __init__(self, *args, **kwargs):
         from tinymce.widgets import TinyMCE
@@ -92,7 +83,6 @@ class FwReForm(forms.ModelForm):
         self.fields['bcc'].widget.attrs['type'] = 'hidden'
         self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
 
-
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_id = 'fw-re-form'
@@ -104,27 +94,24 @@ class FwReForm(forms.ModelForm):
         v.validationalize_form()
 
 
-
 class ContactForm(forms.ModelForm):
     class Meta:
         model = Contact
-        exclude = ('address_book')
+        exclude = ('address_book',)
 
-        def __init__(self, *args, **kwargs):
-            super(ContactForm, self).__init__(*args, **kwargs)
-            self.field['display_name'].widget.attrs['class']= 'myeditable'
-            self.field['display_name'].widget.attrs['data-url']= '/edit/addressbook'
+    def __init__(self, *args, **kwargs):
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.field['display_name'].widget.attrs['class'] = 'myeditable'
+        self.field['display_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-            self.field['first_name'].widget.attrs['class']= 'myeditable'
-            self.field['first_name'].widget.attrs['data-url']= '/edit/addressbook'
+        self.field['first_name'].widget.attrs['class'] = 'myeditable'
+        self.field['first_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-            self.field['last_name'].widget.attrs['class']= 'myeditable'
-            self.field['last_name'].widget.attrs['data-url']= '/edit/addressbook'
+        self.field['last_name'].widget.attrs['class'] = 'myeditable'
+        self.field['last_name'].widget.attrs['data-url'] = '/edit/addressbook'
 
-            self.field['email'].widget.attrs['class']= 'myeditable'
-            self.field['email'].widget.attrs['data-url']= '/edit/addressbook'
+        self.field['email'].widget.attrs['class'] = 'myeditable'
+        self.field['email'].widget.attrs['data-url'] = '/edit/addressbook'
 
-            self.field['email_additional'].widget.attrs['class']= 'myeditable'
-            self.field['email_additional'].widget.attrs['data-url']= '/edit/addressbook'
-
-
+        self.field['email_additional'].widget.attrs['class'] = 'myeditable'
+        self.field['email_additional'].widget.attrs['data-url'] = '/edit/addressbook'

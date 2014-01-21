@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-__author__ = 'Farzaneh'
 import factory
 import random
 import string
@@ -7,12 +6,12 @@ import string
 from django.contrib.auth.models import User
 
 from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
-from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment, MailReply
+from arsh.user_mail.models import ReadMail, Contact, AddressBook, MailReply
 
 
+#similar in common
 def random_string(length=10):
     return u''.join(random.choice(string.ascii_letters) for x in range(length))
-#similar in common
 
 
 class MailDomainFactory(factory.DjangoModelFactory):
@@ -70,12 +69,6 @@ class MailReplyFactory(factory.DjangoModelFactory):
 
 class AddressBookFactory(factory.DjangoModelFactory):
     FACTORY_FOR = AddressBook
-
-
-class AttachmentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Attachment
-
-    attachment = factory.django.FileField(filename='flower.jpg')
 
 
 class DatabaseMailAccountFactory(factory.DjangoModelFactory):

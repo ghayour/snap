@@ -37,7 +37,7 @@ arsh.ui.Toolbar = arsh.ui.BaseComponent.extend({
         var action = arsh.js.get(opts, 'action');
         var popover = arsh.js.get(opts, 'popover');
         var showCond = arsh.js.get(opts, 'show', 'true');
-
+        var exclass = arsh.js.get(opts , 'class');
         var el = $(_.template('<div class="toolbar-item"><span class="item-icon icon-{{glyph}}"></span><span class="item-title">{{title}}</span></div>')({glyph: icon, title: title}));
         var type = 'button';
         if (action) el.click(action);
@@ -66,8 +66,8 @@ arsh.ui.Toolbar = arsh.ui.BaseComponent.extend({
                 content: arsh.js.get(popover, 'content')
             });
         }
-
-        if (! eval(showCond) ) el.hide();
+        if (exclass){el.addClass(exclass)}
+        if (! eval(showCond) || exclass == 'mailAction' || exclass == 'mailAction mark-read' || exclass == 'mailAction mark-unread' ) el.hide();
         el.appendTo(this.div);
         this._buttons.push({element: el, showCond: showCond, type: type});
     }
