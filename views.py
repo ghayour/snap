@@ -554,9 +554,11 @@ def mails_gc():
 def mark_thread(request, thread_slug, action):
     thread = get_object_or_404(Thread, slug=thread_slug)
     if action == 'read':
-        thread.mark_as_read(request.user)
+        if thread.is_unread(request.user):
+            thread.mark_as_read(request.user)
     elif action == 'unread':
-        thread.mark_as_unread(request.user)
+        if not thread.is_unread(request.user):
+            thread.mark_as_unread(request.user)
 
     if request.is_ajax():
         return HttpResponse('OK')
@@ -578,11 +580,13 @@ def ajax_mark_thread(request):
         if action == 'read':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_read(request.user)
+                if thread.is_unread(request.user):
+                    thread.mark_as_read(request.user)
         elif action == 'unread':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_unread(request.user)
+                if not thread.is_unread(request.user):
+                    thread.mark_as_unread(request.user)
         else:
             response_text = u"عملیات درخواستی امکان پذیر نیست."
 
