@@ -256,10 +256,17 @@ def show_label(request, label, archive_mode):
     user = request.user
 
     tls = Thread.objects.filter(labels=label)
-
-    tls1 = sorted(tls , key= lambda t : t.get_last_modified() , reverse=True)
-
-
+    temp_unread = []
+    temp_read = []
+    for t in tls :
+        if t.is_unread():
+            temp_unread.append(t)
+        else:
+            temp_read.append(t)
+    temp_unread = sorted(temp_unread , key= lambda t : t.get_last_modified() , reverse=True)
+    temp_read = sorted(temp_read , key= lambda t : t.get_last_modified() , reverse=True)
+    tls1 = temp_unread
+    tls1 += temp_read
     threads = tls1 if archive_mode else tls1.filter(labels=UserManager.get(user).get_unread_label())
     #threads = threads[:50]  # TODO: how to view all mails?
     threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
