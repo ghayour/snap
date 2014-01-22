@@ -129,6 +129,7 @@
     <div class="thread" data-user-id="{{ user.id }}">
     <input id="user-id" type="hidden" value="{{ user.id }}">
         {% for mail , lt in mails.items %}
+
             <div id="mail-{{ mail.pk }}" class="mail fa" data-index="{{ forloop.counter0 }}" data-db="{{ mail.pk }}">
                 <div class="mail-header in-line">
                         <input class="mail-checkbox" type="checkbox" value="{{ mail.pk }}">
@@ -173,6 +174,9 @@
 {#                use filters to get mail_label_list#}
 
                             {% for mail_label in lt %}
+                                {% if mail_label.label == label  %}
+                                    <input type="hidden" id="has_label" value="True" >
+                                {% endif %}
                                 <div class="mail-label delete-label">
                                     <span class="mail-label-delete" item_type="mail"
                                           item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>
