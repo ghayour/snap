@@ -211,8 +211,8 @@ def show_thread(request, thread, label=None):
     mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
-        # if tobe_shown[mail] and mail.has_label(label):
-        #     mails_labeled.append(mail)
+        if mail.has_label(label):
+                mails_labeled.append(mail)
     if not tobe_shown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -228,8 +228,10 @@ def show_thread(request, thread, label=None):
             thread.mark_as_read(up)
         except:
             pass
-    # if mails_labeled :
-    #     all_mails = mails_labeled
+
+
+    if mails_labeled :
+        all_mails = mails_labeled
 
     return render_to_response('mail/showThread.html', {
         'user': request.user,
