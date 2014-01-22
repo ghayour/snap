@@ -208,9 +208,11 @@ def show_thread(request, thread, label=None):
     all_mails = thread.get_user_mails(up)
 
     tobe_shown = {}
-
+    mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
+        # if tobe_shown[mail] and mail.has_label(label):
+        #     mails_labeled.append(mail)
     if not tobe_shown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -226,6 +228,8 @@ def show_thread(request, thread, label=None):
             thread.mark_as_read(up)
         except:
             pass
+    # if mails_labeled :
+    #     all_mails = mails_labeled
 
     return render_to_response('mail/showThread.html', {
         'user': request.user,
@@ -245,18 +249,18 @@ def show_thread(request, thread, label=None):
 def show_label(request, label, archive_mode):
     user = request.user
 
-    tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
-    threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
+    tls = Thread.objects.filter(labels=label)
+
+    tls1 = sorted(tls , key= lambda t : t.get_last_modified() , reverse=True)
+
+
+    threads = tls1 if archive_mode else tls1.filter(labels=UserManager.get(user).get_unread_label())
     #threads = threads[:50]  # TODO: how to view all mails?
     threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
 
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
-    for t in threads :
-        mails_list = t.get_user_mails(user)
-        for m in mails_list :
-            if m.has_label :
-                print m.title
+
     return render_to_response('mail/label.html',
                               {'threads': threads, 'label': label, 'label_title': label.title, 'user': request.user,
                                'env': env,

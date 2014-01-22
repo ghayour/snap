@@ -667,7 +667,12 @@ class Thread(Slugged):
             :return: آخرین میل این نخ
             :rtype: Mail
         """
+
         return self.mails.order_by('-created_at')[0:1].get()
+
+    def get_last_modified(self):
+        last_mail = self.get_last_mail()
+        return last_mail.created_at
 
     def get_sorted_mails(self):
         """نامه های این نخ را بر می گرداند.
