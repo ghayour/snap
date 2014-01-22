@@ -211,6 +211,10 @@ def show_thread(request, thread, label=None):
     mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
+        if tobe_shown[mail]:
+            for t in tobe_shown[mail]:
+                l = t.label
+                labels = labels.exclude(title = l.title)
         if mail.has_label(label):
                 mails_labeled.append(mail)
     if not tobe_shown:
