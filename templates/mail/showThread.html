@@ -43,7 +43,7 @@
             show_hide_info_fields();
             manage_read_mails();
             manage_mails_display();
-
+            showLabeledMail();
             var last_mail = $("div.mail").last();
             $("#fw-re-form").append('<input id="selected-mail-id" type="hidden" name="mail_id " value="' + last_mail.data("db") + '"></input>');
             $("#fw-re-form").append('<input id="message-type" type="hidden" name="re-fw" value=""></input>');
@@ -174,10 +174,11 @@
 {#                use filters to get mail_label_list#}
 
                             {% for mail_label in lt %}
-                                {% if mail_label.label == label  %}
-                                    <input type="hidden" id="has_label" value="True" >
-                                {% endif %}
+                                {% if mail_label.label.id != label.id  %}
                                 <div class="mail-label delete-label">
+                                {% else %}
+                                <div class="mail-label delete-label main-label">
+                                {% endif %}
                                     <span class="mail-label-delete" item_type="mail"
                                           item_id={{ mail.id }} label_id={{ mail_label.label.id }}>X</span>
                                     <span class="mail-label-title">
