@@ -206,33 +206,41 @@ def show_thread(request, thread, label=None):
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
         fw_re_form = FwReForm(user_id=up.id)
-        action = request.GET.get('action' , '')
-        if request.is_ajax() and action=='reply' :
-            re_to = re_cc = re_bcc = []
-            re_mail_id = request.GET.get('mail' , '')
-            re_mail = Mail.objects.get(id = re_mail_id)
-            recivers =  MailReceiver.objects.filter(mail=re_mail)
-
-            for mr in MailReceiver.objects.filter(mail=re_mail):
-                username = mr.user.username
-                re_sender = username
-                if mr.type == 'to':
-                    re_to.append(username)
-                elif mr.type == 'cc':
-                    re_cc.append(username)
-                elif mr.type == 'bcc':
-                    re_bcc.append(username)
-            fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+    #     fw_re_form = FwReForm(user_id=up.id)
+    #     action = request.GET.get('action' , '')
+    #     if request.is_ajax() and action=='reply' :
+    #         re_to = re_cc = re_bcc = []
+    #         re_mail_id = request.GET.get('mail' , '')
+    #         re_mail = Mail.objects.get(id = re_mail_id)
+    #         recivers =  MailReceiver.objects.filter(mail=re_mail)
+    #
+    #         for mr in MailReceiver.objects.filter(mail=re_mail):
+    #             username = mr.user.username
+    #             re_sender = username
+    #             if mr.type == 'to':
+    #                 re_to.append(username)
+    #             elif mr.type == 'cc':
+    #                 re_cc.append(username)
+    #             elif mr.type == 'bcc':
+    #                 re_bcc.append(username)
+    #         fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
 
 
     labels = thread.get_user_labels(up)
+
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     all_mails = thread.get_user_mails(up)
 
     tobe_shown = {}
-
+    mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
+        if tobe_shown[mail]:
+            for t in tobe_shown[mail]:
+                l = t.label
+                labels = labels.exclude(title = l.title)
+        if mail.has_label(label):
+                mails_labeled.append(mail)
     if not tobe_shown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -248,6 +256,10 @@ def show_thread(request, thread, label=None):
             thread.mark_as_read(up)
         except:
             pass
+
+
+    if mails_labeled :
+        all_mails = mails_labeled
 
     return render_to_response('mail/showThread.html', {
         'user': request.user,
@@ -267,8 +279,19 @@ def show_thread(request, thread, label=None):
 def show_label(request, label, archive_mode):
     user = request.user
 
-    tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
-    threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
+    tls = Thread.objects.filter(labels=label)
+    temp_unread = []
+    temp_read = []
+    for t in tls :
+        if t.is_unread():
+            temp_unread.append(t)
+        else:
+            temp_read.append(t)
+    temp_unread = sorted(temp_unread , key= lambda t : t.get_last_modified() , reverse=True)
+    temp_read = sorted(temp_read , key= lambda t : t.get_last_modified() , reverse=True)
+    tls1 = temp_unread
+    tls1 += temp_read
+    threads = tls1 if archive_mode else tls1.filter(labels=UserManager.get(user).get_unread_label())
     #threads = threads[:50]  # TODO: how to view all mails?
     threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
 
@@ -578,9 +601,11 @@ def mails_gc():
 def mark_thread(request, thread_slug, action):
     thread = get_object_or_404(Thread, slug=thread_slug)
     if action == 'read':
-        thread.mark_as_read(request.user)
+        if thread.is_unread(request.user):
+            thread.mark_as_read(request.user)
     elif action == 'unread':
-        thread.mark_as_unread(request.user)
+        if not thread.is_unread(request.user):
+            thread.mark_as_unread(request.user)
 
     if request.is_ajax():
         return HttpResponse('OK')
@@ -602,11 +627,13 @@ def ajax_mark_thread(request):
         if action == 'read':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_read(request.user)
+                if thread.is_unread(request.user):
+                    thread.mark_as_read(request.user)
         elif action == 'unread':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_unread(request.user)
+                if not thread.is_unread(request.user):
+                    thread.mark_as_unread(request.user)
         else:
             response_text = u"عملیات درخواستی امکان پذیر نیست."
 

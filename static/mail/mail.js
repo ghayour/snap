@@ -94,6 +94,17 @@ function manage_mails_display() {
     });
 }
 
+function showLabeledMail(){
+    var labeled_mail = $('.main-label');
+    if (labeled_mail.length != 0 ){
+//        showAllMails();
+        $('.mail-header').parent().addClass('hide-element');
+        $("#other-mails").hide();
+        $('.other-mails').find()
+        labeled_mail.parent().parent().removeClass('other-mails');
+        labeled_mail.parent().parent().removeClass('hide-element');
+    }
+}
 function showAllMails() {
     $(".other-mails").removeClass("other-mails");
     $("#other-mails").hide();

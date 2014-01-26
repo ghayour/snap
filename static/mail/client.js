@@ -193,6 +193,22 @@ $(function(){
             expand_close_mails($(this));
         }
     });
+
+    mailToolbar.addButton({
+        icon: '',
+        title: 'نمایش همه ی میل ها ',
+        show: 'mailSystem.state.viewing == "mails"',
+        action: function() {
+            //change_button_name($(this));
+//            $('.main-label').removeClass('main-label');
+            $(".other-mails").removeClass("other-mails");
+            $('.mail-header').parent().removeClass('hide-element');
+
+
+            expand_close_mails($(this));
+        }
+    });
+
     mailToolbar.addButton({
         icon: '',
         title: 'پاسخ',
