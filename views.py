@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+import collections
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -231,7 +232,7 @@ def show_thread(request, thread, label=None):
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     all_mails = thread.get_user_mails(up)
 
-    tobe_shown = {}
+    tobe_shown = collections.OrderedDict()
     mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
