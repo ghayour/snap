@@ -232,6 +232,8 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(true, false);
         $("#id_title").val(get_fw_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_fw_content(cur_mail));
+//        $("#id_attachments_wrap_list").add()
+
 
     }
     else{

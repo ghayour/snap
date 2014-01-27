@@ -36,12 +36,12 @@ def setup(request):
 
 @login_required
 def see(request, label_slug, thread_slug, archive=None):
-    user_manager = UserManager.get(request.user)
+    user_manager = UserManager.get(request.user) #Q
     config_manager = ConfigManager.prepare()
     mail_admin = MailAdmin.prepare()
 
     # MailAccount
-    if not mail_admin.user_has_mail_account(request.user):
+    if not mail_admin.user_has_mail_account(request.user): #Q
         # creating a arshmail account for this new user
         mail_admin.create_arsh_mail_account(request.user)
 
@@ -63,10 +63,10 @@ def see(request, label_slug, thread_slug, archive=None):
         if label_slug:
             label = get_object_or_404(Label, user=request.user, slug=label_slug)
         else:
-            label = user_manager.get_label(Label.INBOX_LABEL_NAME)
+            label = user_manager.get_label(Label.INBOX_LABEL_NAME) #Q
             if not label:
                 user_manager.setup_mailbox()
-                label = user_manager.get_inbox()
+                label = user_manager.get_inbox() #Q
 
     # thread
     thread = get_object_or_404(Thread, slug=thread_slug) if thread_slug else None

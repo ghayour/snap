@@ -159,7 +159,7 @@ class Mail(models.Model):
             return True
         return False
 
-    @staticmethod
+    #@staticmethod
     def add_receiver(mail, thread, receiver_address, type='to', label_names=None, create_new_labels=True):
         """
         :param mail:
@@ -314,6 +314,7 @@ class Mail(models.Model):
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
 
         to=""
+        #in_reply_to = self
         if not thread and not in_reply_to:
             raise ValueError('No mail specified to reply to it!')
         if not thread:
@@ -361,6 +362,68 @@ class Mail(models.Model):
                             titles=titles, attachments=attachments)
 
         # if is_specific_reply:
+        MailReply.objects.create(first=in_reply_to, reply=reply)
+
+
+    #@staticmethod
+
+
+    def forward(self, content, sender, receivers, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
+              #include=[], exclude=[],
+              titles=None,
+              #exclude_others=False,
+              attachments=None):
+        """
+
+        :param content: متن پاسخ
+        :type content: unicode
+        :param sender: فرستنده‌ی پاسخ
+        :type sender: User
+        :param receivers: آدرس دریافت کنندگان اصلی
+        :type receivers: str[]
+        :param cc: آدرس دریافت کنندگان رونوشت
+        :type cc: str[]
+        :param bcc: آدرس دریافت کنندگان مخفی
+        :type bcc: str[]
+        :param in_reply_to: این نامه پاسخ به کدام نامه است
+        :type in_reply_to: Mail
+        :param subject: عنوان نامه
+        :type subject: unicode
+        :param thread: نخ مربوطه
+        :type thread: Thread
+        :param include: کسانی که به گیرندگان اضافه می شوند
+        :type include: str[]
+        :param exclude: کسانی که از گیرندگان حذف می شوند
+        :type exclude: str[]
+        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+        :type titles: str[]
+        """
+        #TODO: support adding to, cc,responders = None bcc in the middle of a thread
+
+        to = ""
+        in_reply_to = self
+        #if not thread and not in_reply_to:
+        #    raise ValueError('No mail specified to forward!')
+        if not thread:
+            thread = in_reply_to.thread
+        if not in_reply_to:
+            in_reply_to = thread.get_last_mail()
+            #is_specific_reply = False
+        #else:
+            #is_specific_reply = True
+
+        logger.debug('generating forward  mail#%d' % in_reply_to.id)
+        #mail = in_reply_to
+        mail = self
+        re_title = subject if subject else u'FWD: ' + mail.title
+
+        #TODO: attachment strategy should be fixed
+        reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
+                            titles=titles, attachments=self.attachment_set+attachments)
+
+
+        # if is_specific_reply:
+        #TODO: ask what is specific_reply?
         MailReply.objects.create(first=in_reply_to, reply=reply)
 
     def add_label(self, label):
@@ -677,7 +740,11 @@ class Thread(Slugged):
         return self.mails.order_by('-created_at')
 
     def get_unread_mails(self, user):
-        return [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
+        #Query No: 1 for each iteration!
+        #TODO: improve (probably with joining tables)
+        mails = [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
+        #mails =
+        return mails
 
     def is_thread_related(self, user):
         u"""
@@ -709,11 +776,14 @@ class Thread(Slugged):
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
         """
 
-        mail_list = []
-        for mail in self.mails.all():
-            if mail.sender_id == user.id or user in mail.recipients.all():
-                if mail not in mail_list:
-                    mail_list.append(mail)
+        #Query No: 0
+        mail_list = Mail.objects.filter(thread=self, (recipients_contains=user | sender=user)).distinct()
+
+        #mail_list = []
+        #for mail in self.mails.all():
+        #    if mail.sender_id == user.id or user in mail.recipients.all():
+        #        if mail not in mail_list:
+        #            mail_list.append(mail)
         return mail_list
 
     def get_participants(self, related_user=None):
@@ -723,17 +793,47 @@ class Thread(Slugged):
             thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
 
         sender_ids = thread_mails.values_list('sender', flat=True).distinct()
+        #senders = User.objects.filter(id__in=sender_ids)
+
+        recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
+        participant_ids= sender_ids + recipient_ids
+
+        #recipients = User.objects.filter(id__in=recipient_ids)
+        participants = User.objects.filter(id__in=participant_ids)
+
+        return {'participants': participants}
+
+    def get_senders(self, related_user=None):
+        thread_mails = self.mails.all()
+
+        if related_user:
+            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+
+        sender_ids = thread_mails.values_list('sender', flat=True).distinct()
         senders = User.objects.filter(id__in=sender_ids)
+
+
+        return {'senders': senders}
+
+    def get_receivers(self, related_user=None):
+        thread_mails = self.mails.all()
+
+        if related_user:
+            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+
 
         recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
         recipients = User.objects.filter(id__in=recipient_ids)
 
-        return {'senders': senders, 'recipients': recipients}
+        return {'recipients': recipients}
+
+
 
     def complete_todo(self):
         ls = self.get_participants()
-        p_all = ls['senders'] | ls['recipients']
-        for p in p_all:
+        #p_all = ls['senders'] | ls['recipients']
+        #for p in p_all:
+        for p in ls:
             self.add_label(Label.get_label_for_user(Label.COMPLETED_LABEL_NAME, p, create_new=True))
 
     def set_new_request(self, new_recipients):
@@ -993,6 +1093,7 @@ class ReadMail(models.Model):
 
     @staticmethod
     def has_read(user, mail):
+        #Query No:1
         try:
             ReadMail.objects.get(mail=mail, reader=user)
         except ReadMail.DoesNotExist:

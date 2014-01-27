@@ -260,6 +260,7 @@ div.inactive_mail {
 {
     width: 200px;
 }
+
 .r-label > input[type=radio]{
     display:none;
 }
