@@ -160,11 +160,10 @@
                         <span class="mail-subject"> {{ mail.title }}</span>
                         <span class="mail-summery hide-element"
                               id="mail-summery-{{ forloop.counter0 }}"> - {{ mail.get_summary|striptags }}</span>
-                        {% if mail.attachment_set.all %}
+                        {% if mail.has_attachment %}
                             <span class="mail-attach">
-                        <img class="attach-icon" src="{{ STATIC_URL }}mail/images/attachment.png"
-                             alt="{% trans "attachment" %}" title="{% trans "attachment" %}">
-                    </span>
+                                <img class="attach-icon" src="{{ STATIC_URL }}mail/images/attachment.png" alt="{% trans "attachment" %}" title="{% trans "attachment" %}">
+                            </span>
                         {% endif %}
                         <span class="mail-date">{{ mail.created_at|shamsi }}
 {#                                |relative}} #}
@@ -194,12 +193,12 @@
                         {{ mail.content|safe }}
                     </div>
 
-                    {% if mail.attachment_set.all %}
+                    {% if mail.has_attachment %}
                         <h4 style="margin-bottom: 0">فایل های پیوست:</h4>
-                        {% for attached_file in mail.attachment_set.all %}
+                        {% for attached_file in mail.attachments.all %}
                             <div class="mail-attachment">
-                                <a href="{{ attached_file.attachment.url }}" target="_blank">
-                                    {{ attached_file.attachment|filename }}
+                                <a href="{% url 'mail/attachments' attached_file.disk_filename %}" target="_blank">
+                                    {{ attached_file.real_filename }}
                                 </a>
                             </div>
                         {% endfor %}

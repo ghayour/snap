@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import base64
 import json
+import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -11,13 +13,14 @@ from django.template.context import RequestContext
 from django.utils import simplejson
 from django.contrib.auth.models import User
 
-from arsh.common.http.ajax import ajax_view
+from arsh.common.http.ajax import ajax_view, post_only
+from arsh.storage.file_store import FileStore
 from arsh.user_mail.UserManager import UserManager
 from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, TemporaryAttachments
 
 
 def get_default_inbox():
@@ -94,6 +97,7 @@ def compose(request):
     compose_form = ComposeForm()
     result_error = None
     if request.method == "POST":
+        mail_uid = request.POST.get('mail_uid')
         # TODO: move these to the ComposeForm
         receivers = request.POST.get('receivers')
         initial_cc = request.POST.get('cc')
@@ -113,7 +117,8 @@ def compose(request):
             if Label.TODO_LABEL_NAME in initial_labels:
                 recipient_labels.append(Label.TODO_LABEL_NAME)
 
-            attachments = request.FILES.getlist('attachments[]')
+            # TODO: handle unsupported browsers for file upload
+            attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
 
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
@@ -134,8 +139,27 @@ def compose(request):
         'initial_bcc': initial_bcc,
         'mailForm': compose_form,
         'all_labels': Label.get_user_labels(request.user),
-        'send_error': result_error
+        'send_error': result_error,
+        'mail_uid': base64.urlsafe_b64encode(os.urandom(20)),
     }, context_instance=RequestContext(request))
+
+
+@login_required
+@ajax_view
+@post_only
+def attach(request):
+    try:
+        mail_uid = request.POST['mail_uid']
+    except KeyError:
+        raise Http404()
+    uploaded_file = FileStore.handle_upload(request.FILES['file'], namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
+    TemporaryAttachments.objects.create(filename=uploaded_file.name, mail_uid=mail_uid)
+    return {}
+
+
+@login_required
+def attachments(request, attachment_slug):
+    return FileStore.serve_file(request=request, filename=attachment_slug, namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
 
 
 def show_thread(request, thread, label=None):

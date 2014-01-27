@@ -325,8 +325,13 @@ a.aui-btn.btn-narrow-reload:hover {
 
 .threads-table tr.unread {
     background: #f0f0f0;
+    font-weight: bold;
 }
 
+.threads-table tr.subselected {
+    background: #b9daeb;
+    color: #ffffff;
+}
 .threads-table td {
     border-bottom: 1px solid #DBDBDB;
     color: #4f4f4f;

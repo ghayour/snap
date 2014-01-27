@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime
+from itertools import chain
 import logging
+import re
 
 from model_utils import Choices
 from django.contrib.auth.models import User
@@ -11,8 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
+from arsh.storage.models import StoredFileModel
 
-__docformat__ = 'reStructuredText'
 
 logger = logging.getLogger()
 
@@ -99,6 +101,8 @@ class DatabaseMailAccount(MailAccount):
 
 
 class Mail(models.Model):
+    ATTACHMENTS_STORE_NAMESPACE = 'attachments'
+
     sender = models.ForeignKey(User, related_name='sender', verbose_name=u'فرستنده')
     #TODO: ask: what if  reciever is out of this system!
     recipients = models.ManyToManyField(User, through='MailReceiver')
@@ -106,6 +110,7 @@ class Mail(models.Model):
     content = models.TextField(verbose_name=u'متن نامه')
     created_at = models.DateTimeField(auto_now_add=True)
     thread = models.ForeignKey('Thread', related_name='mails')
+    attachments = models.ManyToManyField(StoredFileModel, blank=True)
 
     def __unicode__(self):
         return self.title
@@ -129,6 +134,18 @@ class Mail(models.Model):
 
     def set_thread(self, thread):
         self.thread = thread
+
+    def attach_file(self, file):
+        u""" یک فایل را به این میل پیوست می کند
+
+            :type file: StoredFileModel or str
+        """
+        if not isinstance(file, StoredFileModel):
+            file = StoredFileModel.objects.get(disk_filename=file)
+        self.attachments.add(file)
+
+    def has_attachment(self):
+        return self.attachments.all().count() > 0
 
     @staticmethod
     def get_valid_receiver(val):
@@ -200,25 +217,18 @@ class Mail(models.Model):
     @staticmethod
     def create(content, subject, sender, receivers, cc=None, bcc=None, thread=None, titles=None,
                initial_sender_labels=None, attachments=None):
-        """ یک نامه‌ی جدید می‌سازد و می‌فرستد
+        u""" یک نامه‌ی جدید می‌سازد و می‌فرستد
 
-        :param content: متن نامه
-        :type content: unicode
-        :param subject: عنوان نامه
-        :type subject: unicode
-        :param sender: کاربر فرستنده
-        :type sender: User
-        :param receivers: آدرس دریافت کنندگان اصلی
-        :type receivers: str[]
-        :param cc: آدرس دریافت کنندگان رونوشت
-        :type cc: str[]
-        :param bcc: آدرس دریافت کنندگان مخفی
-        :type bcc: str[]
-        :param thread: نخ مربوطه که این نامه روی آن ارسال می‌شود، اگر از قبل وجود داشته باشد.
-        :type thread: arsh.mail.models.Thread
-        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
-        :type titles: str[]
-        :rtype: arsh.mail.models.mail
+            :param unicode content: متن نامه
+            :param unicode subject: عنوان نامه
+            :param User sender: کاربر فرستنده
+            :param list of str receivers: آدرس دریافت کنندگان اصلی
+            :param list of str cc: آدرس دریافت کنندگان رونوشت
+            :param list of str bcc: آدرس دریافت کنندگان مخفی
+            :param Thread thread: نخ مربوطه که این نامه روی آن ارسال می‌شود، اگر از قبل وجود داشته باشد.
+            :param list of str titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+            :type attachments: list of StoredFileModel or str
+            :rtype: arsh.mail.models.mail
         """
 
         recipients = {'to': receivers or [], 'cc': cc or [], 'bcc': bcc or []}
@@ -252,11 +262,11 @@ class Mail(models.Model):
                                    sender=sender)
         if attachments:
             for attached_file in attachments:
-                mail.attachment_set.create(attachment=attached_file)
+                mail.attach_file(attached_file)
 
-        if thread.firstMail is None:
+        if thread.firstMail is None:  # this must not be first_mail, for perforamce reasons
             logger.debug('setting first thread mail')
-            thread.firstMail = mail
+            thread.first_mail = mail
             thread.save()
 
         logger.debug('mail saved')
@@ -338,8 +348,7 @@ class Mail(models.Model):
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
-                if not (
-                                        username in to or username in cc or username in bcc or username in exclude or username == sender.username):
+                if username not in chain(to or [], cc or [], bcc or [], exclude or [], [sender.username]):
                     if mr.type == 'to':
                         to.append(username)
                     elif mr.type == 'cc':
@@ -448,9 +457,19 @@ def get_file_path(instance, filename):
     return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
 
 
-class Attachment(models.Model):
-    mail = models.ForeignKey(Mail)
-    attachment = models.FileField(upload_to=get_file_path, verbose_name=u'فایل ضمیمه', null=True, blank=True)
+class TemporaryAttachments(models.Model):
+    filename = models.CharField(max_length=50)
+    mail_uid = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def get_mail_attachments(cls, mail_uid):
+        u""" تمام پیوست های موقت ذخیره شده برای یک شناسه میل را می دهد
+
+            :param mail_uid: شناسه موقت میل، این با شناسه ثابت میل متقاوت است
+        """
+        attachments = cls.objects.filter(mail_uid=mail_uid)
+        return [StoredFileModel.objects.get(disk_filename=a.filename) for a in attachments]
 
 
 #TODO: implement this in show_thread, etc.
@@ -678,8 +697,30 @@ class Thread(Slugged):
     def __unicode__(self):
         return self.title
 
+    @property
+    def first_mail(self):
+        """
+            :rtype: Mail
+        """
+        if self.firstMail is None:
+            self.fix_first_mail()
+        return self.firstMail
+
+    @first_mail.setter
+    def first_mail(self, mail):
+        self.firstMail = mail
+
     def save(self, *args, **kwargs):
         super(Thread, self).save(*args, **kwargs)
+
+    def fix_first_mail(self):
+        u""" فیلد اولین میل این ترد را ست می کند.
+            از آنجایی که این فیلد، یک فیلد محاسبه شده است، این تابع می تواند مقادیر آن را اصلاح کند
+            این تابع پس از تنظیم، شی را ذخیره نیز می کند
+        """
+        self.firstMail = self.mails.all().order_by('created_at')[0]
+        if self.firstMail:
+            self.save()
 
     def add_label(self, label):
         if not self.has_label(label):
@@ -859,9 +900,8 @@ class Thread(Slugged):
                                       create_new_labels=True)
 
     def get_deadline(self):
-        import re
         #TODO:check this search
-        mail=self.firstMail
+        mail = self.first_mail
         sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
                         mail.content)
         if sub:

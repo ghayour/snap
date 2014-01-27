@@ -9,6 +9,7 @@
 {% block css %}
     {{ block.super }}
     {% css 'lib/pen/src/pen.css' %}
+    {% css 'bower_components/dropzone/downloads/css/dropzone.css' %}
 {% endblock %}
 
 {% block js %}
@@ -18,7 +19,7 @@
     {% js 'lib/pen/src/pen.js' %}
     {% js 'lib/pen/src/markdown.js' %}
     {% js 'mail/compose.js' %}
-    {% js 'js/dropzone.js' %}
+    {% js 'bower_components/dropzone/downloads/dropzone.min.js' %}
 {% endblock %}
 
 {% block content %}
@@ -38,7 +39,7 @@
     </style>
 
     <div id="compose-mail">
-        <h2>ارسال پیام به سایر کاربران</h2>
+       <h2>  ارسال رایانامه  </h2>
         {% if send_error %}
             <div class="error-bar">{{ send_error }}</div>
         {% endif %}
@@ -46,7 +47,13 @@
         <input type="hidden" id="user-id" value="{{ user.id }}">
         <form id="compose-form" class="mail-form" method='POST' enctype="multipart/form-data">
             {% csrf_token %}
+            <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
             {% crispy mailForm mailForm.helper %}
         </form>
+        <form action="{% url 'mail/attach' %}" class="dropzone" id="dropzone">
+            {% csrf_token %}
+            <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
+        </form>
+
     </div>
 {% endblock %}

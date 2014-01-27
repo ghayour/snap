@@ -346,7 +346,14 @@ input.label-input {
 #compose-mail label{
     width: 80px;
 }
-
+ #compose-mail h2{
+     font-family:  'B Yekan', "B Traffic", "B Mitra bold", 'B Nazanin', Tahoma, serif;
+     font-size: 13px;
+     font-weight: bold;
+     direction: rtl;
+    text-align: right;
+    padding: 5px ;
+ }
 .error-bar{
     background: none repeat scroll 0 0 #FFEDF0;
     border: 1px solid #B5142F;

@@ -9,11 +9,11 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 
 from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
-from arsh.user_mail.models import ReadMail, Contact, AddressBook, Attachment, MailReply
+from arsh.user_mail.models import ReadMail, Contact, AddressBook, MailReply
 
 from factories import UserFactory, MailProviderFactory, MailDomainFactory, MailFactory, ThreadFactory
 from factories import LabelFactory, MailFactory, ContactFactory, AddressBookFactory, DatabaseMailAccountFactory
-from factories import DatabaseMailAccountFactory, AttachmentFactory
+from factories import DatabaseMailAccountFactory
 
 
 fixtures = ['test_admin_users']
@@ -50,8 +50,8 @@ class TestModelFunc(TestCase):
         print label1
         print label2
         #Check INBOX and SENT labels
-        self.assertNotEqual(list(label1), list([]))
-        self.assertNotEqual(list(label2), list([]))
+        self.assertNotEqual(list(label1), [])
+        self.assertNotEqual(list(label2), [])
         self.assertTrue(mail.has_label(LabelFactory.create(user=user1, title=Label.SENT_LABEL_NAME)))
         self.assertTrue(mail.has_label(LabelFactory.create(user=user2, title=Label.INBOX_LABEL_NAME)))
         self.assertIsNotNone(thread.labels)
@@ -102,8 +102,8 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
         self.assertIsNotNone(thread.labels)
-        self.assertNotEqual(list(label1), list([]))
-        self.assertNotEqual(list(label2), list([]))
+        self.assertNotEqual(list(label1), [])
+        self.assertNotEqual(list(label2), [])
         self.assertTrue(mail.has_label(LabelFactory.create(user=user1, title=Label.SENT_LABEL_NAME)))
         self.assertTrue(mail.has_label(LabelFactory.create(user=user2, title=Label.INBOX_LABEL_NAME)))
         self.assertIsNotNone(thread.labels)
@@ -137,8 +137,8 @@ class TestModelFunc(TestCase):
         self.assertIsNotNone(mail.title)
         self.assertIsNotNone(mail.created_at)
         self.assertIsNotNone(thread.labels)
-        self.assertNotEqual(list(label1), list([]))
-        self.assertNotEqual(list(label2), list([]))
+        self.assertNotEqual(list(label1), [])
+        self.assertNotEqual(list(label2), [])
         #TODO: 5: ask how to check labels are added correct
         self.assertTrue(mail.has_label(user2_label))
         self.assertTrue(mail.has_label(user1_label))
@@ -194,10 +194,8 @@ class TestModelFunc(TestCase):
         #user2_account=DatabaseMailAccountFactory.create(user=user2, provider=mail_provider, email=user2.email)
 
         mail = MailFactory.create(content=u'This is send mail test', sender=user1)
-        #, subject=u'Test subject', receivers=None)
-        # Testing functions:
-        AttachmentFactory.create(mail=mail)
 
+        # Testing functions:
         mail.add_receiver(mail, mail.thread, user2.email)
         mail.get_recipients()
         mail.get_summary()
@@ -219,11 +217,11 @@ class TestModelFunc(TestCase):
 
         label1 = Label.get_user_labels(user1)
         label2 = Label.get_user_labels(user2)
-        self.assertIsNotNone(mail.attachment_set)
+        self.assertFalse(mail.has_attachment())
         self.assertIsNotNone(label1)
         self.assertIsNotNone(label2)
-        self.assertNotEqual(list(label1), list([]))
-        self.assertNotEqual(list(label2), list([]))
+        self.assertNotEqual(list(label1), [])
+        self.assertNotEqual(list(label2), [])
         print "test attach"
         i = 1
         for a in label1:
@@ -264,7 +262,7 @@ class TestModelFunc(TestCase):
         self.assertIsNone(AddressBook.get_addressbook_for_user(user1))
         address_book1 = AddressBook.get_addressbook_for_user(user1, create_new=True)
         self.assertIsNotNone(AddressBook.get_addressbook_for_user(user1))
-        self.assertEqual(list(address_book1.get_all_contacts()), list([]))
+        self.assertEqual(list(address_book1.get_all_contacts()), [])
         #TODO: comment: the logic is how that the email should be exactly username@default_domain or we would get error
         #TODO: comment: so it seems we should not allow setting email address separately or fix the logic
 
@@ -354,11 +352,12 @@ class AppTest(TestCase):
         self.assertTemplateUsed(response, 'mail/composeEmail.html')
         self.assertEqual(Mail.objects.all().exists(), False)
         self.client.post('/compose', data={
+            'mail_uid': 'test_mail_uid_1',
             'receivers': 'test_admin_user@arshmail.ir',
             'cc': '',
             'bcc': '',
             'title': 'test_title',
-            'content': '<p>test_contents</p>'
+            'content': '<p>test_contents</p>',
         })
         self.assertEqual(Mail.objects.all().exists(), True)
         self.assertEqual(Thread.objects.all().exists(), True)
