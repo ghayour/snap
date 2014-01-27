@@ -162,7 +162,7 @@ def attach(request):
 def attachments(request, attachment_slug):
     return FileStore.serve_file(request=request, filename=attachment_slug, namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
 
-
+@ajax_view
 def show_thread(request, thread, label=None):
     """
     :type thread: Thread
@@ -206,25 +206,35 @@ def show_thread(request, thread, label=None):
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
-        fw_re_form = FwReForm(user_id=up.id)
     #     fw_re_form = FwReForm(user_id=up.id)
-    #     action = request.GET.get('action' , '')
-    #     if request.is_ajax() and action=='reply' :
-    #         re_to = re_cc = re_bcc = []
-    #         re_mail_id = request.GET.get('mail' , '')
-    #         re_mail = Mail.objects.get(id = re_mail_id)
-    #         recivers =  MailReceiver.objects.filter(mail=re_mail)
-    #
-    #         for mr in MailReceiver.objects.filter(mail=re_mail):
-    #             username = mr.user.username
-    #             re_sender = username
-    #             if mr.type == 'to':
-    #                 re_to.append(username)
-    #             elif mr.type == 'cc':
-    #                 re_cc.append(username)
-    #             elif mr.type == 'bcc':
-    #                 re_bcc.append(username)
-    #         fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+        action = request.GET.get('action' , '')
+        if request.is_ajax() and action=='reply' :
+            # pass
+            re_to = []
+            re_cc =[]
+            re_bcc = []
+            re_mail_id = request.GET.get('mail' , '')
+            re_mail = Mail.objects.get(id = re_mail_id)
+            # recivers =  MailReceiver.objects.filter(mail=re_mail)
+            #
+            re_to = [re_mail.sender.username] if re_mail.sender.username != up.username else []
+                
+            for mr in MailReceiver.objects.filter(mail=re_mail):
+                username = mr.user.username
+                if mr.type == 'to' and username != up.username:
+                    re_cc.append(username)
+                elif mr.type == 'cc':
+                    re_cc.append(username)
+
+
+            data = {'to':re_to ,'cc': re_cc }
+            return data
+
+        else:
+            fw_re_form = FwReForm(user_id=up.id)
+            # fw_re_form = FwReForm({'user_id':up.id})
+
+
 
 
     labels = thread.get_user_labels(up)

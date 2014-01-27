@@ -367,7 +367,37 @@ function set_reply_form(){
             data : {
                 mail  : selected_mail ,
                 action : 'reply'
-            }
+            },
+          success:function(data){
+              if (data.to){
+                var re_to = $('#id_receivers');
+                set_initial_value(data.to , re_to );
+//                $("#id_receivers").closest('tr').show();
+
+              }
+              if (data.cc){
+                 var re_cc = $('#id_cc');
+                 set_initial_value(data.cc , re_cc );
+//                 $("#id_cc").closest('tr').show()
+              }
+
+
+          }
+
         });
+
+}
+
+function set_initial_value( data , elem ){
+                var list=  []
+                  data_length = data.length
+                  for(var i =0 ; i<data_length ; i++){
+                      var x = {'id': i , 'text':data[i]+'@arshmail.ir'};
+                      list[i]= x
+                  }
+                 elem.select2(
+                    "data",list
+                 );
+                elem.closest('tr').show();
 
 }
