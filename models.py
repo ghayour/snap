@@ -757,15 +757,23 @@ class Thread(Slugged):
         :rtype: int or None
         :return:اگر کاربر در لیست افراد مرتبط با ترد وجود داشت آی دی آن را بر میگرداند.
         """
-        #Query No: 0
-        related_users = []
-        for mail in self.mails.all():
-            for r in mail.recipients.all():
-                if r.id not in related_users:
-                    related_users += [r.id]
-        if self.firstMail.sender_id not in related_users:
-            related_users += [self.firstMail.sender_id]
-        return user.id in related_users
+
+        #Done: improve
+        #TODO:Test
+        mail_list = Mail.objects.filter(thread=self, (recipients_contains=user | sender=user)).distinct()
+        if mail_list:
+            return user.id
+        else:
+            return None
+
+        #related_users = []
+        #for mail in self.mails.all():
+        #    for r in mail.recipients.all():
+        #        if r.id not in related_users:
+        #            related_users += [r.id]
+        #if self.firstMail.sender_id not in related_users:
+        #    related_users += [self.firstMail.sender_id]
+        #return user.id in related_users
 
     def get_user_mails(self, user):
         """
@@ -776,7 +784,7 @@ class Thread(Slugged):
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
         """
 
-        #Query No: 0
+        #TODO: Test
         mail_list = Mail.objects.filter(thread=self, (recipients_contains=user | sender=user)).distinct()
 
         #mail_list = []
