@@ -782,11 +782,12 @@ class Thread(Slugged):
         return self.mails.order_by('-created_at')
 
     def get_unread_mails(self, user):
-        #Query No: 1 for each iteration!
-        #TODO: improve (probably with joining tables)
-        mails = [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
-        #mails =
-        return mails
+        #Done: improve
+        #TODO: Test
+        read_mails = ReadMail.objects.filter(user=user).mail
+        unread_mails = self.get_user_mails(user).exclude(id__in=read_mails)
+        #unread_mails = [mail for mail in user_mails if not ReadMail.has_read(user, mail)]
+        return unread_mails
 
     def is_thread_related(self, user):
         u"""
@@ -802,9 +803,9 @@ class Thread(Slugged):
 
         #Done: improve
         #TODO:Test
-        mail_list = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).distinct()
+        #mail_list = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).distinct()
 
-        if mail_list:
+        if Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists():
             return user.id
         else:
             return None
@@ -828,7 +829,7 @@ class Thread(Slugged):
         """
 
         #TODO: Test
-        mail_list = Mail.objects.filter(Q(thread=self, recipients__id_exact=user) |Q(thread=self, sender=user ))# | sender=user)).distinct()
+        mails = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) |Q(thread=self, sender=user ))# | sender=user)).distinct()
         #mail_list2 = Mail.objects.filter(thread=self, sender=user )
 
         #mail_list = []
@@ -836,7 +837,7 @@ class Thread(Slugged):
         #    if mail.sender_id == user.id or user in mail.recipients.all():
         #        if mail not in mail_list:
         #            mail_list.append(mail)
-        return mail_list
+        return mails
 
     def get_participants(self, related_user=None):
         thread_mails = self.mails.all()
@@ -845,12 +846,10 @@ class Thread(Slugged):
             thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
 
         sender_ids = thread_mails.values_list('sender', flat=True).distinct()
-        #senders = User.objects.filter(id__in=sender_ids)
 
         recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
         participant_ids= sender_ids + recipient_ids
 
-        #recipients = User.objects.filter(id__in=recipient_ids)
         participants = User.objects.filter(id__in=participant_ids)
 
         return {'participants': participants}
