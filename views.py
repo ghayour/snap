@@ -227,14 +227,14 @@ def show_thread(request, thread, label=None):
             if action=='reply-all':
                 if sender != up.username :
                     re_to = [re_mail.sender.username]
-                    for mr in recivers :
+                    for mr in receivers :
                         username = mr.user.username
                         if (mr.type == 'to' and username != up.username) or mr.type == 'cc' :
                             re_cc.append(username)
 
 
                 else:
-                    for mr in recivers :
+                    for mr in receivers :
                         username = mr.user.username
                         if mr.type == 'to':
                             re_to.append(username)
@@ -248,7 +248,7 @@ def show_thread(request, thread, label=None):
                 if sender != up.username:
                     re_to = [re_mail.sender.username]
                 else :
-                    for mr in recivers :
+                    for mr in receivers :
                         username = mr.user.username
                         if mr.type == 'to':
                             re_to.append(username)
