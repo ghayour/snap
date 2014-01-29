@@ -214,6 +214,7 @@ $(function(){
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            clean_form();
             set_reply_form ("reply");
             update_message_type("reply");
             forward_reply_handler("reply");
@@ -224,6 +225,7 @@ $(function(){
         title: '  پاسخ به همه ' ,
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            clean_form();
             set_reply_form ("reply-all");
             update_message_type("reply-all");
             forward_reply_handler("reply-all");
@@ -234,6 +236,7 @@ $(function(){
         title: 'باز ارسال',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            clean_form();
             update_message_type("forward");
             forward_reply_handler("forward");
         }
@@ -300,6 +303,7 @@ function update_message_type(message_type){
 }
 
 function forward_reply_handler(action_type){
+
     var content_place;
     var checked_item;
     var thread_id = $('#thread-id').val();
@@ -329,10 +333,29 @@ function forward_reply_handler(action_type){
 
     }
     else{
+        var to = "افزودن پاسخ به"
+        var cc  = ' افزودن رونوشت '
+        var bcc = "افزودن رونوشت مخفی"
+
+        if ($('#id_receivers').closest('tr').is(':visible')){
+            to = 'حذف پاسخ به'
+        }
+        if ($('#id_cc').closest('tr').is(':visible')){
+            to = 'حذف رونوشت'
+        }
+        if ($('#id_bcc').closest('tr').is(':visible')){
+            to = 'حذف رونوشت مخفی'
+        }
         var link_row='<tr><td class="formlinks">'+
-                '<a id="replyto-link">افزودن پاسخ-به</a><span class="separator">|</span>'+
-                '<a id="cc-link" >افزودن رونوشت</a>'+
-                '<span class="separator">|</span>'+'<a id="bcc-link">افزودن رونوشت مخفی</a>'+
+                '<a id="replyto-link">'+
+                to +
+                '</a><span class="separator">|</span>'+
+                '<a id="cc-link" >'+
+                 cc +
+                '</a>'+
+                '<span class="separator">|</span>'+'<a id="bcc-link">'+
+                 bcc +
+                '</a>'+
                 '</td></tr>';
         $("tr").filter(function(){
            if($(this).find("#div_id_bcc").length>=1 && ($(this).parent().find(".formlinks").length==0))
@@ -374,6 +397,7 @@ function forward_reply_handler(action_type){
 function set_reply_form(action_type){
     var selected_mail = $('.mail-checkbox:checked').val();
     var url = $(location).attr('pathname');
+//    $('.select2-choices').empty();
 
       $.ajax({
             url : url,
@@ -412,4 +436,13 @@ function set_initial_value( data , elem ){
                  );
                 elem.closest('tr').show();
 
+}
+
+function clean_form(){
+    $('#id_receivers').select2("val", "");
+    $('#id_cc').select2("val", "");
+    $('#id_bcc').select2("val", "");
+    $('#id_receivers').closest('tr').hide();
+    $('#id_cc').closest('tr').hide();
+    $('#id_bcc').closest('tr').hide();
 }
