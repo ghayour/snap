@@ -789,6 +789,14 @@ class Thread(Slugged):
         #unread_mails = [mail for mail in user_mails if not ReadMail.has_read(user, mail)]
         return unread_mails
 
+    @staticmethod
+    def related_threads(user):
+        #Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists()
+        #TODO: Test
+        mails = Mail.objects.filter(Q(recipients__id__exact=user.id) | Q(sender=user)).select_related()
+        threads = Thread.objects.filter(mails__in=mails).distinct()#I'm not sure!
+        return threads
+
     def is_thread_related(self, user):
         u"""
         یک کاربر به عنوان ورودی میگیرد و بررسی میکند آیا این
@@ -828,6 +836,7 @@ class Thread(Slugged):
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
         """
 
+        #Done: improve
         #TODO: Test
         mails = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) |Q(thread=self, sender=user ))# | sender=user)).distinct()
         #mail_list2 = Mail.objects.filter(thread=self, sender=user )
@@ -840,10 +849,12 @@ class Thread(Slugged):
         return mails
 
     def get_participants(self, related_user=None):
+        #Done:improve
+        #TODO: Test
         thread_mails = self.mails.all()
 
         if related_user:
-            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
 
         sender_ids = thread_mails.values_list('sender', flat=True).distinct()
 
@@ -855,30 +866,30 @@ class Thread(Slugged):
         return {'participants': participants}
 
     def get_senders(self, related_user=None):
+        #Done:improve
+        #TODO:Test
         thread_mails = self.mails.all()
 
         if related_user:
-            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
 
         sender_ids = thread_mails.values_list('sender', flat=True).distinct()
         senders = User.objects.filter(id__in=sender_ids)
 
-
         return {'senders': senders}
 
     def get_receivers(self, related_user=None):
+        #Done: improve
+        #TODO: Test
         thread_mails = self.mails.all()
 
         if related_user:
-            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
-
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
 
         recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
         recipients = User.objects.filter(id__in=recipient_ids)
 
         return {'recipients': recipients}
-
-
 
     def complete_todo(self):
         ls = self.get_participants()

@@ -211,9 +211,9 @@ def show_thread(request, thread, label=None):
             re_to = re_cc = re_bcc = []
             re_mail_id = request.GET.get('mail' , '')
             re_mail = Mail.objects.get(id = re_mail_id)
-            recivers =  MailReceiver.objects.filter(mail=re_mail)
+            recivers = MailReceiver.objects.filter(mail=re_mail)
 
-            for mr in MailReceiver.objects.filter(mail=re_mail):
+            for mr in recivers:
                 username = mr.user.username
                 re_sender = username
                 if mr.type == 'to':
@@ -267,10 +267,22 @@ def show_thread(request, thread, label=None):
 def show_label(request, label, archive_mode):
     user = request.user
 
-    tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
-    threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
+    #TODO: Test
+    related_threads = Thread.related_threads(user)
+    if archive_mode:
+        threads = related_threads.filter(labels=label).order_by('-pk').select_related()
+    else:
+        threads = related_threads.filter(Q(labels=label) & Q(labels=UserManager.get(user).get_unread_label())).order_by('-pk').select_related()
+
+    #TODO:improve here (too much query)
+    #tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
+    #threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
+
+    #threads = threads.related_threads(user)
+    #threads = [t for t in threads if t.is_thread_related(user)]
+    #Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists():
     #threads = threads[:50]  # TODO: how to view all mails?
-    threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
+
 
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
