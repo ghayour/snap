@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
@@ -801,7 +802,8 @@ class Thread(Slugged):
 
         #Done: improve
         #TODO:Test
-        mail_list = Mail.objects.filter(thread=self, (recipients_contains=user | sender=user)).distinct()
+        mail_list = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).distinct()
+
         if mail_list:
             return user.id
         else:
@@ -826,7 +828,8 @@ class Thread(Slugged):
         """
 
         #TODO: Test
-        mail_list = Mail.objects.filter(thread=self, (recipients_contains=user | sender=user)).distinct()
+        mail_list = Mail.objects.filter(Q(thread=self, recipients__id_exact=user) |Q(thread=self, sender=user ))# | sender=user)).distinct()
+        #mail_list2 = Mail.objects.filter(thread=self, sender=user )
 
         #mail_list = []
         #for mail in self.mails.all():
