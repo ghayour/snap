@@ -10,6 +10,7 @@
     {{ block.super }}
     {% css 'lib/pen/src/pen.css' %}
     {% css 'bower_components/dropzone/downloads/css/dropzone.css' %}
+    {% css 'mail/css/compose.css' %}
 {% endblock %}
 
 {% block js %}
@@ -23,23 +24,8 @@
 {% endblock %}
 
 {% block content %}
-    <style>
-        .pen {
-            background-color: #FFF;
-            margin-right: 80px;
-            padding: 10px;
-            min-height: 175px;
-            width: 60%;
-        }
-
-        .pen, .pen * {
-            font-family: BYekan, "B Nazanin", BNazanin, Tahoma, serif;
-            font-size: 16px;
-        }
-    </style>
-
     <div id="compose-mail">
-       <h2>  ارسال رایانامه  </h2>
+       <h2>ارسال رایانامه  </h2>
         {% if send_error %}
             <div class="error-bar">{{ send_error }}</div>
         {% endif %}
@@ -50,7 +36,7 @@
             <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
             {% crispy mailForm mailForm.helper %}
         </form>
-        <form action="{% url 'mail/attach' %}" class="dropzone" id="dropzone">
+        <form action="{% url 'mail/attach' %}" class="dropzone" id="uploader">
             {% csrf_token %}
             <input type="hidden" name="mail_uid" value="{{ mail_uid }}" />
         </form>

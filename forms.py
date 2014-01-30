@@ -52,7 +52,7 @@ class ComposeForm(forms.ModelForm):
         self.helper.form_id = 'compose-form'
         self.helper.form_class = 'form margin-30'
         self.helper.layout = LayoutUtils(has_submit=True, has_reset=False,
-                                         fields_order=['title', 'receivers', 'cc', 'bcc', 'labels', 'content',
+                                         fields_order=['receivers', 'title', 'cc', 'bcc', 'labels', 'content',
                                                        'attachments']).generate_table_layout(self, 1)
         v = ValidationService(self, "#%s" % self.helper.form_id)
         v.validationalize_form()
