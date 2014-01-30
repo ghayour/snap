@@ -6,6 +6,12 @@ var mailSystem = new arsh.mail.Client();
 
 /* General JS code */
 $(function() {
+    // For passing data from Django to JS
+    var current_label_element = $("#current_label");
+    mailSystem.currentLabel.id = current_label_element.val();
+    mailSystem.currentLabel.slug = current_label_element.attr('data-slug');
+    mailSystem.currentLabel.title = current_label_element.attr('data-title');
+
     $('#refresh-button').click(function() {
         window.location.reload();
     });
@@ -68,7 +74,7 @@ $(function(){
         title: 'بایگانی',
         class : 'mailAction',
         action: function() {
-            mailSystem.setArchiveMode();
+            mailSystem.archive();
         }
     });
 

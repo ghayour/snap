@@ -106,7 +106,7 @@
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="current_label" value="{{ label.id }}" data-slug="{{ label.slug }}">
+    <input type="hidden" id="current_label" value="{{ label.id }}" data-slug="{{ label.slug }}" data-title="{{ label.title }}">
     <div id='header' class="fa">
         <span class="thread-title">{{ thread.title }}</span>
         <input type="hidden" id="thread-id" value="{{ thread.id }}">

@@ -558,6 +558,13 @@ class Label(Slugged):
     def is_initial_label(self):
         return self.get_std_name() != ''
 
+    @classmethod
+    def get_display_name(cls, std_name):
+        try:
+            return cls.STD_LABELS[std_name]
+        except KeyError:
+            return None
+
     # @property
     # def user(self):
     #     return self.account.user
@@ -670,15 +677,6 @@ class Label(Slugged):
         if isinstance(user, User):
             user = user.id
         return Label.objects.filter(user__id=user).exclude(title=Label.UNREAD_LABEL_NAME)
-
-    @classmethod
-    def parse_label_title(cls, title):
-        if title == 'trash':
-            return cls.TRASH_LABEL_NAME
-        elif title == 'spam':
-            return cls.SPAM_LABEL_NAME
-            #TODO: complete this
-        return None
 
 
 class Thread(Slugged):

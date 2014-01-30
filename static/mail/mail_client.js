@@ -11,6 +11,7 @@ arsh.mail.Client = Class.extend({
             viewing: ''
         };
         this.objectHandler = null;
+        this.currentLabel = {id: null, slug: null, name: null};
     },
 
     setView: function(view) {
@@ -19,10 +20,10 @@ arsh.mail.Client = Class.extend({
             throw new arsh.e.ValueError();
         this.state.viewing = view;
         if (view == 'threads') {
-            this.objectHandler = new arsh.mail.ThreadHandler();
+            this.objectHandler = new arsh.mail.ThreadHandler({parent: this});
         }
         if (view == 'mails') {
-            this.objectHandler = new arsh.mail.MailHandler();
+            this.objectHandler = new arsh.mail.MailHandler({parent: this});
         }
     },
 
@@ -52,12 +53,17 @@ arsh.mail.Client = Class.extend({
     },
     markAsSpam: function(){
         this.objectHandler.markAsSpam();
+    },
+    archive: function() {
+        this.objectHandler.archive();
+        // TODO: also mark as read?
     }
 });
 
 arsh.mail.ObjectHandler = Class.extend({
-    init: function() {
+    init: function(opts) {
         this.selection = [];
+        this.parent = arsh.js.get(opts, 'parent');
     },
 
     _updateSelection: function(type) {
@@ -95,23 +101,30 @@ arsh.mail.ThreadHandler = arsh.mail.ObjectHandler.extend({
     moveToLabel: function (label, label_id, label_name, current_label) {
         this._updateSelection('thread');
         var self = this;
+        if (typeof current_label == 'undefined')
+            current_label = this.parent.currentLabel.id;
         if (label == label_name){
             label = '';
         }
-        $.post(arsh.dj.resolver.url('mail/move_thread'),
-            {item_id: self.selection, label : label, current_label:current_label,
-                label_id: label_id, label_name: label_name},
-                function (data) {
-                    if (data["response_text"] == 'success') {
-                        alert('عملیات با موفقیت انجام شد.');
-                        $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
-                            $(this).closest("tr").remove();
-                        });
-                    }
-                    else {
-                        alert(data["response_text"]);
-                    }
-                });
+        $.post(arsh.dj.resolver.url('mail/move_thread'), {
+                item_id: self.selection,
+                label : label,
+                current_label: current_label,
+                label_id: label_id,
+                label_name: label_name
+            },
+            function (data) {
+                if (data["response_text"] == 'success') {
+                    alert('عملیات با موفقیت انجام شد.');
+                    $('input:checkbox[class="thread-checkbox"]:checked').each(function () {
+                        $(this).closest("tr").remove();
+                    });
+                }
+                else {
+                    alert(data["response_text"]);
+                }
+            }
+        );
     },
 
     markAsSpam: function() {
@@ -120,6 +133,10 @@ arsh.mail.ThreadHandler = arsh.mail.ObjectHandler.extend({
 
     moveToTrash: function() {
         this.moveToLabel('trash');
+    },
+
+    archive: function() {
+        this.moveToLabel('archive');
     }
 });
 

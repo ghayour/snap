@@ -523,8 +523,13 @@ def move_thread(request):
     thread_list = []
     label_name = request.POST.get('label')
     if label_name:
-        real_title = Label.parse_label_title(label_name)
-        label = UserManager.get(request.user).get_label(real_title)
+        # only for std labels label_name can be used
+        real_title = Label.get_display_name(label_name)
+        if real_title is None:
+            label = None
+        else:
+            # as said its a std label, so its safe to have create=True here
+            label = UserManager.get(request.user).get_label(real_title, create=True)
     else:
         try:
             label_id = int(request.POST['label_id'])
