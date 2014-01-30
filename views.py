@@ -180,10 +180,15 @@ def show_thread(request, thread, label=None):
         referrer = reverse('mail/home')
 
     if request.method == "POST":
+        #mail_uid = request.POST.get('mail_uid')
         mail_id = request.POST.get('mail_id', '')
         selected_mail = Mail.objects.get(pk=mail_id)
-        attachments = request.FILES.getlist('attachments[]')
+        #attachments = request.FILES.getlist('attachments[]')
+        # TODO: handle unsupported browsers for file upload
+        #attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
+
         fw_re_form = FwReForm(request.POST, request.FILES, user_id=up.id)
+        #fw_re_form = ComposeForm(request.POST, request.FILES)
 
         if fw_re_form.is_valid():
             content = fw_re_form.cleaned_data['content']
@@ -205,8 +210,10 @@ def show_thread(request, thread, label=None):
                            titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
+            #fw_re_form = ComposeForm()  # clearing sent mail details
     else:
         fw_re_form = FwReForm(user_id=up.id)
+        #fw_re_form = ComposeForm()
         action = request.GET.get('action', '')
         if request.is_ajax() and action == 'reply':
             re_to = re_cc = re_bcc = []
@@ -224,6 +231,7 @@ def show_thread(request, thread, label=None):
                 elif mr.type == 'bcc':
                     re_bcc.append(username)
             fw_re_form = FwReForm(to=re_to, cc=re_cc, bcc=re_bcc)
+            #fw_re_form = ComposeForm(to=re_to, cc=re_cc, bcc=re_bcc)
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
@@ -261,6 +269,15 @@ def show_thread(request, thread, label=None):
         'referrer': referrer,
         'env': env,
         'last_index': len(tobe_shown),
+        #'user': request.user,
+        #'initial_to': initial_to,
+        #'initial_cc': initial_cc,
+        #'initial_bcc': initial_bcc,
+        ##'mailForm': compose_form,
+        #'all_labels': Label.get_user_labels(request.user),
+        #'send_error': result_error,
+        #'mail_uid': base64.urlsafe_b64encode(os.urandom(20)),
+
     }, context_instance=RequestContext(request))
 
 
