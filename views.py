@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+import collections
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -162,7 +163,7 @@ def attach(request):
 def attachments(request, attachment_slug):
     return FileStore.serve_file(request=request, filename=attachment_slug, namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
 
-
+@ajax_view
 def show_thread(request, thread, label=None):
     """
     :type thread: Thread
@@ -212,35 +213,73 @@ def show_thread(request, thread, label=None):
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
             #fw_re_form = ComposeForm()  # clearing sent mail details
     else:
-        fw_re_form = FwReForm(user_id=up.id)
+    #     fw_re_form = FwReForm(user_id=up.id)
         #fw_re_form = ComposeForm()
         action = request.GET.get('action', '')
-        if request.is_ajax() and action == 'reply':
-            re_to = re_cc = re_bcc = []
+        if request.is_ajax():
+            re_cc =[]
+            re_to = []
             re_mail_id = request.GET.get('mail', '')
             re_mail = Mail.objects.get(id=re_mail_id)
             receivers = MailReceiver.objects.filter(mail=re_mail)
+            sender = re_mail.sender.username
+            #
+            if action=='reply-all':
+                if sender != up.username :
+                    re_to = [re_mail.sender.username]
+                    for mr in recivers :
+                        username = mr.user.username
+                        if (mr.type == 'to' and username != up.username) or mr.type == 'cc' :
+                            re_cc.append(username)
 
-            for mr in receivers:
-                username = mr.user.username
-                re_sender = username
-                if mr.type == 'to':
-                    re_to.append(username)
-                elif mr.type == 'cc':
-                    re_cc.append(username)
-                elif mr.type == 'bcc':
-                    re_bcc.append(username)
-            fw_re_form = FwReForm(to=re_to, cc=re_cc, bcc=re_bcc)
-            #fw_re_form = ComposeForm(to=re_to, cc=re_cc, bcc=re_bcc)
+
+                else:
+                    for mr in recivers :
+                        username = mr.user.username
+                        if mr.type == 'to':
+                            re_to.append(username)
+                        elif mr.type == 'cc':
+                            re_cc.append(username)
+
+
+
+
+            elif action == 'reply':
+                if sender != up.username:
+                    re_to = [re_mail.sender.username]
+                else :
+                    for mr in recivers :
+                        username = mr.user.username
+                        if mr.type == 'to':
+                            re_to.append(username)
+
+
+
+
+
+            data = {'to':re_to ,'cc': re_cc }
+            return data
+
+        else:
+            fw_re_form = FwReForm(user_id=up.id)
+
+
 
     labels = thread.get_user_labels(up)
+
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     all_mails = thread.get_user_mails(up)
 
-    tobe_shown = {}
-
+    tobe_shown = collections.OrderedDict()
+    mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
+        if tobe_shown[mail]:
+            for t in tobe_shown[mail]:
+                l = t.label
+                labels = labels.exclude(title = l.title)
+        if mail.has_label(label):
+                mails_labeled.append(mail)
     if not tobe_shown:
         return HttpResponseRedirect(reverse('mail/home'))
 
@@ -256,6 +295,10 @@ def show_thread(request, thread, label=None):
             thread.mark_as_read(up)
         except:
             pass
+
+
+    if mails_labeled :
+        all_mails = mails_labeled
 
     return render_to_response('mail/showThread.html', {
         'user': request.user,
@@ -606,9 +649,11 @@ def mails_gc():
 def mark_thread(request, thread_slug, action):
     thread = get_object_or_404(Thread, slug=thread_slug)
     if action == 'read':
-        thread.mark_as_read(request.user)
+        if thread.is_unread(request.user):
+            thread.mark_as_read(request.user)
     elif action == 'unread':
-        thread.mark_as_unread(request.user)
+        if not thread.is_unread(request.user):
+            thread.mark_as_unread(request.user)
 
     if request.is_ajax():
         return HttpResponse('OK')
@@ -630,11 +675,13 @@ def ajax_mark_thread(request):
         if action == 'read':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_read(request.user)
+                if thread.is_unread(request.user):
+                    thread.mark_as_read(request.user)
         elif action == 'unread':
             for thread_id in thread_list:
                 thread = Thread.objects.get(id=int(thread_id))
-                thread.mark_as_unread(request.user)
+                if not thread.is_unread(request.user):
+                    thread.mark_as_unread(request.user)
         else:
             response_text = u"عملیات درخواستی امکان پذیر نیست."
 

@@ -340,11 +340,13 @@ class Mail(models.Model):
         re_title = subject if subject else u'RE: ' + mail.title
 
 
-        to = [mail.sender.username] if mail.sender.username != sender.username else []
+        to_main = [mail.sender.username] if mail.sender.username != sender.username else []
         if receivers:
-            to = to + receivers
-        # else:
-        #     to = [mail.sender.username] if mail.sender.username != sender.username else []
+            to = receivers
+            if not to_main in to :
+                to = to + to_main
+        else:
+            to = [mail.sender.username] if mail.sender.username != sender.username else []
         if not exclude_others:
             for mr in MailReceiver.objects.filter(mail=mail):
                 username = mr.user.username
@@ -367,8 +369,8 @@ class Mail(models.Model):
         reply = Mail.create(content, re_title, sender, receivers=to, cc=cc, bcc=bcc, thread=thread,
                             titles=titles, attachments=attachments)
 
-        reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
-                            titles=titles, attachments=attachments)
+        # reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
+        #                     titles=titles, attachments=attachments)
 
         # if is_specific_reply:
         MailReply.objects.create(first=in_reply_to, reply=reply)
@@ -450,11 +452,6 @@ class Mail(models.Model):
     def get_user_labels(self, user):
         qs = ThreadLabel.get_mail_labels(user=user, thread=self.thread, mail=self)
         return qs
-
-
-def get_file_path(instance, filename):
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-    return "uploads/attachments/%s/%s/%s" % (instance.mail.sender.username, now, filename)
 
 
 class TemporaryAttachments(models.Model):
@@ -769,7 +766,12 @@ class Thread(Slugged):
             :return: آخرین میل این نخ
             :rtype: Mail
         """
+
         return self.mails.order_by('-created_at')[0:1].get()
+
+    def get_last_modified(self):
+        last_mail = self.get_last_mail()
+        return last_mail.created_at
 
     def get_sorted_mails(self):
         """نامه های این نخ را بر می گرداند.

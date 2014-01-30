@@ -193,14 +193,40 @@ $(function(){
             expand_close_mails($(this));
         }
     });
+
+    mailToolbar.addButton({
+        icon: '',
+        title: 'نمایش همه ی میل ها ',
+        show: 'mailSystem.state.viewing == "mails"',
+        action: function() {
+            //change_button_name($(this));
+//            $('.main-label').removeClass('main-label');
+            $(".other-mails").removeClass("other-mails");
+            $('.mail-header').parent().removeClass('hide-element');
+
+
+            expand_close_mails($(this));
+        }
+    });
+
     mailToolbar.addButton({
         icon: '',
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
-            set_reply_form ();
+            set_reply_form ("reply");
             update_message_type("reply");
             forward_reply_handler("reply");
+        }
+    });
+    mailToolbar.addButton({
+        icon: '',
+        title: '  پاسخ به همه ' ,
+        show: 'mailSystem.state.viewing == "mails"',
+        action: function() {
+            set_reply_form ("reply-all");
+            update_message_type("reply-all");
+            forward_reply_handler("reply-all");
         }
     });
     mailToolbar.addButton({
@@ -266,6 +292,8 @@ $(function() {
 function update_message_type(message_type){
     $("#message-type").val(message_type);
     var txt="پاسخ" ;
+    if (message_type == 'reply-all')
+        var text = "پاسخ به همه  " ;
     if(message_type=='forward')
         var txt="ارجاع" ;
     $("legend").text(txt);
@@ -343,7 +371,7 @@ function forward_reply_handler(action_type){
 //    content_place.append(FW_RE);
 }
 
-function set_reply_form(){
+function set_reply_form(action_type){
     var selected_mail = $('.mail-checkbox:checked').val();
     var url = $(location).attr('pathname');
 
@@ -352,8 +380,36 @@ function set_reply_form(){
             type : 'GET',
             data : {
                 mail  : selected_mail ,
-                action : 'reply'
-            }
+                action : action_type
+            },
+          success:function(data){
+              if (data.to.length > 0){
+                var re_to = $('#id_receivers');
+                set_initial_value(data.to , re_to );
+
+              }
+              if (data.cc.length > 0){
+                 var re_cc = $('#id_cc');
+                 set_initial_value(data.cc , re_cc );
+              }
+
+
+          }
+
         });
+
+}
+
+function set_initial_value( data , elem ){
+                var list=  []
+                  data_length = data.length
+                  for(var i =0 ; i<data_length ; i++){
+                      var x = {'id': i , 'text':data[i]+'@arshmail.ir'};
+                      list[i]= x
+                  }
+                 elem.select2(
+                    "data",list
+                 );
+                elem.closest('tr').show();
 
 }

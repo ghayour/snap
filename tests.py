@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-
 import factory
 import random
 import string
 
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from django.test import TestCase
 from django.test.client import Client
 
 from arsh.user_mail.models import Mail, Label, Thread, MailDomain, MailProvider, DatabaseMailAccount
 from arsh.user_mail.models import ReadMail, Contact, AddressBook, MailReply
 
-from factories import UserFactory, MailProviderFactory, MailDomainFactory, MailFactory, ThreadFactory
-from factories import LabelFactory, MailFactory, ContactFactory, AddressBookFactory, DatabaseMailAccountFactory
-from factories import DatabaseMailAccountFactory
+from .factories import UserFactory, MailProviderFactory, MailDomainFactory, MailFactory, ThreadFactory
+from .factories import LabelFactory, MailFactory, ContactFactory, AddressBookFactory, DatabaseMailAccountFactory
+from .factories import DatabaseMailAccountFactory
 
 
 fixtures = ['test_admin_users']
@@ -361,6 +361,11 @@ class AppTest(TestCase):
         })
         self.assertEqual(Mail.objects.all().exists(), True)
         self.assertEqual(Thread.objects.all().exists(), True)
+
+    def test_contacts(self):
+        response = self.client.get(reverse('view/address_book'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'mail/address_book.html')
 
     def test_archive(self):
         response = self.client.get('/view/archive/')
