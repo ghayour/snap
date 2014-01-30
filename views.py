@@ -20,7 +20,8 @@ from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, TemporaryAttachments
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, \
+    TemporaryAttachments
 
 
 def get_default_inbox():
@@ -39,12 +40,12 @@ def setup(request):
 
 @login_required
 def see(request, label_slug, thread_slug, archive=None):
-    user_manager = UserManager.get(request.user) #Q
+    user_manager = UserManager.get(request.user)
     config_manager = ConfigManager.prepare()
     mail_admin = MailAdmin.prepare()
 
     # MailAccount
-    if not mail_admin.user_has_mail_account(request.user): #Q
+    if not mail_admin.user_has_mail_account(request.user):
         # creating a arshmail account for this new user
         mail_admin.create_arsh_mail_account(request.user)
 
@@ -66,10 +67,10 @@ def see(request, label_slug, thread_slug, archive=None):
         if label_slug:
             label = get_object_or_404(Label, user=request.user, slug=label_slug)
         else:
-            label = user_manager.get_label(Label.INBOX_LABEL_NAME) #Q
+            label = user_manager.get_label(Label.INBOX_LABEL_NAME)
             if not label:
                 user_manager.setup_mailbox()
-                label = user_manager.get_inbox() #Q
+                label = user_manager.get_inbox()
 
     # thread
     thread = get_object_or_404(Thread, slug=thread_slug) if thread_slug else None
@@ -206,14 +207,14 @@ def show_thread(request, thread, label=None):
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
     else:
         fw_re_form = FwReForm(user_id=up.id)
-        action = request.GET.get('action' , '')
-        if request.is_ajax() and action=='reply' :
+        action = request.GET.get('action', '')
+        if request.is_ajax() and action == 'reply':
             re_to = re_cc = re_bcc = []
-            re_mail_id = request.GET.get('mail' , '')
-            re_mail = Mail.objects.get(id = re_mail_id)
-            recivers = MailReceiver.objects.filter(mail=re_mail)
+            re_mail_id = request.GET.get('mail', '')
+            re_mail = Mail.objects.get(id=re_mail_id)
+            receivers = MailReceiver.objects.filter(mail=re_mail)
 
-            for mr in recivers:
+            for mr in receivers:
                 username = mr.user.username
                 re_sender = username
                 if mr.type == 'to':
@@ -222,8 +223,7 @@ def show_thread(request, thread, label=None):
                     re_cc.append(username)
                 elif mr.type == 'bcc':
                     re_bcc.append(username)
-            fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
-
+            fw_re_form = FwReForm(to=re_to, cc=re_cc, bcc=re_bcc)
 
     labels = thread.get_user_labels(up)
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
@@ -267,22 +267,22 @@ def show_thread(request, thread, label=None):
 def show_label(request, label, archive_mode):
     user = request.user
 
+    #Done: improve
     #TODO: Test
     related_threads = Thread.related_threads(user)
     if archive_mode:
         threads = related_threads.filter(labels=label).order_by('-pk').select_related()
     else:
-        threads = related_threads.filter(Q(labels=label) & Q(labels=UserManager.get(user).get_unread_label())).order_by('-pk').select_related()
+        threads = related_threads.filter(Q(labels=label) &
+                    Q(labels=UserManager.get(user).get_unread_label())).order_by('-pk').select_related()
 
-    #TODO:improve here (too much query)
+    #improve here (too much query) ---> above
     #tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
     #threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
-
     #threads = threads.related_threads(user)
     #threads = [t for t in threads if t.is_thread_related(user)]
-    #Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists():
-    #threads = threads[:50]  # TODO: how to view all mails?
 
+    #threads = threads[:50]  # TODO: how to view all mails?
 
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
@@ -302,7 +302,7 @@ def manage_label(request):
     if request.is_ajax() and request.POST:
         action = request.POST.get('name')
         id1 = request.POST.get('pk')
-        l = Label.objects.get(user = user , id = id1)
+        l = Label.objects.get(user=user, id=id1)
         if action == 'delete':
             l.delete()
         else:
@@ -310,17 +310,16 @@ def manage_label(request):
             l.title = title
             l.save()
 
-
     label = Label.get_user_labels(user)
     initial = Label.get_initial_labels()
     init_label = []
     for l in initial:
-        init_label.append(Label.get_label_for_user(l , user))
-        label = label.exclude(title = l)
-    return render_to_response('mail/manage_label.html' ,
-                              {'labels':label ,
-                               'init_label':init_label },
-                              context_instance = RequestContext(request))
+        init_label.append(Label.get_label_for_user(l, user))
+        label = label.exclude(title=l)
+    return render_to_response('mail/manage_label.html',
+                              {'labels': label,
+                               'init_label': init_label},
+                              context_instance=RequestContext(request))
 
 
 @ajax_view
@@ -329,7 +328,7 @@ def mail_validate(request):
     x = request.POST.get('receivers', '')
     y = request.POST.get('cc', '')
     z = request.POST.get('bcc', '')
-    rl =[x, y, z]
+    rl = [x, y, z]
 
     for r in rl:
         if r:
@@ -732,11 +731,11 @@ def addressbook_edit(request):
 def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
-    contact_form = ContactForm();
-    if request.is_ajax() and request.method == 'POST' :
+    contact_form = ContactForm()
+    if request.is_ajax() and request.method == 'POST':
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
-        delete_contact = contacts.get(pk = pk)
+        delete_contact = contacts.get(pk=pk)
         delete_contact.delete()
 
     return render_to_response('mail/address_book.html', {'contacts': contacts},

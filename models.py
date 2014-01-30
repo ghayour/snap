@@ -16,7 +16,6 @@ from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
 from arsh.storage.models import StoredFileModel
 
-
 logger = logging.getLogger()
 
 FOOTER_SLUG = 'sdhf3akj22sf5hljhuh243u423yr87fdyshd8c'
