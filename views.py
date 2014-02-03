@@ -23,6 +23,7 @@ from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
 from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, \
     TemporaryAttachments
+from arsh.user_mail.todo.todo_item import TodoItem
 
 
 def get_default_inbox():
@@ -125,10 +126,14 @@ def compose(request):
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
             try:
-                Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=recipient_labels,
-                            initial_sender_labels=initial_labels,
-                            attachments=attachments)
+                mail = Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
+                                   bcc=parse_address(bcc), titles=recipient_labels,
+                                   initial_sender_labels=initial_labels,
+                                   attachments=attachments)
+
+                todo = TodoItem.try_parse_thread(mail.thread, user=request.user)
+                if todo:
+                    todo.sync()
 
                 return HttpResponseRedirect(reverse('mail/home'))
             except ValidationError as e:

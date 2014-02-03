@@ -125,7 +125,8 @@ class Mail(models.Model):
     def get_summary(self):
         from HTMLParser import HTMLParser
 
-        env = {'content': self.content}
+        content = self.content.replace('<br>', '&nbsp;').replace('<br/>', '&nbsp;').replace('</div>', '</div>&nbsp;')
+        env = {'content': content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
@@ -540,7 +541,8 @@ class Label(Slugged):
         'request': REQUEST_LABEL_NAME,
     }
     INITIAL_LABELS = (INBOX_LABEL_NAME, SENT_LABEL_NAME, UNREAD_LABEL_NAME,  STARRED_LABEL_NAME,
-                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
+                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME,
+                      TODO_LABEL_NAME, )
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')  # delete with data migration
@@ -677,6 +679,17 @@ class Label(Slugged):
         if isinstance(user, User):
             user = user.id
         return Label.objects.filter(user__id=user).exclude(title=Label.UNREAD_LABEL_NAME)
+
+    @classmethod
+    def get_label_threads(cls, user, label_name):
+        u""" تمامی تردهای درون یک برچسب را برای کاربر خواسته شده می دهد
+
+            :param User user: کاربر مربوطه
+            :param unicode label_name: نام برچسب
+            :return: Label
+        """
+        label = cls.objects.get(user=user, title=label_name)
+        return label.threads.all()
 
 
 class Thread(Slugged):
@@ -910,23 +923,6 @@ class Thread(Slugged):
                 if not r == mail.sender and not r in mail.recipients.all():
                     Mail.add_receiver(mail, self, r, type='cc', label_names=[Label.REQUEST_LABEL_NAME],
                                       create_new_labels=True)
-
-    def get_deadline(self):
-        #TODO:check this search
-        mail = self.first_mail
-        sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
-                        mail.content)
-        if sub:
-            try:
-                d_str = sub.group(0).split(':')
-                days = d_str[1].split(u'\u0631\u0648\u0632')
-                if days:
-                    d = days[0]
-                    sd = mail.created_at.date()
-                    deadline = sd + datetime.timedelta(days=int(d))
-                    return deadline
-            except Exception:
-                return None
 
     @staticmethod
     def get_user_threads(user):
