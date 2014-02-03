@@ -9,12 +9,12 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 
 from arsh.common.db.basic import Slugged, Named
 from arsh.common.algorithm.strings import get_summary
 from .Manager import DecoratorManager
 from arsh.storage.models import StoredFileModel
-
 
 logger = logging.getLogger()
 
@@ -125,7 +125,8 @@ class Mail(models.Model):
     def get_summary(self):
         from HTMLParser import HTMLParser
 
-        env = {'content': self.content}
+        content = self.content.replace('<br>', '&nbsp;').replace('<br/>', '&nbsp;').replace('</div>', '</div>&nbsp;')
+        env = {'content': content}
         DecoratorManager.get().activate_hook('get_mail_summary', env, self)
         return get_summary(HTMLParser().unescape(env['content']), 50, striptags=True)
 
@@ -176,7 +177,7 @@ class Mail(models.Model):
             return True
         return False
 
-    @staticmethod
+    #@staticmethod
     def add_receiver(mail, thread, receiver_address, type='to', label_names=None, create_new_labels=True):
         """
         :param mail:
@@ -324,6 +325,7 @@ class Mail(models.Model):
         #TODO: support adding to, cc,responders = None bcc in the middle of a thread
 
         to=""
+        #in_reply_to = self
         if not thread and not in_reply_to:
             raise ValueError('No mail specified to reply to it!')
         if not thread:
@@ -372,6 +374,68 @@ class Mail(models.Model):
         #                     titles=titles, attachments=attachments)
 
         # if is_specific_reply:
+        MailReply.objects.create(first=in_reply_to, reply=reply)
+
+
+    #@staticmethod
+
+
+    def forward(self, content, sender, receivers, cc=None, bcc=None, in_reply_to=None, subject=None, thread=None,
+              #include=[], exclude=[],
+              titles=None,
+              #exclude_others=False,
+              attachments=None):
+        """
+
+        :param content: متن پاسخ
+        :type content: unicode
+        :param sender: فرستنده‌ی پاسخ
+        :type sender: User
+        :param receivers: آدرس دریافت کنندگان اصلی
+        :type receivers: str[]
+        :param cc: آدرس دریافت کنندگان رونوشت
+        :type cc: str[]
+        :param bcc: آدرس دریافت کنندگان مخفی
+        :type bcc: str[]
+        :param in_reply_to: این نامه پاسخ به کدام نامه است
+        :type in_reply_to: Mail
+        :param subject: عنوان نامه
+        :type subject: unicode
+        :param thread: نخ مربوطه
+        :type thread: Thread
+        :param include: کسانی که به گیرندگان اضافه می شوند
+        :type include: str[]
+        :param exclude: کسانی که از گیرندگان حذف می شوند
+        :type exclude: str[]
+        :param titles: نام برچسب‌هایی که این نامه پس از ارسال می‌گیرد. به صورت پیش‌فرض صندوق ورودی است.
+        :type titles: str[]
+        """
+        #TODO: support adding to, cc,responders = None bcc in the middle of a thread
+
+        to = ""
+        in_reply_to = self
+        #if not thread and not in_reply_to:
+        #    raise ValueError('No mail specified to forward!')
+        if not thread:
+            thread = in_reply_to.thread
+        if not in_reply_to:
+            in_reply_to = thread.get_last_mail()
+            #is_specific_reply = False
+        #else:
+            #is_specific_reply = True
+
+        logger.debug('generating forward  mail#%d' % in_reply_to.id)
+        #mail = in_reply_to
+        mail = self
+        re_title = subject if subject else u'FWD: ' + mail.title
+
+        #TODO: attachment strategy should be fixed
+        reply = Mail.create(content, re_title, sender, receivers=receivers, cc=cc, bcc=bcc, thread=thread,
+                            titles=titles, attachments=self.attachment_set+attachments)
+
+
+        # if is_specific_reply:
+        #TODO: ask what is specific_reply?
         MailReply.objects.create(first=in_reply_to, reply=reply)
 
     def add_label(self, label):
@@ -477,7 +541,8 @@ class Label(Slugged):
         'request': REQUEST_LABEL_NAME,
     }
     INITIAL_LABELS = (INBOX_LABEL_NAME, SENT_LABEL_NAME, UNREAD_LABEL_NAME,  STARRED_LABEL_NAME,
-                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME, )
+                      TRASH_LABEL_NAME, SPAM_LABEL_NAME, ARCHIVE_LABEL_NAME, REQUEST_LABEL_NAME,
+                      TODO_LABEL_NAME, )
 
     account = models.ForeignKey(MailAccount, related_name='labels')
     user = models.ForeignKey(User, related_name='labels')  # delete with data migration
@@ -494,6 +559,13 @@ class Label(Slugged):
 
     def is_initial_label(self):
         return self.get_std_name() != ''
+
+    @classmethod
+    def get_display_name(cls, std_name):
+        try:
+            return cls.STD_LABELS[std_name]
+        except KeyError:
+            return None
 
     # @property
     # def user(self):
@@ -609,13 +681,15 @@ class Label(Slugged):
         return Label.objects.filter(user__id=user).exclude(title=Label.UNREAD_LABEL_NAME)
 
     @classmethod
-    def parse_label_title(cls, title):
-        if title == 'trash':
-            return cls.TRASH_LABEL_NAME
-        elif title == 'spam':
-            return cls.SPAM_LABEL_NAME
-            #TODO: complete this
-        return None
+    def get_label_threads(cls, user, label_name):
+        u""" تمامی تردهای درون یک برچسب را برای کاربر خواسته شده می دهد
+
+            :param User user: کاربر مربوطه
+            :param unicode label_name: نام برچسب
+            :return: Label
+        """
+        label = cls.objects.get(user=user, title=label_name)
+        return label.threads.all()
 
 
 class Thread(Slugged):
@@ -720,7 +794,20 @@ class Thread(Slugged):
         return self.mails.order_by('-created_at')
 
     def get_unread_mails(self, user):
-        return [mail for mail in self.get_user_mails(user) if not ReadMail.has_read(user, mail)]
+        #Done: improve
+        #TODO: Test
+        read_mails = ReadMail.objects.filter(user=user).mail
+        unread_mails = self.get_user_mails(user).exclude(id__in=read_mails)
+        #unread_mails = [mail for mail in user_mails if not ReadMail.has_read(user, mail)]
+        return unread_mails
+
+    @staticmethod
+    def related_threads(user):
+        #Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists()
+        #TODO: Test
+        mails = Mail.objects.filter(Q(recipients__id__exact=user.id) | Q(sender=user)).select_related()
+        threads = Thread.objects.filter(mails__in=mails).distinct()#I'm not sure!
+        return threads
 
     def is_thread_related(self, user):
         u"""
@@ -733,15 +820,24 @@ class Thread(Slugged):
         :rtype: int or None
         :return:اگر کاربر در لیست افراد مرتبط با ترد وجود داشت آی دی آن را بر میگرداند.
         """
-        #Query No: 0
-        related_users = []
-        for mail in self.mails.all():
-            for r in mail.recipients.all():
-                if r.id not in related_users:
-                    related_users += [r.id]
-        if self.first_mail.sender_id not in related_users:
-            related_users += [self.first_mail.sender_id]
-        return user.id in related_users
+
+        #Done: improve
+        #TODO:Test
+        #mail_list = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).distinct()
+
+        if Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) | Q(thread=self, sender=user)).exists():
+            return user.id
+        else:
+            return None
+
+        #related_users = []
+        #for mail in self.mails.all():
+        #    for r in mail.recipients.all():
+        #        if r.id not in related_users:
+        #            related_users += [r.id]
+        #if self.firstMail.sender_id not in related_users:
+        #    related_users += [self.firstMail.sender_id]
+        #return user.id in related_users
 
     def get_user_mails(self, user):
         """
@@ -752,31 +848,66 @@ class Thread(Slugged):
         :return:لیست میل هایی از ترد که مرتبط با کاربر است
         """
 
-        mail_list = []
-        for mail in self.mails.all():
-            if mail.sender_id == user.id or user in mail.recipients.all():
-                if mail not in mail_list:
-                    mail_list.append(mail)
-        return mail_list
+        #Done: improve
+        #TODO: Test
+        mails = Mail.objects.filter(Q(thread=self, recipients__id__exact=user.id) |Q(thread=self, sender=user ))# | sender=user)).distinct()
+        #mail_list2 = Mail.objects.filter(thread=self, sender=user )
+
+        #mail_list = []
+        #for mail in self.mails.all():
+        #    if mail.sender_id == user.id or user in mail.recipients.all():
+        #        if mail not in mail_list:
+        #            mail_list.append(mail)
+        return mails
 
     def get_participants(self, related_user=None):
+        #Done:improve
+        #TODO: Test
         thread_mails = self.mails.all()
 
         if related_user:
-            thread_mails = thread_mails.filter(sender=related_user) | thread_mails.filter(recipients=related_user)
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
+
+        sender_ids = thread_mails.values_list('sender', flat=True).distinct()
+
+        recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
+        participant_ids= sender_ids + recipient_ids
+
+        participants = User.objects.filter(id__in=participant_ids)
+
+        return {'participants': participants}
+
+    def get_senders(self, related_user=None):
+        #Done:improve
+        #TODO:Test
+        thread_mails = self.mails.all()
+
+        if related_user:
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
 
         sender_ids = thread_mails.values_list('sender', flat=True).distinct()
         senders = User.objects.filter(id__in=sender_ids)
 
+        return {'senders': senders}
+
+    def get_receivers(self, related_user=None):
+        #Done: improve
+        #TODO: Test
+        thread_mails = self.mails.all()
+
+        if related_user:
+            thread_mails = thread_mails.filter(Q(sender=related_user) | Q(recipients=related_user))
+
         recipient_ids = thread_mails.values_list('recipients', flat=True).distinct()
         recipients = User.objects.filter(id__in=recipient_ids)
 
-        return {'senders': senders, 'recipients': recipients}
+        return {'recipients': recipients}
 
     def complete_todo(self):
         ls = self.get_participants()
-        p_all = ls['senders'] | ls['recipients']
-        for p in p_all:
+        #p_all = ls['senders'] | ls['recipients']
+        #for p in p_all:
+        for p in ls:
             self.add_label(Label.get_label_for_user(Label.COMPLETED_LABEL_NAME, p, create_new=True))
 
     def set_new_request(self, new_recipients):
@@ -792,23 +923,6 @@ class Thread(Slugged):
                 if not r == mail.sender and not r in mail.recipients.all():
                     Mail.add_receiver(mail, self, r, type='cc', label_names=[Label.REQUEST_LABEL_NAME],
                                       create_new_labels=True)
-
-    def get_deadline(self):
-        #TODO:check this search
-        mail = self.first_mail
-        sub = re.search(re.compile(ur'\u0645\u0647\u0644\u062a \u0627\u0646\u062c\u0627\u0645:(.)+', re.U),
-                        mail.content)
-        if sub:
-            try:
-                d_str = sub.group(0).split(':')
-                days = d_str[1].split(u'\u0631\u0648\u0632')
-                if days:
-                    d = days[0]
-                    sd = mail.created_at.date()
-                    deadline = sd + datetime.timedelta(days=int(d))
-                    return deadline
-            except Exception:
-                return None
 
     @staticmethod
     def get_user_threads(user):
@@ -1035,6 +1149,7 @@ class ReadMail(models.Model):
 
     @staticmethod
     def has_read(user, mail):
+        #Query No:1
         try:
             ReadMail.objects.get(mail=mail, reader=user)
         except ReadMail.DoesNotExist:

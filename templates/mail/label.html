@@ -46,7 +46,7 @@
                         {% for l in thread.user_labels %}
                             <span class="mail-tag">{{ l }}</span>
                         {% endfor %}
-                        <span>{{ thread.firstMail.get_summary|striptags }}</span>
+                        <span>{{ thread.firstMail.get_summary }}</span>
                     </a>
                 </td>
                 {% for row in thread.rows %}
@@ -63,6 +63,6 @@
     </table>
 
     <div style="display: none">
-        <input type="hidden" id="current_label" value="{{ label.id }}">
+        <input type="hidden" id="current_label" value="{{ label.id }}" data-slug="{{ label.slug }}" data-title="{{ label.title }}">
     </div>
 {% endblock %}

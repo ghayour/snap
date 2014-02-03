@@ -11,7 +11,10 @@ register = template.Library()
 def filename(value):
     filename = os.path.basename(value.file.name).split('.')[0]
     try:
-        return unicode(base64.urlsafe_b64decode(str(filename)))
-    except TypeError:
+        x = unicode(base64.urlsafe_b64decode(str(filename)))
+        return x
+
+    except Exception:
         # TODO: check this!
-        return filename
+        x = unicode(filename)
+        return x

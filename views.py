@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+import collections
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -20,7 +21,9 @@ from arsh.user_mail.Manager import DecoratorManager
 from arsh.user_mail.forms import ComposeForm, FwReForm, ContactForm
 from arsh.user_mail.config_manager import ConfigManager
 from arsh.user_mail.mail_admin import MailAdmin
-from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, TemporaryAttachments
+from arsh.user_mail.models import Label, Thread, Mail, ReadMail, AddressBook, MailProvider, MailReceiver, \
+    TemporaryAttachments
+from arsh.user_mail.todo.todo_item import TodoItem
 
 
 def get_default_inbox():
@@ -123,10 +126,14 @@ def compose(request):
             cc = request.POST.get('cc')
             bcc = request.POST.get('bcc')
             try:
-                Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
-                            bcc=parse_address(bcc), titles=recipient_labels,
-                            initial_sender_labels=initial_labels,
-                            attachments=attachments)
+                mail = Mail.create(content, subject, request.user, parse_address(receivers), cc=parse_address(cc),
+                                   bcc=parse_address(bcc), titles=recipient_labels,
+                                   initial_sender_labels=initial_labels,
+                                   attachments=attachments)
+
+                todo = TodoItem.try_parse_thread(mail.thread, user=request.user)
+                if todo:
+                    todo.sync()
 
                 return HttpResponseRedirect(reverse('mail/home'))
             except ValidationError as e:
@@ -161,7 +168,7 @@ def attach(request):
 def attachments(request, attachment_slug):
     return FileStore.serve_file(request=request, filename=attachment_slug, namespace=Mail.ATTACHMENTS_STORE_NAMESPACE)
 
-
+@ajax_view
 def show_thread(request, thread, label=None):
     """
     :type thread: Thread
@@ -179,10 +186,15 @@ def show_thread(request, thread, label=None):
         referrer = reverse('mail/home')
 
     if request.method == "POST":
+        #mail_uid = request.POST.get('mail_uid')
         mail_id = request.POST.get('mail_id', '')
         selected_mail = Mail.objects.get(pk=mail_id)
-        attachments = request.FILES.getlist('attachments[]')
+        #attachments = request.FILES.getlist('attachments[]')
+        # TODO: handle unsupported browsers for file upload
+        #attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
+
         fw_re_form = FwReForm(request.POST, request.FILES, user_id=up.id)
+        #fw_re_form = ComposeForm(request.POST, request.FILES)
 
         if fw_re_form.is_valid():
             content = fw_re_form.cleaned_data['content']
@@ -204,26 +216,58 @@ def show_thread(request, thread, label=None):
                            titles=[get_default_inbox()], attachments=attachments)  # TODO: enable in middle reply
 
             fw_re_form = FwReForm(user_id=up.id)  # clearing sent mail details
+            #fw_re_form = ComposeForm()  # clearing sent mail details
     else:
-        fw_re_form = FwReForm(user_id=up.id)
     #     fw_re_form = FwReForm(user_id=up.id)
-    #     action = request.GET.get('action' , '')
-    #     if request.is_ajax() and action=='reply' :
-    #         re_to = re_cc = re_bcc = []
-    #         re_mail_id = request.GET.get('mail' , '')
-    #         re_mail = Mail.objects.get(id = re_mail_id)
-    #         recivers =  MailReceiver.objects.filter(mail=re_mail)
-    #
-    #         for mr in MailReceiver.objects.filter(mail=re_mail):
-    #             username = mr.user.username
-    #             re_sender = username
-    #             if mr.type == 'to':
-    #                 re_to.append(username)
-    #             elif mr.type == 'cc':
-    #                 re_cc.append(username)
-    #             elif mr.type == 'bcc':
-    #                 re_bcc.append(username)
-    #         fw_re_form = FwReForm( to = re_to , cc = re_cc , bcc = re_bcc)
+        #fw_re_form = ComposeForm()
+        action = request.GET.get('action', '')
+        if request.is_ajax():
+            re_cc =[]
+            re_to = []
+            re_mail_id = request.GET.get('mail', '')
+            re_mail = Mail.objects.get(id=re_mail_id)
+            receivers = MailReceiver.objects.filter(mail=re_mail)
+            sender = re_mail.sender.username
+            #
+            if action=='reply-all':
+                if sender != up.username :
+                    re_to = [re_mail.sender.username]
+                    for mr in receivers :
+                        username = mr.user.username
+                        if (mr.type == 'to' and username != up.username) or mr.type == 'cc' :
+                            re_cc.append(username)
+
+
+                else:
+                    for mr in receivers :
+                        username = mr.user.username
+                        if mr.type == 'to':
+                            re_to.append(username)
+                        elif mr.type == 'cc':
+                            re_cc.append(username)
+
+
+
+
+            elif action == 'reply':
+                if sender != up.username:
+                    re_to = [re_mail.sender.username]
+                else :
+                    for mr in receivers :
+                        username = mr.user.username
+                        if mr.type == 'to':
+                            re_to.append(username)
+
+
+
+
+
+            data = {'to':re_to ,'cc': re_cc }
+            return data
+
+        else:
+            fw_re_form = FwReForm(user_id=up.id)
+
 
 
     labels = thread.get_user_labels(up)
@@ -231,7 +275,7 @@ def show_thread(request, thread, label=None):
     labels = labels.exclude(title__in=[Label.SENT_LABEL_NAME, Label.TRASH_LABEL_NAME, Label.ARCHIVE_LABEL_NAME])
     all_mails = thread.get_user_mails(up)
 
-    tobe_shown = {}
+    tobe_shown = collections.OrderedDict()
     mails_labeled = []
     for mail in all_mails:
         tobe_shown[mail] = mail.get_user_labels(up)
@@ -273,27 +317,37 @@ def show_thread(request, thread, label=None):
         'referrer': referrer,
         'env': env,
         'last_index': len(tobe_shown),
+        #'user': request.user,
+        #'initial_to': initial_to,
+        #'initial_cc': initial_cc,
+        #'initial_bcc': initial_bcc,
+        ##'mailForm': compose_form,
+        #'all_labels': Label.get_user_labels(request.user),
+        #'send_error': result_error,
+        #'mail_uid': base64.urlsafe_b64encode(os.urandom(20)),
+
     }, context_instance=RequestContext(request))
 
 
 def show_label(request, label, archive_mode):
     user = request.user
 
-    tls = Thread.objects.filter(labels=label)
-    temp_unread = []
-    temp_read = []
-    for t in tls :
-        if t.is_unread():
-            temp_unread.append(t)
-        else:
-            temp_read.append(t)
-    temp_unread = sorted(temp_unread , key= lambda t : t.get_last_modified() , reverse=True)
-    temp_read = sorted(temp_read , key= lambda t : t.get_last_modified() , reverse=True)
-    tls1 = temp_unread
-    tls1 += temp_read
-    threads = tls1 if archive_mode else tls1.filter(labels=UserManager.get(user).get_unread_label())
+    #Done: improve
+    #TODO: Test
+    related_threads = Thread.related_threads(user)
+    if archive_mode:
+        threads = related_threads.filter(labels=label).order_by('-pk').select_related()
+    else:
+        threads = related_threads.filter(Q(labels=label) &
+                    Q(labels=UserManager.get(user).get_unread_label())).order_by('-pk').select_related()
+
+    #improve here (too much query) ---> above
+    #tls = Thread.objects.filter(labels=label).order_by('-pk').select_related()
+    #threads = tls if archive_mode else tls.filter(labels=UserManager.get(user).get_unread_label())
+    #threads = threads.related_threads(user)
+    #threads = [t for t in threads if t.is_thread_related(user)]
+
     #threads = threads[:50]  # TODO: how to view all mails?
-    threads = [t for t in threads if t.is_thread_related(user)]# Q#=0
 
     env = {'headers': []}
     DecoratorManager.get().activate_hook('show_label', label, threads, user, env)
@@ -313,7 +367,7 @@ def manage_label(request):
     if request.is_ajax() and request.POST:
         action = request.POST.get('name')
         id1 = request.POST.get('pk')
-        l = Label.objects.get(user = user , id = id1)
+        l = Label.objects.get(user=user, id=id1)
         if action == 'delete':
             l.delete()
         else:
@@ -321,17 +375,16 @@ def manage_label(request):
             l.title = title
             l.save()
 
-
     label = Label.get_user_labels(user)
     initial = Label.get_initial_labels()
     init_label = []
     for l in initial:
-        init_label.append(Label.get_label_for_user(l , user))
-        label = label.exclude(title = l)
-    return render_to_response('mail/manage_label.html' ,
-                              {'labels':label ,
-                               'init_label':init_label },
-                              context_instance = RequestContext(request))
+        init_label.append(Label.get_label_for_user(l, user))
+        label = label.exclude(title=l)
+    return render_to_response('mail/manage_label.html',
+                              {'labels': label,
+                               'init_label': init_label},
+                              context_instance=RequestContext(request))
 
 
 @ajax_view
@@ -340,7 +393,7 @@ def mail_validate(request):
     x = request.POST.get('receivers', '')
     y = request.POST.get('cc', '')
     z = request.POST.get('bcc', '')
-    rl =[x, y, z]
+    rl = [x, y, z]
 
     for r in rl:
         if r:
@@ -475,8 +528,13 @@ def move_thread(request):
     thread_list = []
     label_name = request.POST.get('label')
     if label_name:
-        real_title = Label.parse_label_title(label_name)
-        label = UserManager.get(request.user).get_label(real_title)
+        # only for std labels label_name can be used
+        real_title = Label.get_display_name(label_name)
+        if real_title is None:
+            label = None
+        else:
+            # as said its a std label, so its safe to have create=True here
+            label = UserManager.get(request.user).get_label(real_title, create=True)
     else:
         try:
             label_id = int(request.POST['label_id'])
@@ -748,10 +806,10 @@ def addressbook_view(request):
     user = request.user
     contacts = AddressBook.objects.get_or_create(user=user)[0].get_all_contacts()
     contact_form = ContactForm()
-    if request.is_ajax() and request.method == 'POST' :
+    if request.is_ajax() and request.method == 'POST':
         pk = request.POST.get('pk')
         contacts = AddressBook.objects.get(user=user).get_all_contacts()
-        delete_contact = contacts.get(pk = pk)
+        delete_contact = contacts.get(pk=pk)
         delete_contact.delete()
 
     return render_to_response('mail/address_book.html', {'contacts': contacts},

@@ -6,6 +6,12 @@ var mailSystem = new arsh.mail.Client();
 
 /* General JS code */
 $(function() {
+    // For passing data from Django to JS
+    var current_label_element = $("#current_label");
+    mailSystem.currentLabel.id = current_label_element.val();
+    mailSystem.currentLabel.slug = current_label_element.attr('data-slug');
+    mailSystem.currentLabel.title = current_label_element.attr('data-title');
+
     $('#refresh-button').click(function() {
         window.location.reload();
     });
@@ -68,7 +74,7 @@ $(function(){
         title: 'بایگانی',
         class : 'mailAction',
         action: function() {
-            mailSystem.setArchiveMode();
+            mailSystem.archive();
         }
     });
 
@@ -214,9 +220,21 @@ $(function(){
         title: 'پاسخ',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
-            set_reply_form ();
+            clean_form();
+            set_reply_form ("reply");
             update_message_type("reply");
             forward_reply_handler("reply");
+        }
+    });
+    mailToolbar.addButton({
+        icon: '',
+        title: '  پاسخ به همه ' ,
+        show: 'mailSystem.state.viewing == "mails"',
+        action: function() {
+            clean_form();
+            set_reply_form ("reply-all");
+            update_message_type("reply-all");
+            forward_reply_handler("reply-all");
         }
     });
     mailToolbar.addButton({
@@ -224,6 +242,7 @@ $(function(){
         title: 'باز ارسال',
         show: 'mailSystem.state.viewing == "mails"',
         action: function() {
+            clean_form();
             update_message_type("forward");
             forward_reply_handler("forward");
         }
@@ -282,12 +301,15 @@ $(function() {
 function update_message_type(message_type){
     $("#message-type").val(message_type);
     var txt="پاسخ" ;
+    if (message_type == 'reply-all')
+        var text = "پاسخ به همه  " ;
     if(message_type=='forward')
         var txt="ارجاع" ;
     $("legend").text(txt);
 }
 
 function forward_reply_handler(action_type){
+
     var content_place;
     var checked_item;
     var thread_id = $('#thread-id').val();
@@ -312,13 +334,34 @@ function forward_reply_handler(action_type){
         show_hide_info_fields(true, false);
         $("#id_title").val(get_fw_subject(cur_mail)).css('width', '300');
         tinyMCE.get('id_content').setContent(get_fw_content(cur_mail));
+//        $("#id_attachments_wrap_list").add()
+
 
     }
     else{
+        var to = "افزودن پاسخ به"
+        var cc  = ' افزودن رونوشت '
+        var bcc = "افزودن رونوشت مخفی"
+
+        if ($('#id_receivers').closest('tr').is(':visible')){
+            to = 'حذف پاسخ به'
+        }
+        if ($('#id_cc').closest('tr').is(':visible')){
+            to = 'حذف رونوشت'
+        }
+        if ($('#id_bcc').closest('tr').is(':visible')){
+            to = 'حذف رونوشت مخفی'
+        }
         var link_row='<tr><td class="formlinks">'+
-                '<a id="replyto-link">افزودن پاسخ-به</a><span class="separator">|</span>'+
-                '<a id="cc-link" >افزودن رونوشت</a>'+
-                '<span class="separator">|</span>'+'<a id="bcc-link">افزودن رونوشت مخفی</a>'+
+                '<a id="replyto-link">'+
+                to +
+                '</a><span class="separator">|</span>'+
+                '<a id="cc-link" >'+
+                 cc +
+                '</a>'+
+                '<span class="separator">|</span>'+'<a id="bcc-link">'+
+                 bcc +
+                '</a>'+
                 '</td></tr>';
         $("tr").filter(function(){
            if($(this).find("#div_id_bcc").length>=1 && ($(this).parent().find(".formlinks").length==0))
@@ -357,17 +400,55 @@ function forward_reply_handler(action_type){
 //    content_place.append(FW_RE);
 }
 
-function set_reply_form(){
+function set_reply_form(action_type){
     var selected_mail = $('.mail-checkbox:checked').val();
     var url = $(location).attr('pathname');
+//    $('.select2-choices').empty();
 
       $.ajax({
             url : url,
             type : 'GET',
             data : {
                 mail  : selected_mail ,
-                action : 'reply'
-            }
+                action : action_type
+            },
+          success:function(data){
+              if (data.to.length > 0){
+                var re_to = $('#id_receivers');
+                set_initial_value(data.to , re_to );
+
+              }
+              if (data.cc.length > 0){
+                 var re_cc = $('#id_cc');
+                 set_initial_value(data.cc , re_cc );
+              }
+
+
+          }
+
         });
 
+}
+
+function set_initial_value( data , elem ){
+                var list=  []
+                  data_length = data.length
+                  for(var i =0 ; i<data_length ; i++){
+                      var x = {'id': i , 'text':data[i]+'@arshmail.ir'};
+                      list[i]= x
+                  }
+                 elem.select2(
+                    "data",list
+                 );
+                elem.closest('tr').show();
+
+}
+
+function clean_form(){
+    $('#id_receivers').select2("val", "");
+    $('#id_cc').select2("val", "");
+    $('#id_bcc').select2("val", "");
+    $('#id_receivers').closest('tr').hide();
+    $('#id_cc').closest('tr').hide();
+    $('#id_bcc').closest('tr').hide();
 }

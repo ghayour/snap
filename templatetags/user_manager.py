@@ -30,7 +30,7 @@ def get_user_full_name(user):
 @register.filter
 def get_thread_senders(thread, user):
     mail_counts = len(thread.get_user_mails(user))
-    senders = thread.get_participants(user)['senders']
+    senders = thread.get_senders(user)['senders']
     s = ''
     for sender in senders.all():
         full_name = sender.get_full_name()

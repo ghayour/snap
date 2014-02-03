@@ -1,0 +1,33 @@
+{% extends 'mail/mail_template.html' %}
+{% load url from future %}
+{% load i18n %}
+{% load layout %}
+{% load shamsi %}
+
+
+{% block content %}
+    <table class="threads-table">
+        <tr>
+            <th>عنوان کار</th>
+            <th>تاریخ شروع</th>
+            <th>تاریخ پایان</th>
+            <th>واگذار کننده</th>
+            <th>واگذار شده به</th>
+            <th>ناظرین</th>
+        </tr>
+        {% for todo in todos %}
+            <tr>
+                <td><a href="{% url 'mail/see_thread_direct' thread_slug=todo.thread.slug %}" style="font-weight: bold">
+                    {{ todo.title }}
+                </a></td>
+                <td>{{ todo.start|to_shamsi }}</td>
+                <td>{{ todo.due|to_shamsi }}</td>
+                <td>{{ todo.assigner.get_full_name }}</td>
+                <td>{% for u in todo.assignee %}{{ u.get_full_name }}{% if not forloop.last %} و {% endif %}{% endfor %}</td>
+                <td>{% for u in todo.watchers %}{{ u.get_full_name }}{% if not forloop.last %} و {% endif %}{% empty %}-{% endfor %}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">کاری نیست!</td></tr>
+        {% endfor %}
+    </table>
+{% endblock content %}
