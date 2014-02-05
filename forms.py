@@ -58,37 +58,37 @@ class ComposeForm(forms.ModelForm):
         v.validationalize_form()
 
 
-#class FwReForm(forms.ModelForm):
-#    attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
-class FwReForm(ComposeForm):
+class FwReForm(forms.ModelForm):
+    attachments = forms.FileField(label=u'فایل ضمیمه', widget=MultiFileInput, required=False)
+#class FwReForm(ComposeForm):
     class Meta:
         model = Mail
         exclude = ('thread', 'recipients', 'sender','labels')
 
     def __init__(self, *args, **kwargs):
-        #from tinymce.widgets import TinyMCE
+        from tinymce.widgets import TinyMCE
 
         self.user_id = kwargs.pop('user_id', -1)
         #qs = AddressBook.get_addressbook_for_user(get_object_or_404(User, pk=self.user_id)).get_all_contacts()
 
         super(FwReForm, self).__init__(*args, **kwargs)
 
-        #self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:70%'})
+        self.fields['content'].widget = TinyMCE(attrs={'cols': 50, 'rows': 15, 'style': 'width:70%'})
 
-        #self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
-        #self.fields['receivers'].widget.attrs['class'] = 'info'
-        #self.fields['receivers'].widget.attrs['type'] = 'hidden'
-        #self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
-        #
-        #self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
-        #self.fields['cc'].widget.attrs['class'] = 'info'
-        #self.fields['cc'].widget.attrs['type'] = 'hidden'
-        #self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
-        #
-        #self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
-        #self.fields['bcc'].widget.attrs['class'] = 'info'
-        #self.fields['bcc'].widget.attrs['type'] = 'hidden'
-        #self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
+        self.fields['receivers'] = forms.CharField(required=False, label=u"گیرنده")
+        self.fields['receivers'].widget.attrs['class'] = 'info'
+        self.fields['receivers'].widget.attrs['type'] = 'hidden'
+        self.fields['receivers'].widget.attrs['style'] = 'min-width:60%'
+
+        self.fields['cc'] = forms.CharField(required=False, label=u"رونوشت")
+        self.fields['cc'].widget.attrs['class'] = 'info'
+        self.fields['cc'].widget.attrs['type'] = 'hidden'
+        self.fields['cc'].widget.attrs['style'] = 'min-width:60%'
+
+        self.fields['bcc'] = forms.CharField(required=False, label=u"رونوشت مخفی")
+        self.fields['bcc'].widget.attrs['class'] = 'info'
+        self.fields['bcc'].widget.attrs['type'] = 'hidden'
+        self.fields['bcc'].widget.attrs['style'] = 'min-width:60%'
 
         self.helper = FormHelper()
         self.helper.form_method = 'post'

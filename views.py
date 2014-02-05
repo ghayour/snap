@@ -186,12 +186,12 @@ def show_thread(request, thread, label=None):
         referrer = reverse('mail/home')
 
     if request.method == "POST":
-        #mail_uid = request.POST.get('mail_uid')
+        mail_uid = request.POST.get('mail_uid')
         mail_id = request.POST.get('mail_id', '')
         selected_mail = Mail.objects.get(pk=mail_id)
         #attachments = request.FILES.getlist('attachments[]')
         # TODO: handle unsupported browsers for file upload
-        #attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
+        attachments = TemporaryAttachments.get_mail_attachments(mail_uid) if mail_uid else []
 
         fw_re_form = FwReForm(request.POST, request.FILES, user_id=up.id)
         #fw_re_form = ComposeForm(request.POST, request.FILES)
